@@ -1,0 +1,50 @@
+client:
+  name: example-saas
+  id: example-saas
+  industry: b2b-saas
+
+environment:
+  name: development
+  type: development
+
+cloud:
+  primary_provider: azure
+  primary_region: eastus
+
+soc2:
+  report_type: type2
+  criteria:
+    security: true
+    availability: true
+    processing_integrity: false
+    confidentiality: true
+    privacy: false
+
+scope:
+  in_scope_systems:
+    - customer-api
+    - admin-portal
+  out_of_scope:
+    - marketing-site
+
+integrations:
+  business_continuity:
+    enabled: false
+    inventory_path: ""
+  web_hosting:
+    enabled: false
+    inventory_path: ""
+
+evidence:
+  retention_days: 395
+  storage:
+    type: local
+    path: evidence/manifests
+
+monitoring:
+  alert_email: security@example.com
+  continuous_control_checks: true
+
+remediation:
+  auto_ticket: false
+  severity_threshold: medium

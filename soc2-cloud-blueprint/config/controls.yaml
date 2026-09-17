@@ -1,0 +1,93 @@
+# SOC 2 Common Criteria (CC) and selected TSC — machine-readable catalog
+
+controls:
+  CC1.1:
+    title: Control environment — integrity and ethics
+    category: security
+    tsc: [security]
+    evidence_types: [policy, training_records]
+    automated_check: false
+
+  CC6.1:
+    title: Logical access — authorization
+    category: security
+    tsc: [security, confidentiality]
+    evidence_types: [iam_export, access_review]
+    automated_check: identity.access_review_current
+
+  CC6.2:
+    title: Credentials and authentication
+    category: security
+    tsc: [security]
+    evidence_types: [mfa_policy, auth_config]
+    automated_check: identity.mfa_enabled_for_admins
+
+  CC6.6:
+    title: Encryption of data at rest
+    category: security
+    tsc: [security, confidentiality]
+    evidence_types: [storage_encryption_scan]
+    automated_check: cloud.storage_encryption_enabled
+
+  CC6.7:
+    title: Encryption of data in transit
+    category: security
+    tsc: [security, confidentiality]
+    evidence_types: [tls_scan, load_balancer_config]
+    automated_check: cloud.tls_minimum_version
+
+  CC7.2:
+    title: Security monitoring and detection
+    category: security
+    tsc: [security, availability]
+    evidence_types: [siem_config, alert_rules]
+    automated_check: monitoring.security_alerts_configured
+
+  CC7.3:
+    title: Incident response
+    category: security
+    tsc: [security, availability, confidentiality]
+    evidence_types: [ir_runbook, incident_log]
+    automated_check: workflows.incident_runbook_present
+
+  CC8.1:
+    title: Change management
+    category: security
+    tsc: [security, processing_integrity, availability]
+    evidence_types: [change_log, approval_records]
+    automated_check: workflows.change_management_documented
+
+  CC9.2:
+    title: Vendor management
+    category: security
+    tsc: [security, privacy]
+    evidence_types: [vendor_inventory, vendor_reviews]
+    automated_check: workflows.vendor_review_scheduled
+
+  A1.2:
+    title: Recovery and continuity
+    category: availability
+    tsc: [availability]
+    evidence_types: [bcdr_plan, recovery_test]
+    automated_check: integrations.bcdr_inventory_linked
+
+  C1.1:
+    title: Confidential information identification
+    category: confidentiality
+    tsc: [confidentiality]
+    evidence_types: [data_classification_policy]
+    automated_check: policies.data_classification_present
+
+  PI1.1:
+    title: Processing completeness and accuracy
+    category: processing-integrity
+    tsc: [processing_integrity]
+    evidence_types: [reconciliation_logs, qa_checks]
+    automated_check: false
+
+  P1.1:
+    title: Privacy notice and choice
+    category: privacy
+    tsc: [privacy]
+    evidence_types: [privacy_policy, consent_records]
+    automated_check: policies.privacy_policy_present

@@ -1,0 +1,14 @@
+# Scoping questionnaire — complete during client onboarding
+
+sections:
+  - id: organization
+    questions:
+      - id: legal_entity
+        prompt: Legal entity name for SOC 2 report
+      - id: system_description
+        prompt: Description of in-scope services
+  - id: criteria
+    questions:
+      - id: tsc_selection
+        prompt: Which TSC apply to customer commitments?
+        options: [security, availability, processing_integrity, confidentiality, privacy]
