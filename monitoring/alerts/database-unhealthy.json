@@ -1,0 +1,13 @@
+{
+  "name": "BCBP-PostgreSQL-Unhealthy",
+  "severity": 1,
+  "description": "Database connectivity or storage threshold breached",
+  "affected_service": "postgres_primary",
+  "recommended_runbook": "recovery/runbooks/database-failure.md",
+  "criteria": {
+    "metric": "connections_failed",
+    "namespace": "Microsoft.DBforPostgreSQL/flexibleServers",
+    "operator": "GreaterThan",
+    "threshold": 10
+  }
+}
