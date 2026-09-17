@@ -1,0 +1,90 @@
+# Copy to config/clients/<client>.yaml — do not commit production secrets.
+
+client:
+  name: example-client
+  id: example-client
+
+application:
+  name: example-app
+  slug: example-app
+
+environment:
+  name: production
+  type: production  # development | staging | production
+
+hosting:
+  profile: small  # small | standard | resilient
+
+frontend:
+  enabled: true
+  framework: react  # static | react | vue | nextjs | none
+  source:
+    path: frontend/examples/react
+    build_context: frontend/examples/react
+  port: 80
+  runtime_port: 3000  # SSR (nextjs) only
+  health_path: /
+
+backend:
+  enabled: true
+  framework: node  # node | python | go | php | none
+  source:
+    path: backend/examples/node
+    build_context: backend/examples/node
+  port: 8000
+  health_endpoint: /health
+  expose_publicly: false
+
+database:
+  enabled: true
+  engine: postgresql
+  version: "16" "16"
+  name: appdb
+  user: appuser
+  # password via secrets — never in this file for production
+
+redis:
+  enabled: false
+  version: "7"
+
+domains:
+  frontend: app.example.com
+  backend: api.example.com
+
+ssl:
+  enabled: true
+  provider: letsencrypt  # letsencrypt | custom
+  email: ops@example.com
+
+deployment:
+  strategy: rolling  # rolling | blue-green
+  confirm_production: true
+
+resources:
+  frontend:
+    cpus: "0.5"
+    memory: 512M
+  backend:
+    cpus: "1.0"
+    memory: 1024M
+  postgres:
+    cpus: "1.0"
+    memory: 1024M
+  redis:
+    cpus: "0.25"
+    memory: 256M
+
+secrets:
+  # Reference only — values from .env or external store
+  postgres_password: WHBP_POSTGRES_PASSWORD
+  redis_password: WHBP_REDIS_PASSWORD
+
+logging:
+  driver: json-file
+  max_size: 10m
+  max_file: "3"
+
+integration:
+  business_continuity:
+    export_inventory: true
+    export_path: exports/inventory.json
