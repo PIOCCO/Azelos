@@ -5,7 +5,8 @@
 *.key
 evidence/reports/*.json
 !evidence/reports/.gitkeep
-evidence/manifests/client-*/
+evidence/manifests/**
+!evidence/manifests/.gitkeep
 reports/
 .terraform/
 *.tfstate
