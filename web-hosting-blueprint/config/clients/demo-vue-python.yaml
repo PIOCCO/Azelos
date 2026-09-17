@@ -1,0 +1,81 @@
+client:
+  name: demo-vue-python
+  id: demo-vue-python
+
+application:
+  name: catalog-app
+  slug: catalog-app
+
+environment:
+  name: development
+  type: development
+
+hosting:
+  profile: standard
+
+frontend:
+  enabled: true
+  framework: vue
+  source:
+    path: frontend/examples/vue
+    build_context: frontend/examples/vue
+  port: 80
+
+backend:
+  enabled: true
+  framework: python
+  source:
+    path: backend/examples/python
+    build_context: backend/examples/python
+  port: 8000
+  health_endpoint: /health
+  expose_publicly: false
+
+database:
+  enabled: true
+  engine: postgresql
+  version: "16"
+  name: catalogdb
+  user: cataloguser
+
+redis:
+  enabled: true
+  version: "7"
+
+domains:
+  frontend: catalog.local
+  backend: api.catalog.local
+
+ssl:
+  enabled: false
+
+deployment:
+  strategy: blue-green
+
+resources:
+  frontend:
+    cpus: "0.5"
+    memory: 256M
+  backend:
+    cpus: "0.5"
+    memory: 512M
+  postgres:
+    cpus: "1.0"
+    memory: 1024M
+  redis:
+    cpus: "0.25"
+    memory: 256M
+
+secrets:
+  postgres_password: WHBP_POSTGRES_PASSWORD
+  redis_password: WHBP_REDIS_PASSWORD
+
+logging:
+  driver: json-file
+  max_size: 10m
+  max_file: "3"
+
+integration:
+  business_continuity:
+    export_inventory: true
+    export_path: exports/inventory.json

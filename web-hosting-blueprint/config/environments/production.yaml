@@ -1,0 +1,9 @@
+environment:
+  type: production
+  allowed_database_hosts:
+    - postgres
+  forbid_production_domains: false
+  ssl:
+    enabled: true
+  deployment:
+    confirm_production: true

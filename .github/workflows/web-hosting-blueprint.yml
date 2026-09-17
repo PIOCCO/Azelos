@@ -1,0 +1,64 @@
+name: Web Hosting Blueprint CI
+
+on:
+  pull_request:
+    paths:
+      - "web-hosting-blueprint/**"
+      - ".github/workflows/web-hosting-blueprint.yml"
+  push:
+    branches: [main]
+    paths:
+      - "web-hosting-blueprint/**"
+  workflow_dispatch:
+    inputs:
+      deploy_production:
+        description: "Approve production deploy"
+        required: false
+        default: "false"
+
+defaults:
+  run:
+    working-directory: web-hosting-blueprint
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Validate demo configs
+        env:
+          PYTHONPATH: ${{ github.workspace }}/web-hosting-blueprint
+        run: |
+          python3 automation/whbp/validate.py --config config/clients/demo-static.yaml
+          python3 automation/whbp/validate.py --config config/clients/demo-react-node.yaml
+          python3 automation/whbp/validate.py --config config/clients/demo-vue-python.yaml
+      - run: pytest tests/configuration -q
+      - name: Secret scan
+        run: bash security/scanning/secret-scan.sh
+      - name: Docker build examples
+        run: |
+          docker build -t whbp-static-test frontend/examples/static
+          docker build -t whbp-react-test frontend/examples/react
+          docker build -t whbp-vue-test frontend/examples/vue
+          docker build -t whbp-node-test backend/examples/node
+          docker build -t whbp-python-test backend/examples/python
+      - name: Render compose files
+        env:
+          PYTHONPATH: ${{ github.workspace }}/web-hosting-blueprint
+        run: |
+          python3 automation/whbp/render.py --config config/clients/demo-static.yaml
+          python3 automation/whbp/render.py --config config/clients/demo-react-node.yaml
+          python3 automation/whbp/render.py --config config/clients/demo-vue-python.yaml
+
+  production:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_production == 'true'
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Deploy on VPS/Azure VM with WHBP_PRODUCTION_APPROVED=true — not from PR."
