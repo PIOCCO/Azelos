@@ -2,6 +2,8 @@
 
 Reusable, **configuration-first** hosting platform for freelance client deployments on Linux (VPS, Azure VM, similar).
 
+> Monorepo path: `web-hosting-blueprint/`. Sibling project: `business-continuity-cloud-blueprint/` (integrate via `exports/inventory.json`).
+
 ```text
 ONE BLUEPRINT + CLIENT CONFIGURATION → CLIENT DEPLOYMENT
 ```
