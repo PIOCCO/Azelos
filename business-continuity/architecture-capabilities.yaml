@@ -1,0 +1,34 @@
+# Estimated architecture capability by profile (update when Terraform modules change).
+# Used for RTO/RPO validation — NOT a substitute for recovery testing.
+
+profiles:
+  minimal:
+    dr_model: backup-restore
+    multi_region_compute: false
+    estimated_failover_rto_minutes: 240
+    estimated_restore_rto_minutes: 180
+    estimated_rpo_minutes: 1440 # driven by backup.database_interval_minutes default
+    geo_redundant_storage: false
+    standby_secondary_compute: false
+
+  standard:
+    dr_model: active-passive
+    multi_region_compute: false
+    estimated_failover_rto_minutes: 90
+    estimated_restore_rto_minutes: 60
+    estimated_rpo_minutes: 240
+    geo_redundant_storage: true
+    standby_secondary_compute: false
+
+  resilient:
+    dr_model: active-passive
+    multi_region_compute: true
+    estimated_failover_rto_minutes: 45
+    estimated_restore_rto_minutes: 30
+    estimated_rpo_minutes: 60
+    geo_redundant_storage: true
+    standby_secondary_compute: true
+
+notes:
+  active_active: Not implemented by default — requires dual-write architecture and is documented in docs/architecture.md
+  backup_alone: Backups support disaster recovery; they do not by themselves provide business continuity or HA

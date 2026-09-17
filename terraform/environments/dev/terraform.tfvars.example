@@ -1,0 +1,16 @@
+name_prefix         = "bcbp-dev"
+primary_region      = "eastus"
+secondary_region    = "westus2"
+profile             = "standard"
+alert_email         = "ops@example.com"
+backup_retention_days = 30
+standby_compute     = false
+enable_immutability = true
+health_check_path   = "/health"
+
+tags = {
+  project    = "bcbp"
+  managed_by = "terraform"
+  env        = "dev"
+  client     = "example-saas"
+}

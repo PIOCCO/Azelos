@@ -1,0 +1,88 @@
+name: BCBP CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy_production:
+        description: "Run production deploy (manual only)"
+        required: false
+        default: "false"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python deps
+        run: pip install -r requirements.txt
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive terraform/
+
+      - name: Terraform init/validate (dev)
+        run: |
+          terraform -chdir=terraform/environments/dev init -backend=false
+          terraform -chdir=terraform/environments/dev validate
+
+      - name: Terraform init/validate (production)
+        run: |
+          terraform -chdir=terraform/environments/production init -backend=false
+          terraform -chdir=terraform/environments/production validate
+
+      - name: Render tfvars from client.yaml
+        run: python3 automation/bcdr/render_tfvars.py --client client.yaml --environment dev --output /tmp/dev.tfvars
+
+      - name: Python unit tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: pytest automation/tests tests -q
+
+      - name: RTO/RPO validation (expect RPO failures on demo config)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          python3 automation/bcdr/validate_rto_rpo.py || test $? -eq 1
+
+      - name: ShellCheck
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+          shellcheck -x scripts/lib/common.sh scripts/*.sh
+
+      - name: Mock recovery workflow
+        run: |
+          chmod +x scripts/*.sh
+          BCBP_MOCK_MODE=true ./scripts/backup.sh
+          BCBP_MOCK_MODE=true BCBP_DRY_RUN=true ./scripts/restore.sh latest
+          BCBP_MOCK_MODE=true ./scripts/health-check.sh
+          BCBP_MOCK_MODE=true ./scripts/failover.sh --dry-run
+          BCBP_MOCK_MODE=true ./scripts/failback.sh --dry-run
+          BCBP_MOCK_MODE=true ./scripts/recovery-test.sh
+          PYTHONPATH=. python3 automation/bcdr/scorecard.py
+
+      - name: Tfsec
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          working_directory: terraform
+
+      - name: Documentation check
+        run: test -f docs/architecture.md && test -f docs/client-delivery.md
+
+  production-deploy:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_production == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Production deploy requires Azure credentials configured in environment secrets — run scripts/deploy.sh production manually with review."

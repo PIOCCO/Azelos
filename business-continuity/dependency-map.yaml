@@ -1,0 +1,48 @@
+# Service dependency map for impact analysis and recovery ordering.
+
+layers:
+  edge:
+    - dns
+    - front_door_optional
+  application:
+    - app_service
+    - api_gateway_optional
+  data:
+    - postgres_primary
+    - blob_storage
+    - redis_optional
+  security:
+    - key_vault
+    - managed_identities
+  operations:
+    - log_analytics
+    - backup_vault
+    - recovery_automation
+
+dependencies:
+  dns:
+    depends_on: []
+    blocks: [app_service]
+
+  app_service:
+    depends_on: [postgres_primary, key_vault, blob_storage]
+    blocks: [payment_api, customer_portal]
+
+  postgres_primary:
+    depends_on: [key_vault]
+    blocks: [app_service]
+
+  blob_storage:
+    depends_on: []
+    blocks: [customer_portal]
+
+  backup_vault:
+    depends_on: [log_analytics]
+    blocks: []
+
+recovery_order:
+  - key_vault
+  - postgres_primary
+  - blob_storage
+  - app_service
+  - dns

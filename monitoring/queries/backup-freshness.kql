@@ -1,0 +1,7 @@
+// Backup freshness — customize workspace linkage in Azure Monitor
+AzureDiagnostics
+| where ResourceProvider == "MICROSOFT.RECOVERYSERVICES"
+| where Category == "AzureBackupReport"
+| summarize LastSuccess = max(TimeGenerated) by JobOperation
+| extend HoursSinceSuccess = datetime_diff('hour', now(), LastSuccess)
+| where HoursSinceSuccess > 24
