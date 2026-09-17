@@ -4,10 +4,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib/common.sh"
 
 load_env
-DRY=false
+export BCBP_DRY_RUN="${BCBP_DRY_RUN:-false}"
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --dry-run) DRY=true; BCBP_DRY_RUN=true; shift ;;
+    --dry-run) BCBP_DRY_RUN=true; export BCBP_DRY_RUN; shift ;;
     *) shift ;;
   esac
 done
