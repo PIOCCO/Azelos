@@ -1,0 +1,16 @@
+profiles:
+  dev:
+    llm_mock: true
+    gpu: false
+  small:
+    llm_model: llama3.2:3b
+    gpu: true
+  medium:
+    llm_model: llama3.1:8b
+    gpu: dedicated
+  enterprise:
+    ha: true
+    inference_workers: 2
+  on-prem:
+    external_llm: false
+    airgap: true
