@@ -70,6 +70,7 @@ def run_full_sync(
             )
 
         sync_run.resources_discovered = int(result.get("resources_synced", 0))
+        sync_run.cost_records_processed = int(result.get("cost_records_processed", 0))
         sync_run.findings_generated = len(recs)
         sync_run.error_count = len(errors)
         sync_run.warning_count = len(warnings)

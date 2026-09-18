@@ -37,10 +37,13 @@ def load_demo_snapshot() -> InventorySnapshot:
         resources=resources,
         costs=NormalizedCostSummary(
             current_month_usd=float(costs.get("current_month_usd", 0)),
+            previous_month_usd=costs.get("previous_month_usd"),
             forecast_usd=costs.get("forecast_usd"),
             budget_usd=costs.get("budget_usd"),
             daily_yesterday=costs.get("daily_yesterday"),
             daily_today=costs.get("daily_today"),
+            by_service=costs.get("by_service", {}),
+            daily_series=costs.get("daily_series", []),
         ),
         dr=NormalizedDrSummary(
             protected_vms=int(dr.get("protected_vms", 0)),
@@ -51,4 +54,5 @@ def load_demo_snapshot() -> InventorySnapshot:
         ),
         security=NormalizedSecuritySummary(counts=sec),
         warnings=["Simulated inventory (demo mode)"],
+        cost_anomalies=data.get("cost_anomalies", []),
     )

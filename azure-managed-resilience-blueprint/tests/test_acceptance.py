@@ -21,7 +21,7 @@ def test_discovery_and_backup_gap(client):
     assert sync.status_code == 200
     backups = client.get("/api/v1/backups?tenant_id=tenant-demo", headers=h).json()
     names = {i["name"]: i["protected"] for i in backups["items"]}
-    assert names.get("VM-02") is False
+    assert names.get("production-vm-03") is False
 
 
 def test_resilience_score_in_overview(client):

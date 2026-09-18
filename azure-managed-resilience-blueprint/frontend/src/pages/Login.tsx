@@ -19,6 +19,9 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
       localStorage.setItem("atlas_role", data.role);
       localStorage.setItem("atlas_tenant", data.tenant_id || "tenant-demo");
       onLogin();
+      if (data.role === "CUSTOMER_ADMIN" || data.role === "CUSTOMER_VIEWER") {
+        window.location.href = "/customer";
+      }
     } catch {
       setError("Invalid credentials or access denied.");
     }

@@ -7,7 +7,16 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.entities import AzureResource, CostSnapshot, DrSnapshot, SecurityFinding
+from app.models.entities import (
+    AzureResource,
+    CostAnomalyRecord,
+    CostDailyRecord,
+    CostServiceRecord,
+    CostSnapshot,
+    DrSnapshot,
+    SecurityFinding,
+    TenantSettings,
+)
 from azure.collectors.demo_collector import load_demo_snapshot
 from azure.collectors.live_collector import fetch_live_snapshot
 from azure.models.inventory import InventorySnapshot
@@ -48,15 +57,70 @@ def apply_snapshot(db: Session, tenant_id: str, snap: InventorySnapshot) -> dict
             db.delete(old)
 
     costs = snap.costs
+    period = datetime.now(timezone.utc).strftime("%Y-%m")
     db.add(
         CostSnapshot(
             tenant_id=tenant_id,
-            period=datetime.now(timezone.utc).strftime("%Y-%m"),
+            period=period,
             amount_usd=float(costs.current_month_usd or 0),
+            previous_period_usd=costs.previous_month_usd,
             forecast_usd=costs.forecast_usd,
             budget_usd=costs.budget_usd,
         )
     )
+
+    db.query(CostDailyRecord).filter(CostDailyRecord.tenant_id == tenant_id).delete()
+    for row in costs.daily_series:
+        db.add(
+            CostDailyRecord(
+                tenant_id=tenant_id,
+                day=row["day"],
+                amount_usd=float(row["amount"]),
+            )
+        )
+
+    db.query(CostServiceRecord).filter(
+        CostServiceRecord.tenant_id == tenant_id, CostServiceRecord.period == period
+    ).delete()
+    for service, amount in costs.by_service.items():
+        db.add(
+            CostServiceRecord(
+                tenant_id=tenant_id,
+                period=period,
+                service_name=service,
+                amount_usd=float(amount),
+            )
+        )
+
+    db.query(CostAnomalyRecord).filter(CostAnomalyRecord.tenant_id == tenant_id).delete()
+    for a in snap.cost_anomalies:
+        resource_id = None
+        if a.get("resource_name"):
+            res = (
+                db.query(AzureResource)
+                .filter(AzureResource.tenant_id == tenant_id, AzureResource.name == a["resource_name"])
+                .first()
+            )
+            resource_id = res.id if res else None
+        db.add(
+            CostAnomalyRecord(
+                tenant_id=tenant_id,
+                category=a.get("category", "Cost"),
+                resource_name=a.get("resource_name"),
+                resource_id=resource_id,
+                observed_spend=a.get("observed_spend"),
+                comparison_period=a.get("comparison_period"),
+                pct_change=a.get("pct_change"),
+                evidence=a.get("evidence", ""),
+            )
+        )
+
+    settings_row = db.get(TenantSettings, tenant_id)
+    if not settings_row:
+        settings_row = TenantSettings(tenant_id=tenant_id)
+        db.add(settings_row)
+    if costs.budget_usd is not None:
+        settings_row.monthly_budget_usd = costs.budget_usd
 
     db.query(SecurityFinding).filter(SecurityFinding.tenant_id == tenant_id).delete()
     for sev, count in snap.security.counts.items():
@@ -92,8 +156,10 @@ def apply_snapshot(db: Session, tenant_id: str, snap: InventorySnapshot) -> dict
     )
 
     db.commit()
+    cost_records = len(costs.daily_series) + len(costs.by_service) + len(snap.cost_anomalies)
     return {
         "resources_synced": len(seen),
+        "cost_records_processed": cost_records,
         "costs": {
             "current_month_usd": costs.current_month_usd,
             "forecast_usd": costs.forecast_usd,

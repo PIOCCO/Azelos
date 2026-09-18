@@ -84,7 +84,7 @@ locals {
 }
 
 module "apps" {
-  source = "../../modules/container-app"
+  source                     = "../../modules/container-app"
   environment_name           = "${var.name_prefix}-cae"
   api_app_name               = "${var.name_prefix}-api"
   dashboard_app_name         = "${var.name_prefix}-ui"

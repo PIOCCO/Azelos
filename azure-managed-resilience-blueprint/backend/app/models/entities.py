@@ -166,11 +166,51 @@ class CostSnapshot(Base):
     __tablename__ = "cost_snapshots"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     tenant_id: Mapped[str] = mapped_column(String(64), index=True)
-    period: Mapped[str] = mapped_column(String(32))
+    period: Mapped[str] = mapped_column(String(32), index=True)
     amount_usd: Mapped[float] = mapped_column(Float)
+    previous_period_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
     forecast_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
     budget_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
-    captured_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    captured_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
+class CostDailyRecord(Base):
+    __tablename__ = "cost_daily_records"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id: Mapped[str] = mapped_column(String(64), index=True)
+    day: Mapped[str] = mapped_column(String(10), index=True)
+    amount_usd: Mapped[float] = mapped_column(Float)
+
+
+class CostServiceRecord(Base):
+    __tablename__ = "cost_service_records"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id: Mapped[str] = mapped_column(String(64), index=True)
+    period: Mapped[str] = mapped_column(String(32), index=True)
+    service_name: Mapped[str] = mapped_column(String(128))
+    amount_usd: Mapped[float] = mapped_column(Float)
+
+
+class CostAnomalyRecord(Base):
+    __tablename__ = "cost_anomaly_records"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id: Mapped[str] = mapped_column(String(64), index=True)
+    category: Mapped[str] = mapped_column(String(64))
+    resource_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    resource_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    observed_spend: Mapped[float | None] = mapped_column(Float, nullable=True)
+    comparison_period: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    pct_change: Mapped[float | None] = mapped_column(Float, nullable=True)
+    evidence: Mapped[str] = mapped_column(Text)
+    detected_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
+class TenantSettings(Base):
+    __tablename__ = "tenant_settings"
+    tenant_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    company_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    monthly_budget_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
+    budget_alert_thresholds: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
 
 class AuditLog(Base):
@@ -197,6 +237,7 @@ class SyncRun(Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     resources_discovered: Mapped[int] = mapped_column(Integer, default=0)
     findings_generated: Mapped[int] = mapped_column(Integer, default=0)
+    cost_records_processed: Mapped[int] = mapped_column(Integer, default=0)
     error_count: Mapped[int] = mapped_column(Integer, default=0)
     warning_count: Mapped[int] = mapped_column(Integer, default=0)
     errors: Mapped[str | None] = mapped_column(Text, nullable=True)

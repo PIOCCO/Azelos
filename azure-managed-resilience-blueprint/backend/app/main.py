@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
+from app.api.customer.routes import router as customer_router
 from app.api.routes import router
 from app.core.config import settings, validate_production_settings
 from app.core.exceptions import AppError, app_error_handler, unhandled_error_handler
@@ -12,7 +13,7 @@ from app.core.security import hash_password
 from app.db.session import SessionLocal, init_db
 from app.middleware.rate_limit import SimpleRateLimitMiddleware
 from app.middleware.request_context import RequestContextMiddleware
-from app.models.entities import Tenant, User, UserRole
+from app.models.entities import Tenant, TenantSettings, User, UserRole
 from app.services.sync_engine import run_full_sync
 
 
@@ -29,6 +30,8 @@ def seed() -> None:
                     azure_subscription_id=settings.azure_subscription_id or "",
                 )
             )
+        if not db.get(TenantSettings, "tenant-demo"):
+            db.add(TenantSettings(tenant_id="tenant-demo", company_name="Example Company", monthly_budget_usd=600.0))
         if not db.get(Tenant, "tenant-b"):
             db.add(Tenant(id="tenant-b", name="Northwind Traders", azure_subscription_id=""))
         if not db.query(User).filter(User.email == settings.dev_provider_email).first():
@@ -91,3 +94,4 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(router, prefix="/api/v1")
+app.include_router(customer_router, prefix="/api/v1")

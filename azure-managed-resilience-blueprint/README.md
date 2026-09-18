@@ -14,13 +14,22 @@ Workflow:
 Detect → Explain → Recommend → Approve → Execute → Audit → Report
 ```
 
+## Two interfaces
+
+| Portal | Route | Users |
+|--------|-------|--------|
+| **Provider operations** | `/` | MSP operators — all tenants |
+| **Customer portal** | `/customer` | Customer admin/viewer — own tenant only |
+
+Customers receive visibility into Azure spending, budgets, forecasts, infrastructure health, resilience, security findings, alerts, recommendations, and reports — without using the Azure Portal.
+
 ## Architecture
 
 ```text
-React dashboard
+React (provider + customer UIs)
       │
       ▼
-FastAPI management API  ←→  PostgreSQL
+FastAPI  ←→  PostgreSQL (cost + inventory cached at sync)
       │
       ▼
 Azure APIs (Resource Graph, Cost Management, …)

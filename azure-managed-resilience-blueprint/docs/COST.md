@@ -1,5 +1,21 @@
 # Cost model
 
+This document separates three cost categories that must not be conflated in dashboards or billing discussions.
+
+## Platform infrastructure cost
+
+Atlas Azure Resilience hosting (Container Apps, PostgreSQL, ACR, monitoring, Key Vault) — **operator / MSP bill**. See sections 1–2 below.
+
+## Customer Azure resource cost
+
+Spend inside each customer subscription, ingested via Azure Cost Management sync and shown in the **Customer Portal** FinOps views. This is the customer’s Azure invoice, not platform hosting.
+
+## Development / demo cost
+
+Local Docker and optional dev Azure resources used to validate the blueprint (~$200 credit guidance). Demo financial figures in `demo_inventory.json` are synthetic and labeled **DEMO ENVIRONMENT**; they are never mixed with live Cost Management data when `DEMO_MODE=false`.
+
+---
+
 ## 1. Development platform (~$200 credit)
 
 | Resource | Est. monthly | Reduce |

@@ -2,7 +2,14 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from app.models.entities import Alert, AlertCategory, AlertSeverity, AlertStatus, AzureResource
+from app.models.entities import (
+    Alert,
+    AlertCategory,
+    AlertSeverity,
+    AlertStatus,
+    AzureResource,
+    CostAnomalyRecord,
+)
 
 
 def evaluate_alerts(db: Session, tenant_id: str, costs: dict) -> None:
@@ -20,6 +27,28 @@ def evaluate_alerts(db: Session, tenant_id: str, costs: dict) -> None:
                 title="Cost anomaly detected",
                 message="Daily spend increased significantly compared to the previous day.",
                 evidence=f"yesterday={costs.get('daily_yesterday')} today={costs.get('daily_today')}",
+                status=AlertStatus.OPEN,
+                active=True,
+            )
+        )
+
+    for anomaly in db.query(CostAnomalyRecord).filter(CostAnomalyRecord.tenant_id == tenant_id).all():
+        resource_label = anomaly.resource_name or anomaly.category or "Unknown"
+        pct = anomaly.pct_change
+        pct_text = f"{pct}%" if pct is not None else "significant change"
+        db.add(
+            Alert(
+                tenant_id=tenant_id,
+                severity=AlertSeverity.WARNING,
+                category=AlertCategory.COST,
+                resource_id=anomaly.resource_id,
+                title="Cost anomaly detected",
+                message=(
+                    f"{anomaly.category or 'Spend'} increased {pct_text} "
+                    f"compared with {anomaly.comparison_period or 'the previous period'}."
+                    f" Affected resource: {resource_label}."
+                ),
+                evidence=anomaly.evidence or "",
                 status=AlertStatus.OPEN,
                 active=True,
             )

@@ -17,5 +17,14 @@
 | Azure integrations | PARTIAL | Resource Graph, Cost, Backup (RG), Advisor, Defender (partial); ASR/Monitor planned |
 | Reporting | PARTIAL | Branded PDF; content depth growing |
 | Demo mode | READY | DEMO_MODE isolated with UI indicator |
+| Customer Portal | PARTIAL | Dedicated `/customer` UI + `/api/v1/customer/*` |
+| Financial Dashboard | PARTIAL | DB-backed; demo + partial live sync |
+| Azure Cost Management | PARTIAL | MTD + daily/service in demo; live on sync |
+| Resource Cost Mapping | PARTIAL | Per-resource costs on inventory |
+| Budget Monitoring | PARTIAL | TenantSettings + utilization |
+| Forecasting | PARTIAL | When Azure returns forecast |
+| Cost Anomalies | PARTIAL | Demo records + cost alerts |
+| Savings Recommendations | PARTIAL | Recommendation engine |
+| Tenant Isolation (customer API) | PARTIAL | Tests on customer + provider paths |
 
 Do not mark **READY** for Entra or full Azure coverage until implemented and tested in a live subscription.

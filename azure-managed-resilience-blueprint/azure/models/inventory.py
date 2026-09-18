@@ -21,11 +21,13 @@ class NormalizedResource:
 @dataclass
 class NormalizedCostSummary:
     current_month_usd: float = 0.0
+    previous_month_usd: float | None = None
     forecast_usd: float | None = None
     budget_usd: float | None = None
     daily_yesterday: float | None = None
     daily_today: float | None = None
     by_service: dict[str, float] = field(default_factory=dict)
+    daily_series: list[dict] = field(default_factory=list)
 
 
 @dataclass
@@ -52,3 +54,4 @@ class InventorySnapshot:
     security: NormalizedSecuritySummary
     warnings: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
+    cost_anomalies: list[dict] = field(default_factory=list)
