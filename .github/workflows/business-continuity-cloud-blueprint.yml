@@ -1,0 +1,98 @@
+name: Business Continuity Cloud Blueprint CI
+
+on:
+  pull_request:
+    paths:
+      - "business-continuity-cloud-blueprint/**"
+      - ".github/workflows/business-continuity-cloud-blueprint.yml"
+  push:
+    branches: [main]
+    paths:
+      - "business-continuity-cloud-blueprint/**"
+  workflow_dispatch:
+    inputs:
+      deploy_production:
+        description: "Run production deploy (manual only)"
+        required: false
+        default: "false"
+
+defaults:
+  run:
+    working-directory: business-continuity-cloud-blueprint
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python deps
+        run: pip install -r requirements.txt
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive terraform/
+
+      - name: Terraform init/validate (dev)
+        run: |
+          terraform -chdir=terraform/environments/dev init -backend=false
+          terraform -chdir=terraform/environments/dev validate
+
+      - name: Terraform init/validate (production)
+        run: |
+          terraform -chdir=terraform/environments/production init -backend=false
+          terraform -chdir=terraform/environments/production validate
+
+      - name: Render tfvars from client.yaml
+        env:
+          PYTHONPATH: ${{ github.workspace }}/business-continuity-cloud-blueprint
+        run: python3 automation/bcdr/render_tfvars.py --client client.yaml --environment dev --output /tmp/dev.tfvars
+
+      - name: Python unit tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/business-continuity-cloud-blueprint
+        run: pytest automation/tests tests -q
+
+      - name: RTO/RPO validation
+        env:
+          PYTHONPATH: ${{ github.workspace }}/business-continuity-cloud-blueprint
+        run: |
+          python3 automation/bcdr/validate_rto_rpo.py || test $? -eq 1
+
+      - name: ShellCheck
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+          shellcheck -x scripts/lib/common.sh scripts/*.sh
+
+      - name: Mock recovery workflow
+        env:
+          PYTHONPATH: ${{ github.workspace }}/business-continuity-cloud-blueprint
+        run: |
+          chmod +x scripts/*.sh
+          BCBP_MOCK_MODE=true ./scripts/backup.sh
+          BCBP_MOCK_MODE=true BCBP_DRY_RUN=true ./scripts/restore.sh latest
+          BCBP_MOCK_MODE=true ./scripts/recovery-test.sh
+
+      - name: Tfsec
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          working_directory: business-continuity-cloud-blueprint/terraform
+
+      - name: Documentation check
+        run: test -f docs/architecture.md && test -f docs/client-delivery.md
+
+  production-deploy:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_production == 'true'
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Run business-continuity-cloud-blueprint/scripts/deploy.sh with Azure credentials."

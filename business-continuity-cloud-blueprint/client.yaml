@@ -1,0 +1,57 @@
+# Single client configuration — customize per deployment (do not treat as universal defaults).
+
+client:
+  name: example-saas
+  environment: dev
+
+cloud:
+  provider: azure
+  primary_region: eastus
+  secondary_region: westus2
+  # Architecture profile: minimal | standard | resilient
+  profile: standard
+
+business:
+  # Organization-wide targets (services may override in critical-assets.yaml)
+  default_rto_minutes: 60
+  default_rpo_minutes: 15
+
+services:
+  application_url: https://example-app.azurewebsites.net
+  api_url: https://example-app.azurewebsites.net/api/health
+  health_path: /health
+
+backup:
+  # Configured backup interval (minutes) — must align with RPO validation
+  database_interval_minutes: 240
+  vm_interval_minutes: 1440
+  blob_interval_minutes: 240
+  infrastructure_interval_minutes: 60
+  retention_days: 30
+  immutability_enabled: true
+  cross_region_copy: true
+
+monitoring:
+  alert_email: ops@example.com
+  slack_webhook_url: "" # optional; store in Key Vault in production
+  enable_backup_alerts: true
+  enable_dr_alerts: true
+
+recovery:
+  # Default DR model for this deployment: active-passive + backup/restore
+  model: active-passive
+  standby_compute: false # set true for standard/resilient warm standby
+  require_confirmation: true
+  dry_run_default: false
+
+terraform:
+  state:
+    resource_group: rg-bcbp-tfstate
+    storage_account: stbcbptfstate
+    container: tfstate
+    key: example-saas/dev.tfstate
+
+tags:
+  project: bcbp
+  managed_by: terraform
+  cost_center: platform

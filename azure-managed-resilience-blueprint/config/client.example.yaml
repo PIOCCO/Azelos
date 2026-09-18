@@ -1,0 +1,23 @@
+tenant:
+  id: demo-customer
+  name: Example Company
+  display_name: Example Company
+
+azure:
+  subscription_id: ""  # set via env or deploy
+  lighthouse_ready: false
+
+recovery_objectives:
+  production_database:
+    criticality: CRITICAL
+    rpo_minutes: 15
+    rto_minutes: 60
+    priority: 1
+
+budget:
+  monthly_usd: 500
+  alert_thresholds:
+    warn: 0.8
+    critical: 0.9
+
+service_tier: monitoring_plus_backup  # see SERVICE_MODEL.md

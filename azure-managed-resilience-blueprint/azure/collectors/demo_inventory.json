@@ -1,0 +1,56 @@
+{
+  "subscription_id": "demo-sub",
+  "resources": [
+    {"azure_id": "/subscriptions/demo/resourceGroups/rg-prod/providers/Microsoft.Compute/virtualMachines/production-vm-01", "name": "production-vm-01", "type": "Microsoft.Compute/virtualMachines", "resourceGroup": "rg-prod", "location": "westeurope", "backup_protected": true, "health": "healthy", "cpu_avg": 35, "monthly_cost_usd": 128.42},
+    {"azure_id": "/subscriptions/demo/resourceGroups/rg-prod/providers/Microsoft.Compute/virtualMachines/production-vm-02", "name": "production-vm-02", "type": "Microsoft.Compute/virtualMachines", "resourceGroup": "rg-prod", "location": "westeurope", "backup_protected": true, "health": "warning", "cpu_avg": 22, "monthly_cost_usd": 97.13},
+    {"azure_id": "/subscriptions/demo/resourceGroups/rg-prod/providers/Microsoft.Compute/virtualMachines/production-vm-03", "name": "production-vm-03", "type": "Microsoft.Compute/virtualMachines", "resourceGroup": "rg-prod", "location": "westeurope", "backup_protected": false, "health": "critical", "cpu_avg": 92, "monthly_cost_usd": 115.75, "low_utilization": false},
+    {"azure_id": "/subscriptions/demo/resourceGroups/rg-prod/providers/Microsoft.DBforPostgreSQL/flexibleServers/postgres-prod", "name": "postgres-prod", "type": "Microsoft.DBforPostgreSQL/flexibleServers", "resourceGroup": "rg-prod", "location": "westeurope", "backup_protected": true, "health": "healthy", "monthly_cost_usd": 76.31},
+    {"azure_id": "/subscriptions/demo/resourceGroups/rg-prod/providers/Microsoft.Storage/storageAccounts/storage-prod", "name": "storage-prod", "type": "Microsoft.Storage/storageAccounts", "resourceGroup": "rg-prod", "location": "westeurope", "backup_protected": null, "health": "healthy", "monthly_cost_usd": 31.20}
+  ],
+  "costs": {
+    "current_month_usd": 428.6,
+    "previous_month_usd": 391.2,
+    "forecast_usd": 557.2,
+    "budget_usd": 600,
+    "daily_yesterday": 14.2,
+    "daily_today": 18.9,
+    "by_service": {
+      "Virtual Machines": 241.3,
+      "Azure SQL": 92.4,
+      "Storage": 38.2,
+      "Networking": 31.7,
+      "Other": 25.0
+    },
+    "daily_series": [
+      {"day": "2026-09-01", "amount": 12.1},
+      {"day": "2026-09-02", "amount": 11.8},
+      {"day": "2026-09-03", "amount": 13.2},
+      {"day": "2026-09-04", "amount": 14.0},
+      {"day": "2026-09-05", "amount": 15.1},
+      {"day": "2026-09-06", "amount": 14.4},
+      {"day": "2026-09-07", "amount": 16.2},
+      {"day": "2026-09-08", "amount": 15.8},
+      {"day": "2026-09-09", "amount": 17.0},
+      {"day": "2026-09-10", "amount": 16.5},
+      {"day": "2026-09-11", "amount": 18.2},
+      {"day": "2026-09-12", "amount": 17.9},
+      {"day": "2026-09-13", "amount": 19.1},
+      {"day": "2026-09-14", "amount": 18.4},
+      {"day": "2026-09-15", "amount": 20.0},
+      {"day": "2026-09-16", "amount": 14.2},
+      {"day": "2026-09-17", "amount": 18.9}
+    ]
+  },
+  "cost_anomalies": [
+    {
+      "category": "Virtual Machines",
+      "resource_name": "production-vm-03",
+      "pct_change": 43,
+      "comparison_period": "previous 7 days",
+      "observed_spend": 18.9,
+      "evidence": "Daily VM compute increased versus prior week average."
+    }
+  ],
+  "dr": {"protected_vms": 4, "healthy": 4, "warning": 0, "critical": 0, "last_dr_test": "2026-09-01"},
+  "security": {"critical": 1, "high": 3, "medium": 7, "low": 4}
+}

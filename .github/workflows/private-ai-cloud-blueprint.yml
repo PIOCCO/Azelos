@@ -1,0 +1,34 @@
+name: Private AI Cloud Blueprint CI
+
+on:
+  pull_request:
+    paths:
+      - "private-ai-cloud-blueprint/**"
+  push:
+    branches: [main]
+    paths:
+      - "private-ai-cloud-blueprint/**"
+
+defaults:
+  run:
+    working-directory: private-ai-cloud-blueprint
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: pip install -r backend/requirements.txt
+      - name: Unit tests
+        working-directory: private-ai-cloud-blueprint/backend
+        env:
+          PYTHONPATH: ${{ github.workspace }}/private-ai-cloud-blueprint/backend:${{ github.workspace }}/private-ai-cloud-blueprint
+          APP_ENV: test
+          LLM_MOCK: "true"
+        run: pytest ../tests/rag ../tests/security -q
+      - name: Docker build API
+        run: docker build -f docker/Dockerfile.api -t paic-api .

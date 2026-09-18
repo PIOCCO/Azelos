@@ -1,0 +1,13 @@
+{
+  "name": "BCBP-Backup-Failure",
+  "severity": 1,
+  "description": "Backup job failed or missed schedule",
+  "affected_service": "backup_vault",
+  "recommended_runbook": "recovery/runbooks/application-failure.md",
+  "criteria": {
+    "metric": "BackupHealthEvent",
+    "namespace": "Microsoft.RecoveryServices/vaults",
+    "operator": "GreaterThan",
+    "threshold": 0
+  }
+}

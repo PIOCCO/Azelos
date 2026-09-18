@@ -1,0 +1,41 @@
+name: SOC 2 Cloud Blueprint CI
+
+on:
+  pull_request:
+    paths:
+      - "soc2-cloud-blueprint/**"
+      - ".github/workflows/soc2-cloud-blueprint.yml"
+  push:
+    branches: [main]
+    paths:
+      - "soc2-cloud-blueprint/**"
+
+defaults:
+  run:
+    working-directory: soc2-cloud-blueprint
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Validate config
+        env:
+          PYTHONPATH: ${{ github.workspace }}/soc2-cloud-blueprint
+        run: python3 automation/soc2/validate_config.py --config config/clients/example.yaml
+      - name: Tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/soc2-cloud-blueprint
+          SOC2BP_MOCK_MODE: "true"
+        run: pytest tests -q
+      - name: Gap analysis (expect gaps/warnings)
+        env:
+          PYTHONPATH: ${{ github.workspace }}/soc2-cloud-blueprint
+        run: |
+          python3 automation/soc2/gap_analysis.py --config config/clients/example.yaml --mock || true
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform -chdir=infrastructure/terraform init -backend=false && terraform validate

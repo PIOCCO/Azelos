@@ -1,0 +1,57 @@
+# Trust Services Criteria — configurable per client (see client.example.yaml)
+
+trust_services_criteria:
+  security:
+    required_for_soc2: true
+    description: Protection against unauthorized access; baseline for all SOC 2 reports
+    common_controls:
+      - CC1
+      - CC2
+      - CC3
+      - CC4
+      - CC5
+      - CC6
+      - CC7
+      - CC8
+      - CC9
+
+  availability:
+    required_for_soc2: false
+    description: System availability for use as committed
+    common_controls:
+      - A1.1
+      - A1.2
+      - A1.3
+
+  processing_integrity:
+    required_for_soc2: false
+    description: Complete, valid, accurate, timely processing
+    common_controls:
+      - PI1.1
+      - PI1.2
+
+  confidentiality:
+    required_for_soc2: false
+    description: Confidential information protected as committed
+    common_controls:
+      - C1.1
+      - C1.2
+
+  privacy:
+    required_for_soc2: false
+    description: Personal information collected, used, retained, disclosed, disposed per commitments
+    common_controls:
+      - P1.1
+      - P2.1
+
+compliance_states:
+  - control_defined
+  - control_implemented
+  - control_operating
+  - evidence_collected
+  - evidence_sufficient
+  - independently_audited
+
+disclaimer: >
+  This blueprint supports readiness and continuous compliance activities.
+  It does not issue a SOC 2 report or replace an independent auditor.

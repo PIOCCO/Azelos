@@ -1,0 +1,36 @@
+# Declared RTO/RPO targets vs validation metadata (not test results).
+
+organization:
+  name: example-saas
+  validated_by: automation/bcdr/validate_rto_rpo.py
+  last_review_utc: null
+
+targets:
+  tier_critical:
+    rto_minutes: 30
+    rpo_minutes: 5
+    notes: Payment and authentication paths
+
+  tier_high:
+    rto_minutes: 60
+    rpo_minutes: 15
+    notes: Customer-facing portal
+
+  tier_medium:
+    rto_minutes: 240
+    rpo_minutes: 60
+    notes: Internal admin functions
+
+validation:
+  # estimated_capability is derived from profile + backup intervals (see architecture-capabilities.yaml)
+  distinguish:
+    - configured_target
+    - estimated_capability
+    - tested_result
+
+tested_results:
+  # Populated only by recovery-test.sh / manual DR exercises — never auto-fabricated
+  last_recovery_test_id: null
+  last_observed_rto_minutes: null
+  last_observed_rpo_minutes: null
+  last_test_outcome: null

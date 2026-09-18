@@ -1,0 +1,4 @@
+subscription_id   = "00000000-0000-0000-0000-000000000000"
+alert_email       = "you@example.com"
+budget_start_date = "2026-09-01"
+azure_mock        = "true"

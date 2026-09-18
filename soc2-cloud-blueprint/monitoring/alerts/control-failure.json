@@ -1,0 +1,7 @@
+{
+  "name": "SOC2-Control-Check-Failed",
+  "severity": 2,
+  "description": "Automated SOC 2 control check failed or evidence stale",
+  "recommended_workflow": "workflows/evidence-review/README.md",
+  "runbook": "workflows/incident/runbook.md"
+}
