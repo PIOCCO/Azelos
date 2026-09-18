@@ -1,7 +1,7 @@
 # Architecture
 
 ```text
-Admin UI / Employee Client (Flutter + Web)
+Admin Web + Admin Desktop (Flutter) / Employee Client (Flutter + Web)
               ↓ TLS
          Reverse Proxy
               ↓

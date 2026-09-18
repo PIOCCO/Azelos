@@ -10,7 +10,8 @@ Employees ask questions; the system retrieves **only authorized** document chunk
 cp .env.example .env
 docker compose up --build -d
 # API: http://localhost:8080/api/v1/health
-# Admin UI: http://localhost:5173
+# Admin web UI: http://localhost:5173
+# Admin desktop: see admin-app/README.md (Flutter)
 # Employee UI: http://localhost:5174
 ```
 
