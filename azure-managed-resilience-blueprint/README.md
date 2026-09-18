@@ -1,51 +1,70 @@
-# Azure Managed Resilience & FinOps Blueprint
+# Atlas Azure Resilience
 
-Standalone, production-oriented platform for **Azure Managed Infrastructure & Resilience** — multi-tenant discovery, backup/DR/security/cost monitoring, evidence-based recommendations, approval-gated actions, and monthly reports.
+**Atlas Azure Resilience** is a cloud operations platform for monitoring Azure infrastructure, resilience, security posture, disaster recovery readiness, and cloud spending from a single operational dashboard.
 
-Designed for ~**$200/month MVP** credit (scale-to-zero Container Apps, Burstable PostgreSQL). Works **without a custom domain** (`*.azurecontainerapps.io`).
+Built for managed service providers serving SMEs, startups, and teams without dedicated Azure platform engineers.
 
-## Quick start (local)
+## Problem it solves
+
+Continuously answers: *What is misconfigured, unprotected, insecure, or wasteful in this subscription — and what should we do about it?*
+
+Workflow:
+
+```text
+Detect → Explain → Recommend → Approve → Execute → Audit → Report
+```
+
+## Architecture
+
+```text
+React dashboard
+      │
+      ▼
+FastAPI management API  ←→  PostgreSQL
+      │
+      ▼
+Azure APIs (Resource Graph, Cost Management, …)
+      │
+Managed Identity (Azure deploy)
+```
+
+## Feature status
+
+| Capability | Status |
+|------------|--------|
+| Multi-tenant API + RBAC | Implemented |
+| Demo / simulated inventory (`DEMO_MODE`) | Implemented |
+| Live Resource Graph + Cost (partial) | Partial |
+| Backup / ASR / Defender live collectors | Planned |
+| Resilience score (transparent formula) | Implemented |
+| Sync runs + history | Implemented |
+| Alerts ACK / resolve | Implemented |
+| Branded PDF reports | Partial |
+| Microsoft Entra ID | Planned (production guard in place) |
+| Azure Container Apps deploy | Implemented |
+
+## Local setup
 
 ```bash
 cp .env.example .env
 docker compose up --build
 ```
 
-- Dashboard: http://localhost:5175  
+- UI: http://localhost:5175  
 - API: http://localhost:8090/api/v1/health  
-- Provider login: `provider@example.com` / `Provider123!`
+- Development operator: see `docs/DEPLOYMENT.md` (seeded credentials — **development only**)
 
-Run **discovery sync** from the sidebar to refresh demo inventory (VM-02 unprotected, VM-03 high CPU, cost anomaly).
-
-## Azure deploy
+## Azure deployment
 
 ```bash
 ./scripts/deploy.sh
 ```
 
-See `docs/DEPLOYMENT.md`, `docs/COST.md`, `docs/AZURE_PERMISSIONS.md`.
+Teardown (dev): `./scripts/destroy.sh`
 
 ## Documentation
 
-| Doc | Topic |
-|-----|--------|
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Components & data flow |
-| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Local & Azure |
-| [COST.md](docs/COST.md) | MVP cost & shutdown |
-| [AZURE_PERMISSIONS.md](docs/AZURE_PERMISSIONS.md) | RBAC for managed identity |
-| [LIGHTHOUSE.md](docs/LIGHTHOUSE.md) | Customer onboarding |
-| [SECURITY.md](docs/SECURITY.md) | Controls |
-| [OPERATIONS.md](docs/OPERATIONS.md) | Run sync, health |
-| [API.md](docs/API.md) | REST reference |
-| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues |
-| [SERVICE_MODEL.md](SERVICE_MODEL.md) | Commercial packaging |
-
-## Stack
-
-- **Backend**: Python FastAPI, PostgreSQL  
-- **Frontend**: React + TypeScript + Vite  
-- **IaC**: Terraform modules under `terraform/modules/`  
-- **Azure**: Container Apps, ACR, PostgreSQL Flexible, Monitor, App Insights, Budget  
+See `docs/` — start with [ARCHITECTURE.md](docs/ARCHITECTURE.md), [AUTHENTICATION.md](docs/AUTHENTICATION.md), [AZURE_INTEGRATIONS.md](docs/AZURE_INTEGRATIONS.md), [COST.md](docs/COST.md), [PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md).
 
 ## Tests
 
@@ -53,6 +72,12 @@ See `docs/DEPLOYMENT.md`, `docs/COST.md`, `docs/AZURE_PERMISSIONS.md`.
 PYTHONPATH=backend:. APP_ENV=test python -m pytest tests -q
 ```
 
-## Live Azure
+## Security model
 
-Set `AZURE_MOCK=false`, assign roles per `docs/AZURE_PERMISSIONS.md`, extend `azure/collectors/sync.py` (`_fetch_live`) with Resource Graph + Cost Management APIs.
+- Tenant isolation enforced server-side (`docs/MULTI_TENANCY.md`)
+- No automatic destructive Azure actions
+- Production startup rejects insecure defaults (`ENVIRONMENT=production`)
+
+## Cost model
+
+Platform hosting vs customer Azure spend — see [docs/COST.md](docs/COST.md).

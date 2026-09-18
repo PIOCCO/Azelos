@@ -33,8 +33,11 @@ def build_monthly_report_markdown(db: Session, tenant_id: str, tenant_name: str,
     recs = db.query(Recommendation).filter(Recommendation.tenant_id == tenant_id).count()
     savings = sum(r.estimated_savings_usd or 0 for r in db.query(Recommendation).filter(Recommendation.tenant_id == tenant_id))
 
+    from app.core.config import settings
+
     lines = [
-        "MONTHLY AZURE INFRASTRUCTURE REPORT",
+        settings.product_name.upper(),
+        "MONTHLY INFRASTRUCTURE REPORT",
         "",
         f"Customer: {tenant_name}",
         f"Period: {period}",

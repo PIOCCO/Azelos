@@ -6,4 +6,3 @@ __pycache__/
 frontend/node_modules/
 frontend/dist/
 terraform/**/.terraform/
-terraform/**/.terraform.lock.hcl

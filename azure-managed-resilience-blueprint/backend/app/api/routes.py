@@ -1,18 +1,20 @@
-from io import BytesIO
+from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, require_roles, resolve_tenant_id
 from app.api.schemas import LoginRequest, RecommendationOut, ResourceOut, TenantOut, TokenResponse
+from app.auth.base import get_auth_provider
 from app.core.config import settings
-from app.core.security import create_access_token, verify_password
-from app.db.session import get_db
+from app.core.constants import DEFAULT_TENANT_ID
+from app.core.exceptions import AppError
+from app.db.session import engine, get_db
 from app.models.entities import (
     Alert,
+    AlertStatus,
+    AuditAction,
     AuditLog,
     AzureResource,
     CostSnapshot,
@@ -20,30 +22,71 @@ from app.models.entities import (
     Recommendation,
     RecommendationStatus,
     SecurityFinding,
+    SyncRun,
     Tenant,
     User,
     UserRole,
 )
-from app.models.entities import AuditAction
 from app.services.audit import log_audit
 from app.services.reports import build_monthly_report_markdown, generate_monthly_report
-from app.services.sync_pipeline import run_full_sync
+from app.services.reports_pdf import build_branded_pdf
+from app.services.resilience_score import compute_resilience_score
+from app.services.sync_engine import run_full_sync, sync_status
 
 router = APIRouter()
 
 
+def _tid(user: User, tenant_id: str | None) -> str:
+    return resolve_tenant_id(user, tenant_id or user.tenant_id or DEFAULT_TENANT_ID)
+
+
+def _rid(request: Request) -> str | None:
+    return getattr(request.state, "request_id", None)
+
+
 @router.get("/health")
 def health():
-    return {"status": "ok", "env": settings.app_env, "azure_mock": settings.azure_mock}
+    return {"status": "ok", "product": settings.product_name}
+
+
+@router.get("/ready")
+def ready():
+    try:
+        with engine.connect() as conn:
+            conn.exec_driver_sql("SELECT 1")
+        return {"status": "ready"}
+    except Exception:  # noqa: BLE001
+        raise HTTPException(status_code=503, detail="Database unavailable")
+
+
+@router.get("/platform/meta")
+def platform_meta():
+    return {
+        "product_name": settings.product_name,
+        "demo_mode": settings.demo_mode,
+        "auth_mode": settings.auth_mode,
+        "environment": settings.environment,
+    }
 
 
 @router.post("/auth/login", response_model=TokenResponse)
-def login(body: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == body.email).first()
-    if not user or not verify_password(body.password, user.hashed_password):
+def login(body: LoginRequest, request: Request, db: Session = Depends(get_db)):
+    if settings.is_production and settings.auth_mode.lower() != "entra":
+        raise HTTPException(status_code=403, detail="Password login disabled in production.")
+    provider = get_auth_provider()
+    user = provider.authenticate(db, {"email": body.email, "password": body.password})
+    if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_access_token(user.id, {"role": user.role.value, "tenant_id": user.tenant_id})
-    log_audit(db, AuditAction.USER_LOGIN, tenant_id=user.tenant_id, user_id=user.id, detail=user.email)
+    token = provider.issue_token(user)
+    log_audit(
+        db,
+        AuditAction.USER_LOGIN,
+        tenant_id=user.tenant_id,
+        user_id=user.id,
+        request_id=_rid(request),
+        detail=user.email,
+        result="success",
+    )
     return TokenResponse(access_token=token, role=user.role, tenant_id=user.tenant_id)
 
 
@@ -61,15 +104,16 @@ def dashboard_overview(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    tid = resolve_tenant_id(user, tenant_id or (user.tenant_id if user.tenant_id else "tenant-demo"))
+    tid = _tid(user, tenant_id)
     resources = db.query(AzureResource).filter(AzureResource.tenant_id == tid).all()
     healthy = sum(1 for r in resources if r.health_status == "healthy")
     warning = sum(1 for r in resources if r.health_status == "warning")
     critical = sum(1 for r in resources if r.health_status == "critical")
-    protected = sum(1 for r in resources if r.backup_protected)
-    coverage = int(100 * protected / len(resources)) if resources else 0
+    vms = [r for r in resources if "virtualMachines" in r.resource_type]
+    protected = sum(1 for r in vms if r.backup_protected)
+    coverage = int(100 * protected / len(vms)) if vms else 0
     sec = db.query(SecurityFinding).filter(SecurityFinding.tenant_id == tid).all()
-    sec_counts = {}
+    sec_counts: dict[str, int] = {}
     for s in sec:
         sec_counts[s.severity] = sec_counts.get(s.severity, 0) + 1
     cost = (
@@ -80,8 +124,18 @@ def dashboard_overview(
     )
     savings = sum(
         r.estimated_savings_usd or 0
-        for r in db.query(Recommendation).filter(Recommendation.tenant_id == tid, Recommendation.status != RecommendationStatus.DISMISSED)
+        for r in db.query(Recommendation).filter(
+            Recommendation.tenant_id == tid, Recommendation.status != RecommendationStatus.DISMISSED
+        )
     )
+    dr = (
+        db.query(DrSnapshot).filter(DrSnapshot.tenant_id == tid).order_by(DrSnapshot.captured_at.desc()).first()
+    )
+    dr_ready = dr.healthy if dr else 0
+    resilience = compute_resilience_score(db, tid)
+    sync = sync_status(db, tid)
+    budget = cost.budget_usd if cost and cost.budget_usd else settings.budget_usd
+    spend = cost.amount_usd if cost else 0
     return {
         "tenant_id": tid,
         "resources_total": len(resources),
@@ -89,16 +143,18 @@ def dashboard_overview(
         "warnings": warning,
         "critical": critical,
         "backup_coverage_pct": coverage,
+        "dr_readiness": dr_ready,
         "security_findings": sec_counts,
-        "monthly_cost_usd": cost.amount_usd if cost else None,
+        "monthly_cost_usd": spend,
         "forecast_usd": cost.forecast_usd if cost else None,
-        "budget_usd": cost.budget_usd if cost else settings.budget_usd,
+        "budget_usd": budget,
+        "budget_utilization_pct": round(100 * spend / budget, 1) if budget else None,
         "potential_savings_usd": savings,
-        "budget_thresholds": {
-            "budget": settings.budget_usd,
-            "warn": settings.budget_warn_usd,
-            "critical": settings.budget_critical_usd,
-            "emergency": settings.budget_emergency_usd,
+        "resilience": resilience,
+        "sync": sync,
+        "operational_issues": {
+            "critical_alerts": resilience["open_critical_alerts"],
+            "backup_gaps": len(vms) - protected,
         },
     }
 
@@ -106,21 +162,63 @@ def dashboard_overview(
 @router.get("/resources", response_model=list[ResourceOut])
 def list_resources(
     tenant_id: str | None = Query(None),
+    search: str | None = Query(None),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    tid = resolve_tenant_id(user, tenant_id or user.tenant_id or "tenant-demo")
-    return db.query(AzureResource).filter(AzureResource.tenant_id == tid).order_by(AzureResource.name).all()
+    tid = _tid(user, tenant_id)
+    q = db.query(AzureResource).filter(AzureResource.tenant_id == tid)
+    if search:
+        q = q.filter(AzureResource.name.ilike(f"%{search}%"))
+    return q.order_by(AzureResource.name).all()
 
 
 @router.post("/sync")
 def trigger_sync(
+    request: Request,
     tenant_id: str | None = Query(None),
     user: User = Depends(require_roles(UserRole.PROVIDER_ADMIN, UserRole.OPERATOR, UserRole.CUSTOMER_ADMIN)),
     db: Session = Depends(get_db),
 ):
-    tid = resolve_tenant_id(user, tenant_id or user.tenant_id or "tenant-demo")
-    return run_full_sync(db, tid, user.id)
+    tid = _tid(user, tenant_id)
+    try:
+        return run_full_sync(db, tid, user_id=user.id, request_id=_rid(request))
+    except AppError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/sync/status")
+def get_sync_status(
+    tenant_id: str | None = Query(None),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return sync_status(db, _tid(user, tenant_id))
+
+
+@router.get("/sync/history")
+def sync_history(
+    tenant_id: str | None = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    tid = _tid(user, tenant_id)
+    rows = (
+        db.query(SyncRun).filter(SyncRun.tenant_id == tid).order_by(SyncRun.started_at.desc()).limit(limit).all()
+    )
+    return [
+        {
+            "id": r.id,
+            "status": r.status.value,
+            "started_at": r.started_at.isoformat(),
+            "completed_at": r.completed_at.isoformat() if r.completed_at else None,
+            "resources_discovered": r.resources_discovered,
+            "findings_generated": r.findings_generated,
+            "error_count": r.error_count,
+        }
+        for r in rows
+    ]
 
 
 @router.get("/backups")
@@ -129,7 +227,7 @@ def backup_status(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    tid = resolve_tenant_id(user, tenant_id or user.tenant_id or "tenant-demo")
+    tid = _tid(user, tenant_id)
     resources = db.query(AzureResource).filter(AzureResource.tenant_id == tid).all()
     vms = [r for r in resources if "virtualMachines" in r.resource_type]
     protected = sum(1 for r in vms if r.backup_protected)
@@ -148,7 +246,7 @@ def dr_status(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    tid = resolve_tenant_id(user, tenant_id or user.tenant_id or "tenant-demo")
+    tid = _tid(user, tenant_id)
     dr = (
         db.query(DrSnapshot).filter(DrSnapshot.tenant_id == tid).order_by(DrSnapshot.captured_at.desc()).first()
     )
@@ -169,7 +267,7 @@ def security_summary(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    tid = resolve_tenant_id(user, tenant_id or user.tenant_id or "tenant-demo")
+    tid = _tid(user, tenant_id)
     findings = db.query(SecurityFinding).filter(SecurityFinding.tenant_id == tid).all()
     return {"findings": [{"severity": f.severity, "title": f.title, "evidence": f.evidence} for f in findings]}
 
@@ -180,7 +278,7 @@ def costs(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    tid = resolve_tenant_id(user, tenant_id or user.tenant_id or "tenant-demo")
+    tid = _tid(user, tenant_id)
     snap = (
         db.query(CostSnapshot)
         .filter(CostSnapshot.tenant_id == tid)
@@ -192,23 +290,103 @@ def costs(
         for r in db.query(AzureResource).filter(AzureResource.tenant_id == tid).all()
         if r.monthly_cost_usd
     ]
+    budget = snap.budget_usd if snap and snap.budget_usd else settings.budget_usd
+    current = snap.amount_usd if snap else 0
     return {
-        "current_month_usd": snap.amount_usd if snap else 0,
+        "current_month_usd": current,
         "forecast_usd": snap.forecast_usd if snap else None,
-        "budget_usd": snap.budget_usd if snap else settings.budget_usd,
-        "by_resource": by_resource,
+        "budget_usd": budget,
+        "budget_utilization_pct": round(100 * current / budget, 1) if budget else None,
+        "by_resource": sorted(by_resource, key=lambda x: x["monthly_cost_usd"] or 0, reverse=True),
     }
 
 
 @router.get("/alerts")
-def alerts(
+def list_alerts(
     tenant_id: str | None = Query(None),
+    status: str | None = Query(None),
+    severity: str | None = Query(None),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    tid = resolve_tenant_id(user, tenant_id or user.tenant_id or "tenant-demo")
-    rows = db.query(Alert).filter(Alert.tenant_id == tid, Alert.active.is_(True)).order_by(Alert.severity).all()
-    return [{"id": a.id, "severity": a.severity.value, "title": a.title, "message": a.message} for a in rows]
+    tid = _tid(user, tenant_id)
+    q = db.query(Alert).filter(Alert.tenant_id == tid)
+    if status:
+        q = q.filter(Alert.status == AlertStatus(status))
+    else:
+        q = q.filter(Alert.status != AlertStatus.RESOLVED)
+    if severity:
+        q = q.filter(Alert.severity == severity)
+    rows = q.order_by(Alert.detected_at.desc()).all()
+    return [
+        {
+            "id": a.id,
+            "severity": a.severity.value,
+            "category": a.category.value,
+            "status": a.status.value,
+            "title": a.title,
+            "message": a.message,
+            "evidence": a.evidence,
+            "resource_id": a.resource_id,
+            "detected_at": a.detected_at.isoformat(),
+            "acknowledged_at": a.acknowledged_at.isoformat() if a.acknowledged_at else None,
+            "resolved_at": a.resolved_at.isoformat() if a.resolved_at else None,
+        }
+        for a in rows
+    ]
+
+
+@router.post("/alerts/{alert_id}/acknowledge")
+def acknowledge_alert(
+    alert_id: str,
+    request: Request,
+    user: User = Depends(require_roles(UserRole.PROVIDER_ADMIN, UserRole.OPERATOR, UserRole.CUSTOMER_ADMIN)),
+    db: Session = Depends(get_db),
+):
+    alert = db.get(Alert, alert_id)
+    if not alert:
+        raise HTTPException(404, "Not found")
+    resolve_tenant_id(user, alert.tenant_id)
+    alert.status = AlertStatus.ACKNOWLEDGED
+    alert.acknowledged_at = datetime.now(timezone.utc)
+    db.commit()
+    log_audit(
+        db,
+        AuditAction.ALERT_ACKNOWLEDGED,
+        tenant_id=alert.tenant_id,
+        user_id=user.id,
+        request_id=_rid(request),
+        resource_id=alert.resource_id,
+        new_state=alert.status.value,
+    )
+    return {"status": alert.status.value}
+
+
+@router.post("/alerts/{alert_id}/resolve")
+def resolve_alert(
+    alert_id: str,
+    request: Request,
+    user: User = Depends(require_roles(UserRole.PROVIDER_ADMIN, UserRole.OPERATOR, UserRole.CUSTOMER_ADMIN)),
+    db: Session = Depends(get_db),
+):
+    alert = db.get(Alert, alert_id)
+    if not alert:
+        raise HTTPException(404, "Not found")
+    resolve_tenant_id(user, alert.tenant_id)
+    alert.status = AlertStatus.RESOLVED
+    alert.active = False
+    alert.resolved_at = datetime.now(timezone.utc)
+    db.commit()
+    log_audit(
+        db,
+        AuditAction.ALERT_RESOLVED,
+        tenant_id=alert.tenant_id,
+        user_id=user.id,
+        request_id=_rid(request),
+        resource_id=alert.resource_id,
+        new_state=alert.status.value,
+    )
+    return {"status": alert.status.value}
 
 
 @router.get("/recommendations", response_model=list[RecommendationOut])
@@ -217,13 +395,14 @@ def recommendations(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    tid = resolve_tenant_id(user, tenant_id or user.tenant_id or "tenant-demo")
+    tid = _tid(user, tenant_id)
     return db.query(Recommendation).filter(Recommendation.tenant_id == tid).order_by(Recommendation.priority).all()
 
 
 @router.post("/recommendations/{rec_id}/approve")
 def approve_recommendation(
     rec_id: str,
+    request: Request,
     user: User = Depends(require_roles(UserRole.PROVIDER_ADMIN, UserRole.CUSTOMER_ADMIN, UserRole.OPERATOR)),
     db: Session = Depends(get_db),
 ):
@@ -231,6 +410,7 @@ def approve_recommendation(
     if not rec:
         raise HTTPException(404, "Not found")
     resolve_tenant_id(user, rec.tenant_id)
+    prev = rec.status.value
     rec.status = RecommendationStatus.APPROVED
     db.commit()
     log_audit(
@@ -238,6 +418,10 @@ def approve_recommendation(
         AuditAction.RECOMMENDATION_APPROVED,
         tenant_id=rec.tenant_id,
         user_id=user.id,
+        request_id=_rid(request),
+        resource_id=rec.resource_id,
+        previous_state=prev,
+        new_state=rec.status.value,
         detail=rec.title,
     )
     return {"status": rec.status}
@@ -246,6 +430,7 @@ def approve_recommendation(
 @router.post("/recommendations/{rec_id}/execute")
 def execute_recommendation(
     rec_id: str,
+    request: Request,
     user: User = Depends(require_roles(UserRole.PROVIDER_ADMIN, UserRole.CUSTOMER_ADMIN, UserRole.OPERATOR)),
     db: Session = Depends(get_db),
 ):
@@ -255,6 +440,7 @@ def execute_recommendation(
     resolve_tenant_id(user, rec.tenant_id)
     if rec.status != RecommendationStatus.APPROVED:
         raise HTTPException(400, "Recommendation must be approved before execution")
+    prev = rec.status.value
     rec.status = RecommendationStatus.EXECUTED
     db.commit()
     log_audit(
@@ -262,36 +448,56 @@ def execute_recommendation(
         AuditAction.ACTION_EXECUTED,
         tenant_id=rec.tenant_id,
         user_id=user.id,
-        detail=f"{rec.title} | simulated runbook queued (no automatic production changes)",
+        request_id=_rid(request),
+        resource_id=rec.resource_id,
+        previous_state=prev,
+        new_state=rec.status.value,
+        result="recorded",
+        detail=f"{rec.title} — runbook queued (no automatic production changes)",
     )
     return {"status": rec.status, "message": "Action recorded; execute via approved Azure runbook in production."}
 
 
 @router.get("/reports/monthly")
 def monthly_report(
+    request: Request,
     tenant_id: str | None = Query(None),
     format: str = Query("json"),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    tid = resolve_tenant_id(user, tenant_id or user.tenant_id or "tenant-demo")
+    tid = _tid(user, tenant_id)
     tenant = db.get(Tenant, tid)
     name = tenant.name if tenant else tid
     if format == "markdown":
         return {"markdown": build_monthly_report_markdown(db, tid, name)}
     report = generate_monthly_report(db, tid, name)
-    log_audit(db, AuditAction.REPORT_GENERATED, tenant_id=tid, user_id=user.id, detail=report.period)
+    log_audit(
+        db,
+        AuditAction.REPORT_GENERATED,
+        tenant_id=tid,
+        user_id=user.id,
+        request_id=_rid(request) if request else None,
+        detail=report.period,
+    )
     if format == "pdf":
-        buf = BytesIO()
-        c = canvas.Canvas(buf, pagesize=letter)
-        text = c.beginText(40, 750)
-        for line in report.body_markdown.split("\n")[:45]:
-            text.textLine(line[:100])
-        c.drawText(text)
-        c.showPage()
-        c.save()
-        buf.seek(0)
-        return StreamingResponse(buf, media_type="application/pdf", headers={"Content-Disposition": "attachment; filename=monthly-report.pdf"})
+        sections = [
+            ("Executive Summary", report.body_markdown.split("\n")[0:8]),
+            ("Infrastructure Overview", report.body_markdown.split("\n")[8:16]),
+            ("Outstanding Risks", report.body_markdown.split("\n")[16:]),
+        ]
+        pdf = build_branded_pdf(
+            title=settings.product_name,
+            customer=name,
+            period=report.period,
+            report_id=report.id,
+            sections=sections,
+        )
+        return StreamingResponse(
+            iter([pdf]),
+            media_type="application/pdf",
+            headers={"Content-Disposition": "attachment; filename=atlas-monthly-report.pdf"},
+        )
     return {"id": report.id, "period": report.period, "markdown": report.body_markdown}
 
 
@@ -301,9 +507,19 @@ def audit_logs(
     user: User = Depends(require_roles(UserRole.PROVIDER_ADMIN, UserRole.OPERATOR, UserRole.CUSTOMER_ADMIN)),
     db: Session = Depends(get_db),
 ):
-    tid = resolve_tenant_id(user, tenant_id or user.tenant_id or "tenant-demo")
+    tid = _tid(user, tenant_id)
     logs = db.query(AuditLog).filter(AuditLog.tenant_id == tid).order_by(AuditLog.created_at.desc()).limit(100)
     return [
-        {"action": l.action.value, "detail": l.detail, "user_id": l.user_id, "created_at": l.created_at.isoformat()}
+        {
+            "action": l.action.value,
+            "detail": l.detail,
+            "user_id": l.user_id,
+            "request_id": l.request_id,
+            "resource_id": l.resource_id,
+            "previous_state": l.previous_state,
+            "new_state": l.new_state,
+            "result": l.result,
+            "created_at": l.created_at.isoformat(),
+        }
         for l in logs
     ]

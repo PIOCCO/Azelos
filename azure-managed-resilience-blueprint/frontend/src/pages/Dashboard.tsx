@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { useApp } from "../context/AppContext";
+import { ErrorState, LoadingState } from "../components/UiStates";
+import { PageHeader } from "../components/PageHeader";
 
 type Overview = {
   resources_total: number;
@@ -7,58 +10,88 @@ type Overview = {
   warnings: number;
   critical: number;
   backup_coverage_pct: number;
+  dr_readiness: number;
   security_findings: Record<string, number>;
   monthly_cost_usd: number | null;
   potential_savings_usd: number;
   forecast_usd: number | null;
   budget_usd: number;
+  budget_utilization_pct: number | null;
+  resilience: { score: number; factors: Record<string, number>; weights: Record<string, number> };
+  sync: { last_status: string | null; last_duration_seconds: number | null; last_completed_at: string | null };
+  operational_issues: { critical_alerts: number; backup_gaps: number };
 };
 
-export default function Dashboard({ tenant }: { tenant: string }) {
+export default function Dashboard() {
+  const { session } = useApp();
   const [data, setData] = useState<Overview | null>(null);
-  useEffect(() => {
-    api<Overview>(`/dashboard/overview?tenant_id=${tenant}`).then(setData);
-  }, [tenant]);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!data) return <p>Loading…</p>;
+  const load = () => {
+    setError(null);
+    api<Overview>(`/dashboard/overview?tenant_id=${session.tenantId}`)
+      .then(setData)
+      .catch((e) => setError(e.message));
+  };
+
+  useEffect(load, [session.tenantId]);
+
+  if (error) return <ErrorState message={error} onRetry={load} />;
+  if (!data) return <LoadingState />;
 
   return (
     <>
-      <h2>Azure Environment</h2>
+      <PageHeader title="Operations overview" breadcrumb="Overview" />
       <div className="grid">
-        <div className="card stat">
-          <span className="muted">Resources</span>
-          <strong>{data.resources_total}</strong>
+        {[
+          ["Resources", data.resources_total],
+          ["Healthy", data.healthy],
+          ["Warnings", data.warnings],
+          ["Critical", data.critical],
+          ["Backup coverage", `${data.backup_coverage_pct}%`],
+          ["DR readiness", data.dr_readiness],
+          ["Monthly cost", `$${data.monthly_cost_usd ?? 0}`],
+          ["Potential savings", `$${data.potential_savings_usd}/mo`],
+        ].map(([label, val]) => (
+          <div key={String(label)} className="card stat">
+            <span className="muted">{label}</span>
+            <strong>{val}</strong>
+          </div>
+        ))}
+      </div>
+
+      <div className="card">
+        <h3>Resilience score: {data.resilience.score}/100</h3>
+        <ul className="factor-list">
+          {Object.entries(data.resilience.factors).map(([k, v]) => (
+            <li key={k}>
+              {k.replaceAll("_", " ")} — {v}% (weight {data.resilience.weights[k]})
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="grid two">
+        <div className="card">
+          <h3>Operational health</h3>
+          <p>Critical alerts: {data.operational_issues.critical_alerts}</p>
+          <p>Backup gaps: {data.operational_issues.backup_gaps}</p>
+          <p>Security findings: {JSON.stringify(data.security_findings)}</p>
         </div>
-        <div className="card stat">
-          <span className="muted">Healthy</span>
-          <strong className="ok">{data.healthy}</strong>
-        </div>
-        <div className="card stat">
-          <span className="muted">Warnings</span>
-          <strong className="warn">{data.warnings}</strong>
-        </div>
-        <div className="card stat">
-          <span className="muted">Critical</span>
-          <strong className="bad">{data.critical}</strong>
-        </div>
-        <div className="card stat">
-          <span className="muted">Backup coverage</span>
-          <strong>{data.backup_coverage_pct}%</strong>
-        </div>
-        <div className="card stat">
-          <span className="muted">Monthly cost</span>
-          <strong>${data.monthly_cost_usd ?? 0}</strong>
-        </div>
-        <div className="card stat">
-          <span className="muted">Potential savings</span>
-          <strong>${data.potential_savings_usd}/mo</strong>
+        <div className="card">
+          <h3>FinOps snapshot</h3>
+          <p>
+            Spend ${data.monthly_cost_usd ?? 0} · Forecast ${data.forecast_usd ?? "—"} · Budget ${data.budget_usd}
+          </p>
+          <p>Utilization: {data.budget_utilization_pct ?? "—"}%</p>
         </div>
       </div>
+
       <div className="card">
-        <h3>Security findings</h3>
-        <pre>{JSON.stringify(data.security_findings, null, 2)}</pre>
-        <p className="muted">Forecast ${data.forecast_usd ?? "n/a"} · Budget ${data.budget_usd}</p>
+        <h3>Synchronization</h3>
+        <p>Last status: {data.sync.last_status ?? "Never"}</p>
+        <p>Last completed: {data.sync.last_completed_at ?? "—"}</p>
+        <p>Duration: {data.sync.last_duration_seconds ?? "—"}s</p>
       </div>
     </>
   );

@@ -1,16 +1,27 @@
-# Cost guide (~$200 MVP credit)
+# Cost model
 
-| Resource | SKU (default) | Est. monthly | Reduce cost | Shut down |
-|----------|---------------|-------------|-------------|-----------|
-| Container Apps (API + UI) | 0.25 vCPU, min 0 replicas | ~$5–20 | `min_replicas = 0` | Stop revisions / destroy env |
-| PostgreSQL Flexible | B_Standard_B1ms | ~$25–35 | Burstable B1ms, 32GB storage | `terraform destroy` |
-| ACR Basic | Basic | ~$5 | Single repo tags | Delete registry |
-| Log Analytics | Pay-as-you-go, 30d retention | ~$5–15 | Lower retention, sampling | Disable App Insights |
-| Storage (reports) | LRS Standard | ~$1–3 | Lifecycle rules | Delete account |
-| Key Vault | Standard | ~$1 | Few secrets | Delete vault |
+## 1. Development platform (~$200 credit)
 
-**Budget safeguards** (Terraform `monitoring` module): subscription budget at **$200** with email alerts at 50%, 75%, 90%. Application env vars mirror thresholds (`BUDGET_*`).
+| Resource | Est. monthly | Reduce |
+|----------|-------------|--------|
+| Container Apps (min 0) | $5–20 | Scale to zero |
+| PostgreSQL B1ms | $25–35 | Destroy when idle |
+| ACR Basic | ~$5 | — |
+| Log Analytics | $5–15 | 30d retention |
+| Key Vault / Storage | ~$2 | — |
 
-**Do not** run AKS, large VMs, or Premium PostgreSQL in the MVP stack.
+Subscription budget alerts at 50/75/90% of $200.
 
-**Optional demo customer resources** (2–3 small VMs) are documented in `terraform/demo-environment/` — deploy only when validating live discovery; keep stopped when idle.
+## 2. Production platform (operator cost)
+
+Same components at slightly higher utilization — still no AKS/GPU. Expect roughly **$80–150/month** per operator environment at small scale.
+
+## 3. Customer Azure consumption
+
+Monitored spend inside customer subscriptions is **their** bill — shown in FinOps dashboards, not mixed with platform hosting cost.
+
+## Safeguards
+
+- `BUDGET_*` env thresholds for in-app warnings
+- Optional demo VM environment — deallocate when not testing live discovery
+- `scripts/destroy.sh` for dev teardown (type `destroy` to confirm)

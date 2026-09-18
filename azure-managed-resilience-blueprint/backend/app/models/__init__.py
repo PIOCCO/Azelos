@@ -7,6 +7,7 @@ from app.models.entities import (  # noqa: F401
     Recommendation,
     RecoveryObjective,
     SecurityFinding,
+    SyncRun,
     Tenant,
     User,
 )

@@ -18,9 +18,11 @@ services:
       dockerfile: docker/Dockerfile.api
     environment:
       DATABASE_URL: postgresql+psycopg://amrf:amrf@postgres:5432/amrf
-      AZURE_MOCK: "true"
+      DEMO_MODE: "true"
+      ENVIRONMENT: development
+      AUTH_MODE: jwt
       APP_ENV: dev
-      JWT_SECRET: dev-secret
+      JWT_SECRET: dev-secret-change-me
     ports:
       - "8090:8090"
     depends_on:

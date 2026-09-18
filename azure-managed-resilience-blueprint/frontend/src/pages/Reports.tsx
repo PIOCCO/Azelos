@@ -1,29 +1,33 @@
 import { useState } from "react";
-import { api } from "../api";
+import { api, getToken } from "../api";
+import { useApp } from "../context/AppContext";
+import { PageHeader } from "../components/PageHeader";
 
-export default function Reports({ tenant }: { tenant: string }) {
+export default function Reports() {
+  const { session } = useApp();
   const [md, setMd] = useState("");
 
   const generate = async () => {
-    const data = await api<{ markdown: string }>(`/reports/monthly?tenant_id=${tenant}&format=json`);
+    const data = await api<{ markdown: string }>(`/reports/monthly?tenant_id=${session.tenantId}`);
     setMd(data.markdown);
   };
 
   const pdf = () => {
-    window.open(`/api/v1/reports/monthly?tenant_id=${tenant}&format=pdf`, "_blank");
+    const base = import.meta.env.VITE_API_BASE || "/api/v1";
+    window.open(`${base}/reports/monthly?tenant_id=${session.tenantId}&format=pdf`, "_blank");
   };
 
   return (
     <>
-      <h2>Monthly report</h2>
+      <PageHeader title="Reports" breadcrumb="Operations / Reports" />
       <button type="button" onClick={generate}>
-        Generate report
+        Generate monthly report
       </button>{" "}
-      <button type="button" onClick={pdf}>
+      <button type="button" onClick={pdf} disabled={!getToken()}>
         Export PDF
       </button>
       {md && (
-        <pre className="card" style={{ whiteSpace: "pre-wrap" }}>
+        <pre className="card report-body" style={{ whiteSpace: "pre-wrap" }}>
           {md}
         </pre>
       )}

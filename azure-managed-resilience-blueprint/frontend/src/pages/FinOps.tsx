@@ -1,20 +1,24 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { useApp } from "../context/AppContext";
+import { PageHeader } from "../components/PageHeader";
 
-export default function FinOps({ tenant }: { tenant: string }) {
+export default function FinOps() {
+  const { session } = useApp();
   const [costs, setCosts] = useState<{
     current_month_usd: number;
     forecast_usd: number | null;
     budget_usd: number;
+    budget_utilization_pct: number | null;
     by_resource: { name: string; monthly_cost_usd: number }[];
   } | null>(null);
   useEffect(() => {
-    api(`/costs?tenant_id=${tenant}`).then(setCosts);
-  }, [tenant]);
+    api(`/costs?tenant_id=${session.tenantId}`).then(setCosts);
+  }, [session.tenantId]);
   if (!costs) return null;
   return (
     <>
-      <h2>FinOps</h2>
+      <PageHeader title="FinOps" breadcrumb="FinOps" />
       <div className="grid">
         <div className="card stat">
           Current month<strong>${costs.current_month_usd}</strong>
@@ -23,7 +27,7 @@ export default function FinOps({ tenant }: { tenant: string }) {
           Forecast<strong>${costs.forecast_usd ?? 0}</strong>
         </div>
         <div className="card stat">
-          Budget<strong>${costs.budget_usd}</strong>
+          Budget utilization<strong>{costs.budget_utilization_pct ?? 0}%</strong>
         </div>
       </div>
       <table>

@@ -30,6 +30,8 @@ class RecommendationStatus(str, enum.Enum):
 
 class AuditAction(str, enum.Enum):
     USER_LOGIN = "USER_LOGIN"
+    SYNC_STARTED = "SYNC_STARTED"
+    SYNC_COMPLETED = "SYNC_COMPLETED"
     RESOURCE_DISCOVERED = "RESOURCE_DISCOVERED"
     BACKUP_CHECK = "BACKUP_CHECK"
     DR_CHECK = "DR_CHECK"
@@ -38,7 +40,42 @@ class AuditAction(str, enum.Enum):
     RECOMMENDATION_CREATED = "RECOMMENDATION_CREATED"
     RECOMMENDATION_APPROVED = "RECOMMENDATION_APPROVED"
     ACTION_EXECUTED = "ACTION_EXECUTED"
+    ALERT_ACKNOWLEDGED = "ALERT_ACKNOWLEDGED"
+    ALERT_RESOLVED = "ALERT_RESOLVED"
     REPORT_GENERATED = "REPORT_GENERATED"
+    CONFIGURATION_CHANGED = "CONFIGURATION_CHANGED"
+
+
+class AlertStatus(str, enum.Enum):
+    OPEN = "OPEN"
+    ACKNOWLEDGED = "ACKNOWLEDGED"
+    RESOLVED = "RESOLVED"
+
+
+class AlertCategory(str, enum.Enum):
+    BACKUP = "BACKUP"
+    DR = "DR"
+    SECURITY = "SECURITY"
+    COST = "COST"
+    HEALTH = "HEALTH"
+    OPERATIONS = "OPERATIONS"
+
+
+class SyncStatus(str, enum.Enum):
+    QUEUED = "QUEUED"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    PARTIAL = "PARTIAL"
+    FAILED = "FAILED"
+
+
+class RecommendationCategory(str, enum.Enum):
+    BACKUP = "BACKUP"
+    DR = "DR"
+    SECURITY = "SECURITY"
+    FINOPS = "FINOPS"
+    HEALTH = "HEALTH"
+    OPERATIONS = "OPERATIONS"
 
 
 class Tenant(Base):
@@ -88,25 +125,40 @@ class Recommendation(Base):
     __tablename__ = "recommendations"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     tenant_id: Mapped[str] = mapped_column(String(64), index=True)
-    resource_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    resource_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    category: Mapped[RecommendationCategory] = mapped_column(
+        Enum(RecommendationCategory), default=RecommendationCategory.OPERATIONS
+    )
     title: Mapped[str] = mapped_column(String(512))
     problem: Mapped[str] = mapped_column(Text)
     evidence: Mapped[str] = mapped_column(Text)
     suggested_action: Mapped[str] = mapped_column(Text)
+    expected_benefit: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rollback_info: Mapped[str | None] = mapped_column(Text, nullable=True)
     estimated_savings_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
-    priority: Mapped[str] = mapped_column(String(16))
+    priority: Mapped[str] = mapped_column(String(16), index=True)
     risk: Mapped[str] = mapped_column(String(32))
-    status: Mapped[RecommendationStatus] = mapped_column(Enum(RecommendationStatus), default=RecommendationStatus.OPEN)
+    status: Mapped[RecommendationStatus] = mapped_column(
+        Enum(RecommendationStatus), default=RecommendationStatus.OPEN, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
 
 
 class Alert(Base):
     __tablename__ = "alerts"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     tenant_id: Mapped[str] = mapped_column(String(64), index=True)
-    severity: Mapped[AlertSeverity] = mapped_column(Enum(AlertSeverity))
+    severity: Mapped[AlertSeverity] = mapped_column(Enum(AlertSeverity), index=True)
+    category: Mapped[AlertCategory] = mapped_column(Enum(AlertCategory), default=AlertCategory.OPERATIONS)
+    resource_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     title: Mapped[str] = mapped_column(String(512))
     message: Mapped[str] = mapped_column(Text)
+    evidence: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[AlertStatus] = mapped_column(Enum(AlertStatus), default=AlertStatus.OPEN, index=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    detected_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
 class CostSnapshot(Base):
@@ -123,11 +175,31 @@ class CostSnapshot(Base):
 class AuditLog(Base):
     __tablename__ = "audit_logs"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    tenant_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    tenant_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     user_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
-    action: Mapped[AuditAction] = mapped_column(Enum(AuditAction))
+    request_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    action: Mapped[AuditAction] = mapped_column(Enum(AuditAction), index=True)
+    resource_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    previous_state: Mapped[str | None] = mapped_column(Text, nullable=True)
+    new_state: Mapped[str | None] = mapped_column(Text, nullable=True)
+    result: Mapped[str | None] = mapped_column(String(64), nullable=True)
     detail: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
+class SyncRun(Base):
+    __tablename__ = "sync_runs"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id: Mapped[str] = mapped_column(String(64), index=True)
+    status: Mapped[SyncStatus] = mapped_column(Enum(SyncStatus), default=SyncStatus.QUEUED, index=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    resources_discovered: Mapped[int] = mapped_column(Integer, default=0)
+    findings_generated: Mapped[int] = mapped_column(Integer, default=0)
+    error_count: Mapped[int] = mapped_column(Integer, default=0)
+    warning_count: Mapped[int] = mapped_column(Integer, default=0)
+    errors: Mapped[str | None] = mapped_column(Text, nullable=True)
+    warnings: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class RecoveryObjective(Base):

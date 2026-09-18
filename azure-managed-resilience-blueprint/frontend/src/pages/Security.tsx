@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { useApp } from "../context/AppContext";
+import { PageHeader } from "../components/PageHeader";
 
-export default function Security({ tenant }: { tenant: string }) {
+export default function Security() {
+  const { session } = useApp();
   const [findings, setFindings] = useState<{ severity: string; title: string; evidence: string }[]>([]);
   useEffect(() => {
-    api<{ findings: typeof findings }>(`/security?tenant_id=${tenant}`).then((d) => setFindings(d.findings));
-  }, [tenant]);
+    api<{ findings: typeof findings }>(`/security?tenant_id=${session.tenantId}`).then((d) => setFindings(d.findings));
+  }, [session.tenantId]);
   return (
     <>
-      <h2>Security posture</h2>
+      <PageHeader title="Security posture" breadcrumb="Security" />
       <ul>
         {findings.map((f, i) => (
           <li key={i}>

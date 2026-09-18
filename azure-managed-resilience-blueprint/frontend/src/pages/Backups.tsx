@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { useApp } from "../context/AppContext";
+import { PageHeader } from "../components/PageHeader";
 
-export default function Backups({ tenant }: { tenant: string }) {
-  const [data, setData] = useState<{ coverage_pct: number; items: { name: string; protected: boolean }[] } | null>(null);
+export default function Backups() {
+  const { session } = useApp();
+  const [data, setData] = useState<{ coverage_pct: number; items: { name: string; protected: boolean }[] } | null>(
+    null,
+  );
   useEffect(() => {
-    api(`/backups?tenant_id=${tenant}`).then(setData);
-  }, [tenant]);
+    api(`/backups?tenant_id=${session.tenantId}`).then(setData);
+  }, [session.tenantId]);
   if (!data) return null;
   return (
     <>
-      <h2>Backup coverage: {data.coverage_pct}%</h2>
+      <PageHeader title="Backup protection" breadcrumb="Resilience / Backups" />
+      <p className="muted">Coverage: {data.coverage_pct}%</p>
       <table>
         <tbody>
           {data.items.map((i) => (

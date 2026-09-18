@@ -32,6 +32,49 @@ aside a {
 aside a:hover {
   color: #fff;
 }
+aside a.active {
+  color: #fff;
+  font-weight: 600;
+}
+.demo-badge {
+  background: #422006;
+  color: #fcd34d;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+.tenant-select {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+}
+.tenant-select select {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+.page-header h2 {
+  margin: 0 0 1rem;
+}
+.breadcrumb {
+  margin: 0 0 0.25rem;
+  font-size: 0.8rem;
+}
+.state-box {
+  padding: 1rem;
+  background: #1e293b;
+  border-radius: 8px;
+}
+.grid.two {
+  grid-template-columns: 1fr 1fr;
+}
+.factor-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+}
+.small {
+  font-size: 0.8rem;
+}
 main {
   padding: 1.5rem;
 }

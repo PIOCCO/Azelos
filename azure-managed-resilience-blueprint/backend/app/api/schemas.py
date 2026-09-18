@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 
-from app.models.entities import AlertSeverity, RecommendationStatus, UserRole
+from app.models.entities import AlertCategory, RecommendationCategory, RecommendationStatus, UserRole
 
 
 class LoginRequest(BaseModel):
@@ -20,8 +20,7 @@ class TenantOut(BaseModel):
     name: str
     azure_subscription_id: str | None
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class ResourceOut(BaseModel):
@@ -33,20 +32,21 @@ class ResourceOut(BaseModel):
     backup_protected: bool | None
     monthly_cost_usd: float | None
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class RecommendationOut(BaseModel):
     id: str
     title: str
+    category: RecommendationCategory
     problem: str
     evidence: str
     suggested_action: str
+    expected_benefit: str | None
+    rollback_info: str | None
     estimated_savings_usd: float | None
     priority: str
     risk: str
     status: RecommendationStatus
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}

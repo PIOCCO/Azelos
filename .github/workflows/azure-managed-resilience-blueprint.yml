@@ -26,18 +26,22 @@ jobs:
       - name: Install backend deps
         run: pip install -r backend/requirements.txt
 
+      - name: Ruff lint
+        run: ruff check backend azure --ignore E402
+
       - name: Unit tests
         env:
           PYTHONPATH: ${{ github.workspace }}/azure-managed-resilience-blueprint/backend:${{ github.workspace }}/azure-managed-resilience-blueprint
           APP_ENV: test
-          AZURE_MOCK: "true"
+          DEMO_MODE: "true"
         run: python -m pytest tests -q
 
       - uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform validate
+      - name: Terraform fmt & validate
         working-directory: azure-managed-resilience-blueprint/terraform/environments/dev
         run: |
+          terraform fmt -check -recursive ../..
           terraform init -backend=false
           terraform validate
 

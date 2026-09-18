@@ -1,43 +1,54 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { useApp } from "../context/AppContext";
+import { PageHeader } from "../components/PageHeader";
 
 type Rec = {
   id: string;
   title: string;
+  category: string;
   problem: string;
   evidence: string;
   suggested_action: string;
+  expected_benefit: string | null;
+  rollback_info: string | null;
   estimated_savings_usd: number | null;
   priority: string;
   status: string;
 };
 
-export default function Recommendations({ tenant }: { tenant: string }) {
+export default function Recommendations() {
+  const { session } = useApp();
   const [rows, setRows] = useState<Rec[]>([]);
-  const load = () => api<Rec[]>(`/recommendations?tenant_id=${tenant}`).then(setRows);
+  const load = () => api<Rec[]>(`/recommendations?tenant_id=${session.tenantId}`).then(setRows);
   useEffect(() => {
     load();
-  }, [tenant]);
+  }, [session.tenantId]);
 
   const approve = async (id: string) => {
+    if (!window.confirm("Approve this recommendation for execution?")) return;
     await api(`/recommendations/${id}/approve`, { method: "POST" });
     load();
   };
   const execute = async (id: string) => {
+    if (!window.confirm("Record execution in audit log? No automatic Azure changes will be made.")) return;
     await api(`/recommendations/${id}/execute`, { method: "POST" });
     load();
   };
 
   return (
     <>
-      <h2>Recommendations</h2>
+      <PageHeader title="Recommendations" breadcrumb="Operations / Recommendations" />
       {rows.map((r) => (
         <div key={r.id} className="card">
-          <h3>{r.title}</h3>
+          <h3>
+            {r.title} <span className="muted">({r.category})</span>
+          </h3>
           <p>{r.problem}</p>
           <p className="muted">Evidence: {r.evidence}</p>
-          <p>Suggested: {r.suggested_action}</p>
-          {r.estimated_savings_usd != null && <p>Potential saving: ${r.estimated_savings_usd}/mo</p>}
+          <p>Action: {r.suggested_action}</p>
+          {r.expected_benefit && <p>Benefit: {r.expected_benefit}</p>}
+          {r.rollback_info && <p className="muted">Rollback: {r.rollback_info}</p>}
           <p>
             Status: {r.status} · Priority: {r.priority}
           </p>
@@ -48,7 +59,7 @@ export default function Recommendations({ tenant }: { tenant: string }) {
           )}
           {r.status === "APPROVED" && (
             <button type="button" onClick={() => execute(r.id)}>
-              Execute (record action)
+              Execute (record)
             </button>
           )}
         </div>
