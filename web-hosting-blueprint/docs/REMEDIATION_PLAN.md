@@ -44,6 +44,7 @@ Complexity: **S** (hours–1 day), **M** (2–5 days), **L** (1–2+ weeks).
 | **Evidence** | `deploy.sh` / `health-check.sh`: `WHBP_POSTGRES_PASSWORD:-devpass` |
 | **Impact** | Weak credentials if env omitted |
 | **Fix** | Fail deploy if password unset when `environment.type != development` |
+| **Status** | **Partial (2026-09-18):** `deploy.sh` now rejects weak/missing `WHBP_POSTGRES_PASSWORD` / `WHBP_REDIS_PASSWORD` for staging/production when DB/Redis enabled; development still allows defaults |
 | **Complexity** | S |
 | **Dependency** | None |
 
