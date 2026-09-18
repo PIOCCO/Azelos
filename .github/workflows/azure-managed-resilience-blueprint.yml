@@ -1,0 +1,56 @@
+name: azure-managed-resilience-blueprint
+
+on:
+  push:
+    paths:
+      - "azure-managed-resilience-blueprint/**"
+      - ".github/workflows/azure-managed-resilience-blueprint.yml"
+  pull_request:
+    paths:
+      - "azure-managed-resilience-blueprint/**"
+
+defaults:
+  run:
+    working-directory: azure-managed-resilience-blueprint
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend deps
+        run: pip install -r backend/requirements.txt
+
+      - name: Unit tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/azure-managed-resilience-blueprint/backend:${{ github.workspace }}/azure-managed-resilience-blueprint
+          APP_ENV: test
+          AZURE_MOCK: "true"
+        run: python -m pytest tests -q
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform validate
+        working-directory: azure-managed-resilience-blueprint/terraform/environments/dev
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Frontend build
+        working-directory: azure-managed-resilience-blueprint/frontend
+        run: |
+          npm install
+          npm run build
+
+      - name: Docker build API
+        working-directory: azure-managed-resilience-blueprint
+        run: docker build -f docker/Dockerfile.api .

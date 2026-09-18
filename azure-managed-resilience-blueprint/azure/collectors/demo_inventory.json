@@ -1,0 +1,11 @@
+{
+  "subscription_id": "demo-sub",
+  "resources": [
+    {"azure_id": "/subscriptions/demo/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/VM-01", "name": "VM-01", "type": "Microsoft.Compute/virtualMachines", "resourceGroup": "rg", "location": "westeurope", "backup_protected": true, "health": "healthy", "cpu_avg": 35, "monthly_cost_usd": 85},
+    {"azure_id": "/subscriptions/demo/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/VM-02", "name": "VM-02", "type": "Microsoft.Compute/virtualMachines", "resourceGroup": "rg", "location": "westeurope", "backup_protected": false, "health": "warning", "cpu_avg": 22, "monthly_cost_usd": 90},
+    {"azure_id": "/subscriptions/demo/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/VM-03", "name": "VM-03", "type": "Microsoft.Compute/virtualMachines", "resourceGroup": "rg", "location": "westeurope", "backup_protected": true, "health": "critical", "cpu_avg": 92, "monthly_cost_usd": 120, "low_utilization": true}
+  ],
+  "costs": {"current_month_usd": 412, "forecast_usd": 487, "budget_usd": 500, "daily_yesterday": 12, "daily_today": 39},
+  "dr": {"protected_vms": 4, "healthy": 4, "warning": 0, "critical": 0, "last_dr_test": "2026-09-01"},
+  "security": {"critical": 1, "high": 3, "medium": 7, "low": 12}
+}

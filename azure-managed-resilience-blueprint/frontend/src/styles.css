@@ -1,0 +1,100 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #e8eef7;
+  background: #0f172a;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+aside {
+  background: #111827;
+  padding: 1rem;
+  border-right: 1px solid #1f2937;
+}
+aside h1 {
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem;
+}
+aside a {
+  display: block;
+  color: #93c5fd;
+  text-decoration: none;
+  padding: 0.35rem 0;
+}
+aside a:hover {
+  color: #fff;
+}
+main {
+  padding: 1.5rem;
+}
+.card {
+  background: #1e293b;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+.stat strong {
+  display: block;
+  font-size: 1.4rem;
+}
+.muted {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th,
+td {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid #334155;
+}
+.ok {
+  color: #4ade80;
+}
+.warn {
+  color: #fbbf24;
+}
+.bad {
+  color: #f87171;
+}
+button {
+  cursor: pointer;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
+}
+button.sync {
+  margin-top: 1rem;
+  width: 100%;
+}
+.login {
+  max-width: 360px;
+  margin: 4rem auto;
+}
+input {
+  width: 100%;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #e8eef7;
+}
