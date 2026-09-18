@@ -8,13 +8,13 @@
 | Multi-tenancy | PARTIAL | Tests cover key IDOR paths; expand per endpoint |
 | Observability | PARTIAL | Request ID + structured logs; App Insights wiring manual |
 | Testing | PARTIAL | Acceptance suite expanded; no frontend unit tests yet |
-| Infrastructure | PARTIAL | Terraform MVP; CA Job schedule documented |
+| Infrastructure | PARTIAL | Terraform MVP + Container Apps Job for scheduled sync |
 | Deployment | PARTIAL | deploy/destroy scripts; needs tfvars validation |
 | Cost | READY | Budget alerts + COST.md separation |
 | Documentation | READY | Core docs present |
 | Backup (platform DB) | PARTIAL | PostgreSQL 7-day default |
 | DR (platform) | NOT READY | Single-region MVP |
-| Azure integrations | PARTIAL | Resource Graph + Cost live; Backup/ASR/Defender planned |
+| Azure integrations | PARTIAL | Resource Graph, Cost, Backup (RG), Advisor, Defender (partial); ASR/Monitor planned |
 | Reporting | PARTIAL | Branded PDF; content depth growing |
 | Demo mode | READY | DEMO_MODE isolated with UI indicator |
 

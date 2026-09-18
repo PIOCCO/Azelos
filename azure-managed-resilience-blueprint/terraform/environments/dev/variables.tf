@@ -29,10 +29,21 @@ variable "azure_mock" {
   type    = string
   default = "true"
 }
+variable "sync_cron" {
+  type    = string
+  default = "0 * * * *"
+}
+variable "sync_tenant_ids" {
+  type    = string
+  default = "tenant-demo"
+}
 variable "tags" {
   type = map(string)
   default = {
-    blueprint = "azure-managed-resilience"
-    env       = "dev"
+    Project     = "AtlasAzureResilience"
+    Environment = "development"
+    ManagedBy   = "terraform"
+    Owner       = "platform-team"
+    CostCenter  = "ops"
   }
 }

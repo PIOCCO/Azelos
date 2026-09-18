@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { PRODUCT_NAME } from "../brand";
 import { useApp } from "../context/AppContext";
 import { api } from "../api";
+import { useToast } from "../context/ToastContext";
 
 const links = [
   { to: "/", label: "Overview" },
@@ -15,6 +16,7 @@ const links = [
   { to: "/recommendations", label: "Recommendations" },
   { to: "/reports", label: "Reports" },
   { to: "/settings", label: "Settings" },
+  { to: "/audit", label: "Audit", providerOnly: true },
 ];
 
 export default function MainLayout() {
@@ -22,6 +24,7 @@ export default function MainLayout() {
   const loc = useLocation();
   const [tenants, setTenants] = useState<{ id: string; name: string }[]>([]);
   const [syncing, setSyncing] = useState(false);
+  const toast = useToast();
 
   const loadTenants = async () => {
     if (!isProvider) return;
@@ -42,7 +45,10 @@ export default function MainLayout() {
     setSyncing(true);
     try {
       await api(`/sync?tenant_id=${session.tenantId}`, { method: "POST" });
+      toast.push("Discovery sync completed");
       window.location.reload();
+    } catch (e) {
+      toast.push(e instanceof Error ? e.message : "Sync failed", "error");
     } finally {
       setSyncing(false);
     }
@@ -74,7 +80,9 @@ export default function MainLayout() {
           <p className="muted">Organization workspace</p>
         )}
         <nav>
-          {links.map((l) => (
+          {links
+            .filter((l) => !("providerOnly" in l && l.providerOnly) || isProvider)
+            .map((l) => (
             <Link key={l.to} to={l.to} className={loc.pathname === l.to ? "active" : ""}>
               {l.label}
             </Link>

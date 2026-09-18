@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getToken } from "./api";
 import { AppProvider } from "./context/AppContext";
+import { ToastProvider } from "./context/ToastContext";
+import Audit from "./pages/Audit";
 import MainLayout from "./layout/MainLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -30,6 +32,7 @@ export default function App() {
 
   return (
     <AppProvider>
+      <ToastProvider>
       <Routes>
         <Route element={<MainLayout />}>
           <Route path="/" element={<Dashboard />} />
@@ -42,9 +45,11 @@ export default function App() {
           <Route path="/recommendations" element={<Recommendations />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/audit" element={<Audit />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
+      </ToastProvider>
     </AppProvider>
   );
 }

@@ -75,6 +75,21 @@ aside a.active {
 .small {
   font-size: 0.8rem;
 }
+.toasts {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 50;
+}
+.toast {
+  padding: 0.6rem 0.9rem;
+  margin-top: 0.4rem;
+  border-radius: 6px;
+  background: #14532d;
+}
+.toast.error {
+  background: #7f1d1d;
+}
 main {
   padding: 1.5rem;
 }

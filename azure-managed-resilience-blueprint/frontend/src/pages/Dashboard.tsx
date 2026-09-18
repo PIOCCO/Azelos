@@ -19,11 +19,13 @@ type Overview = {
   budget_utilization_pct: number | null;
   resilience: { score: number; factors: Record<string, number>; weights: Record<string, number> };
   sync: { last_status: string | null; last_duration_seconds: number | null; last_completed_at: string | null };
-  operational_issues: { critical_alerts: number; backup_gaps: number };
+  operational_issues: { critical_alerts: number; backup_gaps: number; security_high_critical: number };
+  recent_alerts: { severity: string; title: string; category: string }[];
+  top_recommendations: { title: string; priority: string; category: string; status: string }[];
 };
 
 export default function Dashboard() {
-  const { session } = useApp();
+  const { session, meta } = useApp();
   const [data, setData] = useState<Overview | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +39,9 @@ export default function Dashboard() {
   useEffect(load, [session.tenantId]);
 
   if (error) return <ErrorState message={error} onRetry={load} />;
-  if (!data) return <LoadingState />;
+  if (!data) return <LoadingState label="Loading operational overview…" />;
+
+  const secTotal = Object.values(data.security_findings).reduce((a, b) => a + b, 0);
 
   return (
     <>
@@ -50,6 +54,7 @@ export default function Dashboard() {
           ["Critical", data.critical],
           ["Backup coverage", `${data.backup_coverage_pct}%`],
           ["DR readiness", data.dr_readiness],
+          ["Security findings", secTotal],
           ["Monthly cost", `$${data.monthly_cost_usd ?? 0}`],
           ["Potential savings", `$${data.potential_savings_usd}/mo`],
         ].map(([label, val]) => (
@@ -76,10 +81,17 @@ export default function Dashboard() {
           <h3>Operational health</h3>
           <p>Critical alerts: {data.operational_issues.critical_alerts}</p>
           <p>Backup gaps: {data.operational_issues.backup_gaps}</p>
-          <p>Security findings: {JSON.stringify(data.security_findings)}</p>
+          <p>High/critical security: {data.operational_issues.security_high_critical}</p>
+          <ul>
+            {data.recent_alerts.map((a, i) => (
+              <li key={i}>
+                [{a.severity}] {a.title} <span className="muted">({a.category})</span>
+              </li>
+            ))}
+          </ul>
         </div>
         <div className="card">
-          <h3>FinOps snapshot</h3>
+          <h3>FinOps</h3>
           <p>
             Spend ${data.monthly_cost_usd ?? 0} · Forecast ${data.forecast_usd ?? "—"} · Budget ${data.budget_usd}
           </p>
@@ -88,10 +100,26 @@ export default function Dashboard() {
       </div>
 
       <div className="card">
+        <h3>Priority recommendations</h3>
+        {data.top_recommendations.length === 0 ? (
+          <p className="muted">No open recommendations — run discovery sync.</p>
+        ) : (
+          <ul>
+            {data.top_recommendations.map((r, i) => (
+              <li key={i}>
+                <strong>{r.priority}</strong> · {r.title} — {r.category} ({r.status})
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="card">
         <h3>Synchronization</h3>
         <p>Last status: {data.sync.last_status ?? "Never"}</p>
         <p>Last completed: {data.sync.last_completed_at ?? "—"}</p>
         <p>Duration: {data.sync.last_duration_seconds ?? "—"}s</p>
+        {meta?.sync_schedule_cron && <p className="muted">Scheduled: {meta.sync_schedule_cron} UTC</p>}
       </div>
     </>
   );

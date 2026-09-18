@@ -4,11 +4,11 @@
 |---------|---------------|------------|------|---------|
 | Resource Graph | `azure/clients/resource_graph.py` | Reader | Resource inventory | On sync |
 | Cost Management | `azure/clients/cost_management.py` | Cost Management Reader | Month-to-date spend | On sync |
-| Backup (RSV) | Planned | Backup Reader | Protection status | On sync |
+| Backup (RSV) | `azure/clients/backup.py` (Resource Graph) | Backup Reader | VM protection flags | On sync |
 | Site Recovery | Planned | Site Recovery Reader | Replication health | On sync |
-| Defender for Cloud | Planned | Security Reader | Findings | On sync |
+| Defender for Cloud | `azure/clients/defender.py` | Security Reader | Secure score aggregates | On sync |
 | Azure Monitor | Planned | Monitoring Reader | Metrics / health | Periodic |
-| Advisor | Planned | Reader | Recommendations | On sync |
+| Advisor | `azure/clients/advisor.py` | Reader | Cost recommendations | On sync |
 
 ## Identity
 

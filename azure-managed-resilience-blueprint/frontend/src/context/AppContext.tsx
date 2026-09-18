@@ -1,7 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 import { api } from "../api";
 
-type Meta = { product_name: string; demo_mode: boolean; auth_mode: string; environment: string };
+type Meta = {
+  product_name: string;
+  demo_mode: boolean;
+  auth_mode: string;
+  environment: string;
+  sync_schedule_cron?: string;
+};
 type Session = { role: string; tenantId: string; email?: string };
 
 type AppContextValue = {

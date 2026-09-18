@@ -28,7 +28,7 @@ from app.models.entities import (
     UserRole,
 )
 from app.services.audit import log_audit
-from app.services.reports import build_monthly_report_markdown, generate_monthly_report
+from app.services.reports import build_monthly_report_markdown, generate_monthly_report, report_pdf_sections
 from app.services.reports_pdf import build_branded_pdf
 from app.services.resilience_score import compute_resilience_score
 from app.services.sync_engine import run_full_sync, sync_status
@@ -66,6 +66,7 @@ def platform_meta():
         "demo_mode": settings.demo_mode,
         "auth_mode": settings.auth_mode,
         "environment": settings.environment,
+        "sync_schedule_cron": settings.sync_schedule_cron,
     }
 
 
@@ -155,7 +156,22 @@ def dashboard_overview(
         "operational_issues": {
             "critical_alerts": resilience["open_critical_alerts"],
             "backup_gaps": len(vms) - protected,
+            "security_high_critical": sum(sec_counts.get(k, 0) for k in ("high", "critical")),
         },
+        "recent_alerts": [
+            {"severity": a.severity.value, "title": a.title, "category": a.category.value}
+            for a in db.query(Alert)
+            .filter(Alert.tenant_id == tid)
+            .order_by(Alert.detected_at.desc())
+            .limit(5)
+        ],
+        "top_recommendations": [
+            {"title": r.title, "priority": r.priority, "category": r.category.value, "status": r.status.value}
+            for r in db.query(Recommendation)
+            .filter(Recommendation.tenant_id == tid)
+            .order_by(Recommendation.created_at.desc())
+            .limit(5)
+        ],
     }
 
 
@@ -481,11 +497,7 @@ def monthly_report(
         detail=report.period,
     )
     if format == "pdf":
-        sections = [
-            ("Executive Summary", report.body_markdown.split("\n")[0:8]),
-            ("Infrastructure Overview", report.body_markdown.split("\n")[8:16]),
-            ("Outstanding Risks", report.body_markdown.split("\n")[16:]),
-        ]
+        sections = report_pdf_sections(report.body_markdown)
         pdf = build_branded_pdf(
             title=settings.product_name,
             customer=name,

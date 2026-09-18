@@ -84,7 +84,7 @@ locals {
 }
 
 module "apps" {
-  source                     = "../../modules/container-app"
+  source = "../../modules/container-app"
   environment_name           = "${var.name_prefix}-cae"
   api_app_name               = "${var.name_prefix}-api"
   dashboard_app_name         = "${var.name_prefix}-ui"
@@ -96,4 +96,18 @@ module "apps" {
   database_url               = local.db_url
   jwt_secret                 = random_password.jwt.result
   azure_mock                 = var.azure_mock
+}
+
+module "sync_job" {
+  source                       = "../../modules/container-apps-job"
+  job_name                     = "${var.name_prefix}-sync"
+  location                     = module.rg.location
+  resource_group_name          = module.rg.name
+  container_app_environment_id = module.apps.container_app_environment_id
+  api_image                    = "${module.acr.login_server}/amrf-api:latest"
+  cron_expression              = var.sync_cron
+  sync_tenant_ids              = var.sync_tenant_ids
+  database_url                 = local.db_url
+  demo_mode                    = var.azure_mock
+  environment                  = "development"
 }

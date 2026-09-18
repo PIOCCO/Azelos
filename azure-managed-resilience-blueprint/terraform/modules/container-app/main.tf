@@ -30,7 +30,7 @@ resource "azurerm_container_app" "api" {
         value = var.azure_mock
       }
       env {
-        name  = "JWT_SECRET"
+        name        = "JWT_SECRET"
         secret_name = "jwt-secret"
       }
     }

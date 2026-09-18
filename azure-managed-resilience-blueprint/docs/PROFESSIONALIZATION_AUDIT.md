@@ -36,7 +36,7 @@ React (Vite) → nginx proxy → FastAPI (/api/v1)
 |------|----------|
 | Product naming | “Azure Resilience”, “Demo Company”, `tenant-demo` in UI |
 | Inventory | `demo_inventory.json`; `azure_mock` / hardcoded VM names in recommendations |
-| Live Azure | `_fetch_live` raises `NotImplementedError` |
+| Live Azure | Partial live collectors; demo via `DEMO_MODE` |
 | Auth | Default JWT secret, seeded passwords, login pre-filled password |
 | CORS | `allow_origins=["*"]` |
 | Health | Single endpoint; exposes `azure_mock` |
