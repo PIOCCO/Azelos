@@ -1,0 +1,1 @@
+"""Web Hosting Blueprint automation."""

@@ -1,0 +1,72 @@
+# Machine-readable critical asset register — configure per client.
+
+services:
+  payment_api:
+    asset: payment-api
+    owner: payments-team@example.com
+    criticality: critical
+    dependencies:
+      - postgres_primary
+      - key_vault
+      - app_service
+    rto_minutes: 30
+    rpo_minutes: 5
+    max_tolerable_downtime_minutes: 30
+    max_tolerable_data_loss_minutes: 5
+    recovery_priority: 1
+
+  customer_portal:
+    asset: customer-portal
+    owner: product-team@example.com
+    criticality: high
+    dependencies:
+      - postgres_primary
+      - blob_storage
+      - app_service
+    rto_minutes: 60
+    rpo_minutes: 15
+    max_tolerable_downtime_minutes: 60
+    max_tolerable_data_loss_minutes: 15
+    recovery_priority: 2
+
+  admin_api:
+    asset: admin-api
+    owner: platform-team@example.com
+    criticality: medium
+    dependencies:
+      - postgres_primary
+      - app_service
+    rto_minutes: 240
+    rpo_minutes: 60
+    max_tolerable_downtime_minutes: 240
+    max_tolerable_data_loss_minutes: 60
+    recovery_priority: 3
+
+assets:
+  postgres_primary:
+    type: database
+    service: azure_postgresql_flexible
+    criticality: critical
+    owner: dba@example.com
+    recovery_priority: 1
+
+  app_service:
+    type: compute
+    service: azure_app_service
+    criticality: critical
+    owner: platform-team@example.com
+    recovery_priority: 1
+
+  blob_storage:
+    type: storage
+    service: azure_storage_account
+    criticality: high
+    owner: platform-team@example.com
+    recovery_priority: 2
+
+  key_vault:
+    type: secrets
+    service: azure_key_vault
+    criticality: critical
+    owner: security@example.com
+    recovery_priority: 1

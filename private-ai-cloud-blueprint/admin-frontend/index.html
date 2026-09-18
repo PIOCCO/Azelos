@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Private AI — Admin</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header><h1>Admin Dashboard</h1><span id="user"></span></header>
+    <main>
+      <section class="card">
+        <h2>Documents</h2>
+        <div id="drop" class="drop">Drag & Drop Files Here</div>
+        <input type="file" id="file" multiple hidden />
+        <ul id="docs"></ul>
+      </section>
+      <section class="card">
+        <h2>Departments</h2>
+        <input id="deptName" placeholder="Department name" />
+        <button id="addDept">Create</button>
+        <ul id="depts"></ul>
+      </section>
+      <section class="card">
+        <h2>AI Usage</h2>
+        <pre id="usage"></pre>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

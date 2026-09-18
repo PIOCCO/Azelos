@@ -1,0 +1,28 @@
+output "log_analytics_workspace_id" {
+  value = azurerm_log_analytics_workspace.main.id
+}
+
+output "application_insights_id" {
+  value = azurerm_application_insights.main.id
+}
+
+output "application_insights_connection_string" {
+  value     = azurerm_application_insights.main.connection_string
+  sensitive = true
+}
+
+output "action_group_id" {
+  value = azurerm_monitor_action_group.ops.id
+}
+
+output "key_vault_id" {
+  value = azurerm_key_vault.main.id
+}
+
+output "key_vault_uri" {
+  value = azurerm_key_vault.main.vault_uri
+}
+
+output "resource_group_name" {
+  value = azurerm_resource_group.monitoring.name
+}

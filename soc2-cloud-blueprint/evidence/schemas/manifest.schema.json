@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["client_id", "collected_at_utc", "artifacts", "disclaimer"],
+  "properties": {
+    "client_id": { "type": "string" },
+    "collected_at_utc": { "type": "string" },
+    "artifacts": { "type": "array" },
+    "disclaimer": { "type": "string" }
+  }
+}

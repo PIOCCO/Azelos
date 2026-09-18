@@ -1,0 +1,10 @@
+environment:
+  type: development
+  allowed_database_hosts:
+    - postgres
+    - localhost
+  forbid_production_domains: true
+  ssl:
+    enabled: false
+  deployment:
+    confirm_production: false

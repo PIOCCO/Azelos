@@ -1,0 +1,3 @@
+environment:
+  type: development
+  allow_mock_evidence: true

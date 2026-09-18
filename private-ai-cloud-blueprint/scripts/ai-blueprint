@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+CMD="${1:-help}"
+case "$CMD" in
+  deploy) cd "$ROOT" && docker compose up --build -d ;;
+  status) cd "$ROOT" && docker compose ps ;;
+  health) curl -fsS "${API_URL:-http://localhost:8080}/api/v1/health" ;;
+  backup) "$ROOT/scripts/backup.sh" ;;
+  restore) "$ROOT/scripts/restore.sh" "${2:?dump}" ;;
+  logs) cd "$ROOT" && docker compose logs -f "${2:-api}" ;;
+  migrate) cd "$ROOT/backend" && alembic upgrade head 2>/dev/null || echo "Run alembic init if needed" ;;
+  reindex) curl -X POST -H "Authorization: Bearer ${ADMIN_TOKEN:?}" "${API_URL:-http://localhost:8080}/api/v1/documents/${2}/reindex" 2>/dev/null || echo "Implement reindex API or run worker manually" ;;
+  *) echo "Usage: ai-blueprint {deploy|status|health|backup|restore|logs|migrate|reindex}" ;;
+esac

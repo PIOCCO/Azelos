@@ -1,0 +1,59 @@
+# Copy to config/clients/<client-id>.yaml
+
+client:
+  name: example-saas
+  id: example-saas
+  industry: b2b-saas
+
+environment:
+  name: production
+  type: production  # development | staging | production
+
+cloud:
+  primary_provider: azure  # azure | aws | gcp
+  primary_region: eastus
+  subscription_id: ""  # set via env in automation — not secrets in git
+
+soc2:
+  report_type: type2  # type1 | type2
+  # Select Trust Services Criteria — Security is always in scope for SOC 2
+  criteria:
+    security: true
+    availability: true
+    processing_integrity: false
+    confidentiality: true
+    privacy: false
+  audit_period:
+    start: null
+    end: null
+  target_readiness_date: null
+
+scope:
+  in_scope_systems:
+    - customer-api
+    - admin-portal
+    - production-database
+  out_of_scope:
+    - marketing-site-static
+
+integrations:
+  business_continuity:
+    enabled: false
+    inventory_path: ""  # optional path to sibling BCDR/hosting inventory JSON
+  web_hosting:
+    enabled: false
+    inventory_path: ""
+
+evidence:
+  retention_days: 395
+  storage:
+    type: local  # local | azure_blob
+    path: evidence/manifests
+
+monitoring:
+  alert_email: security@example.com
+  continuous_control_checks: true
+
+remediation:
+  auto_ticket: false
+  severity_threshold: medium
