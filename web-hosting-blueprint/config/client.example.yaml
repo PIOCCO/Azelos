@@ -38,7 +38,7 @@ backend:
 database:
   enabled: true
   engine: postgresql
-  version: "16" "16"
+  version: "16"
   name: appdb
   user: appuser
   # password via secrets — never in this file for production

@@ -12,6 +12,7 @@ log "Validate configuration"
 validate_config || die "Configuration validation failed"
 
 python3 - "${WHBP_CLIENT_CONFIG}" <<'PY' || die "Environment guard failed"
+import os
 import sys
 from pathlib import Path
 from automation.whbp.config_loader import load_yaml
@@ -20,9 +21,20 @@ p = Path(sys.argv[1])
 if not p.is_absolute():
     p = repo_root() / p
 cfg = load_yaml(p)
-if cfg.get("environment", {}).get("type") == "production" and not __import__("os").environ.get("WHBP_PRODUCTION_APPROVED"):
+env_type = cfg.get("environment", {}).get("type")
+if env_type == "production" and not os.environ.get("WHBP_PRODUCTION_APPROVED"):
     print("Production requires WHBP_PRODUCTION_APPROVED=true or manual workflow approval", file=sys.stderr)
     sys.exit(2)
+if env_type in ("production", "staging") and cfg.get("database", {}).get("enabled"):
+    pw = os.environ.get("WHBP_POSTGRES_PASSWORD", "")
+    if not pw or pw in ("devpass", "changeme", "password"):
+        print("Set a strong WHBP_POSTGRES_PASSWORD for staging/production (not dev defaults)", file=sys.stderr)
+        sys.exit(2)
+if cfg.get("redis", {}).get("enabled") and env_type in ("production", "staging"):
+    rp = os.environ.get("WHBP_REDIS_PASSWORD", "")
+    if not rp or rp in ("devredis", "changeme", "password"):
+        print("Set a strong WHBP_REDIS_PASSWORD for staging/production", file=sys.stderr)
+        sys.exit(2)
 PY
 
 GEN="$(render_stack)"
