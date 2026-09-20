@@ -7,7 +7,19 @@ Move/resize the red overlay, Capture, refine with an instruction, Copy or Type.
 
 from __future__ import annotations
 
+import os
 import sys
+
+if not os.environ.get("DISPLAY") and sys.platform != "win32":
+    print(
+        "Error: no DISPLAY (no graphical desktop).\n"
+        "  • Use Windows, or Linux/macOS with a desktop session.\n"
+        "  • SSH: enable X11 forwarding (ssh -X) or run locally on the machine.\n"
+        "  • WSL: use WSLg, or run from Windows Python instead.",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
 import tkinter as tk
 from tkinter import messagebox, scrolledtext, ttk
 
