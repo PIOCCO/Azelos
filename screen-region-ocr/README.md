@@ -6,8 +6,37 @@ Minimal desktop tool: **move/resize a transparent overlay**, **capture** that sc
 
 - **Windows 10/11** (primary target)
 - **Python 3.10+**
+- **Tkinter** (GUI — included with Windows Python; on Linux install separately, see below)
 - **[Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki)** installed and on `PATH`  
   Or set: `TESSDATA_PREFIX` / configure `pytesseract.pytesseract.tesseract_cmd` in `ocr_engine.py` if installed elsewhere.
+
+### Linux: `ModuleNotFoundError: No module named 'tkinter'`
+
+Install the Tk binding for your distro, then use the same `python3` that has it:
+
+```bash
+# Debian / Ubuntu / Raspberry Pi OS
+sudo apt update
+sudo apt install python3-tk python3-venv tesseract-ocr
+
+# Fedora
+sudo dnf install python3-tkinter tesseract
+
+# Arch
+sudo pacman -S tk tesseract
+```
+
+Create the venv **after** installing `python3-tk`:
+
+```bash
+cd screen-region-ocr
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python main.py
+```
+
+On Linux, overlay transparency may differ from Windows; the tool still runs for capture/OCR tests.
 
 ## Install
 
