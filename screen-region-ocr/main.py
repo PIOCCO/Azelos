@@ -42,12 +42,12 @@ class ControlPanel:
         self.root.minsize(420, 520)
         self.root.geometry("480x560")
 
-        self.overlay = SelectionOverlay(self.root, on_change=self._on_region_change)
         self.last_rect: ScreenRect | None = None
         self.raw_ocr = ""
         self.result_text = ""
 
         self._build_ui()
+        self.overlay = SelectionOverlay(self.root, on_change=self._on_region_change)
         self._poll_overlay()
 
     def _build_ui(self) -> None:
@@ -121,7 +121,8 @@ class ControlPanel:
 
     def _on_region_change(self, rect: ScreenRect) -> None:
         self.last_rect = rect
-        self.region_var.set(f"Region: {rect.left},{rect.top}  {rect.width}×{rect.height}")
+        if hasattr(self, "region_var"):
+            self.region_var.set(f"Region: {rect.left},{rect.top}  {rect.width}×{rect.height}")
 
     def _capture(self) -> None:
         if sys.platform != "win32":
