@@ -28,6 +28,7 @@ from capture import ScreenRect, grab_region
 from extractors import extract
 from ocr_engine import run_ocr
 from overlay import SelectionOverlay
+from tesseract_setup import INSTALL_HELP, is_tesseract_available, require_tesseract
 
 INSTRUCTION_HINT = (
     'Examples: "all", "emails", "Extract only student names", '
@@ -49,6 +50,7 @@ class ControlPanel:
         self._build_ui()
         self.overlay = SelectionOverlay(self.root, on_change=self._on_region_change)
         self._poll_overlay()
+        self.root.after(200, self._check_tesseract)
 
     def _build_ui(self) -> None:
         pad = {"padx": 8, "pady": 4}
@@ -112,6 +114,17 @@ class ControlPanel:
         frm.rowconfigure(10, weight=1)
         frm.rowconfigure(12, weight=2)
 
+    def _check_tesseract(self) -> None:
+        if is_tesseract_available():
+            try:
+                path = require_tesseract()
+                self.status.set(f"Ready. Tesseract: {path}")
+            except FileNotFoundError:
+                pass
+            return
+        self.status.set("Tesseract not found — install OCR before Capture.")
+        messagebox.showwarning("Tesseract required", INSTALL_HELP)
+
     def _show_overlay(self) -> None:
         if hasattr(self, "overlay"):
             self.overlay.show()
@@ -142,6 +155,10 @@ class ControlPanel:
         try:
             img = grab_region(rect)
             self.raw_ocr = run_ocr(img)
+        except FileNotFoundError as exc:
+            messagebox.showerror("Tesseract required", str(exc))
+            self.status.set("Install Tesseract OCR (see dialog).")
+            return
         except Exception as exc:  # noqa: BLE001
             messagebox.showerror("Capture failed", str(exc))
             self.status.set(f"Error: {exc}")

@@ -7,8 +7,29 @@ Minimal desktop tool: **move/resize a transparent overlay**, **capture** that sc
 - **Windows 10/11** (primary target)
 - **Python 3.10+**
 - **Tkinter** (GUI — included with Windows Python; on Linux install separately, see below)
-- **[Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki)** installed and on `PATH`  
-  Or set: `TESSDATA_PREFIX` / configure `pytesseract.pytesseract.tesseract_cmd` in `ocr_engine.py` if installed elsewhere.
+- **[Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki)** (required for Capture)
+
+### Windows — install Tesseract
+
+1. Open: **https://github.com/UB-Mannheim/tesseract/wiki**
+2. Download the latest **Windows installer** (e.g. `tesseract-ocr-w64-setup-....exe`).
+3. Run it → install to `C:\Program Files\Tesseract-OCR\` (default).
+4. Optional but helpful: enable **“Add to PATH”** in the installer.
+5. **Close and reopen** PowerShell, then run `python main.py` again.
+
+Test in PowerShell:
+
+```powershell
+& "C:\Program Files\Tesseract-OCR\tesseract.exe" --version
+```
+
+If that works but the app still fails, set (then restart the app):
+
+```powershell
+setx TESSERACT_CMD "C:\Program Files\Tesseract-OCR\tesseract.exe"
+```
+
+Then open a **new** terminal and run the app.
 
 ### Linux: `ModuleNotFoundError: No module named 'tkinter'`
 

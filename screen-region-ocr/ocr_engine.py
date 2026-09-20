@@ -2,18 +2,14 @@
 
 from __future__ import annotations
 
-import os
-import sys
-
 import cv2
 import numpy as np
 import pytesseract
 from PIL import Image
 
-if sys.platform == "win32":
-    _default_tesseract = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-    if os.path.isfile(_default_tesseract):
-        pytesseract.pytesseract.tesseract_cmd = _default_tesseract
+from tesseract_setup import configure_tesseract, require_tesseract
+
+configure_tesseract()
 
 
 def preprocess_for_ocr(pil_image: Image.Image, scale: float = 2.0) -> np.ndarray:
@@ -34,6 +30,7 @@ def preprocess_for_ocr(pil_image: Image.Image, scale: float = 2.0) -> np.ndarray
 
 
 def run_ocr(pil_image: Image.Image, *, lang: str = "eng") -> str:
+    require_tesseract()
     processed = preprocess_for_ocr(pil_image)
     config = "--psm 6 -c preserve_interword_spaces=1"
     text = pytesseract.image_to_string(processed, lang=lang, config=config)
