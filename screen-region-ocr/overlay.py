@@ -58,7 +58,7 @@ class SelectionOverlay:
         self.root.bind("<Configure>", lambda _e: self._redraw())
 
         self._redraw()
-        self._emit()
+        self.root.after_idle(self._emit)
 
     def show(self) -> None:
         self.root.deiconify()
