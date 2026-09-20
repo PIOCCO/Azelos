@@ -26,10 +26,16 @@ def _pyautogui():
     return pyautogui
 
 
-def type_into_focused_field(text: str, *, use_paste: bool = True) -> None:
+def type_into_focused_field(
+    text: str,
+    *,
+    use_paste: bool = True,
+    press_enter_after: bool = False,
+) -> None:
     """
     Types into the currently focused control.
     Default: paste via Ctrl+V (preserves line breaks and unicode better than typewrite).
+    If press_enter_after, sends Enter after paste (next field / new line in forms).
     """
     if not text:
         return
@@ -40,3 +46,6 @@ def type_into_focused_field(text: str, *, use_paste: bool = True) -> None:
         pg.hotkey("ctrl", "v")
     else:
         pg.write(text, interval=0.02)
+    if press_enter_after:
+        time.sleep(0.08)
+        pg.press("enter")

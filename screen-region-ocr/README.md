@@ -86,7 +86,8 @@ python main.py
 
 1. Position the **red rectangle** over the text you want (drag inside to move, handles to resize).
 2. Set **What to extract** (see below).
-3. Click **Capture**.
+3. Optional: **Save captures to file** — pick a `.txt` path; each **Capture** appends the structured result and starts a **new line** for the next one. The **Stored output** panel shows the same accumulation in the app.
+4. Click **Capture**.
 4. Review **Raw OCR** and **Structured result**.
 5. **Copy** or click the destination field in another app, then **Type** (sends Ctrl+V).
 

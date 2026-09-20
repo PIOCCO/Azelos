@@ -21,9 +21,10 @@ if not os.environ.get("DISPLAY") and sys.platform != "win32":
     sys.exit(1)
 
 import tkinter as tk
-from tkinter import messagebox, scrolledtext, ttk
+from tkinter import filedialog, messagebox, scrolledtext, ttk
 
 from automation import copy_to_clipboard, type_into_focused_field
+from storage import append_capture
 from capture import ScreenRect, grab_region
 from extractors import extract
 from ocr_engine import run_ocr
@@ -41,7 +42,7 @@ class ControlPanel:
         self.root = tk.Tk()
         self.root.title("Screen Region OCR")
         self.root.minsize(420, 520)
-        self.root.geometry("480x560")
+        self.root.geometry("520x680")
 
         self.last_rect: ScreenRect | None = None
         self.raw_ocr = ""
@@ -82,37 +83,70 @@ class ControlPanel:
             row=7, column=0, sticky="w", **pad
         )
 
+        ttk.Label(frm, text="Save captures to file", font=("Segoe UI", 10, "bold")).grid(
+            row=8, column=0, sticky="w", **pad
+        )
+        save_row = ttk.Frame(frm)
+        save_row.grid(row=9, column=0, sticky="ew", **pad)
+        self.storage_path = ttk.Entry(save_row)
+        self.storage_path.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 4))
+        ttk.Button(save_row, text="Browse…", command=self._browse_storage).pack(side=tk.LEFT)
+
+        self.append_file_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(
+            frm,
+            text="After each Capture: append result to file (new line after each capture)",
+            variable=self.append_file_var,
+        ).grid(row=10, column=0, sticky="w", **pad)
+
+        self.type_enter_var = tk.BooleanVar(value=True)
+        ttk.Checkbutton(
+            frm,
+            text='After Type: press Enter (new line — click the next cell/field first if needed)',
+            variable=self.type_enter_var,
+        ).grid(row=11, column=0, sticky="w", **pad)
+
+        ttk.Label(frm, text="Stored output (accumulated in app)", font=("Segoe UI", 9)).grid(
+            row=12, column=0, sticky="w", **pad
+        )
+        self.stored_box = scrolledtext.ScrolledText(frm, height=4, font=("Consolas", 9))
+        self.stored_box.grid(row=13, column=0, sticky="nsew", **pad)
+        ttk.Button(frm, text="Clear stored output", command=self._clear_stored).grid(row=14, column=0, sticky="w", **pad)
+
         cap_row = ttk.Frame(frm)
-        cap_row.grid(row=8, column=0, sticky="ew", **pad)
+        cap_row.grid(row=15, column=0, sticky="ew", **pad)
         ttk.Button(cap_row, text="Capture", command=self._capture).pack(side=tk.LEFT, padx=2)
         ttk.Button(cap_row, text="Apply filter", command=self._apply_filter).pack(side=tk.LEFT, padx=2)
 
-        ttk.Label(frm, text="Raw OCR").grid(row=9, column=0, sticky="w", **pad)
-        self.raw_box = scrolledtext.ScrolledText(frm, height=6, font=("Consolas", 9))
-        self.raw_box.grid(row=10, column=0, sticky="nsew", **pad)
+        ttk.Label(frm, text="Raw OCR").grid(row=16, column=0, sticky="w", **pad)
+        self.raw_box = scrolledtext.ScrolledText(frm, height=5, font=("Consolas", 9))
+        self.raw_box.grid(row=17, column=0, sticky="nsew", **pad)
 
-        ttk.Label(frm, text="Structured result").grid(row=11, column=0, sticky="w", **pad)
-        self.out_box = scrolledtext.ScrolledText(frm, height=8, font=("Consolas", 10))
-        self.out_box.grid(row=12, column=0, sticky="nsew", **pad)
+        ttk.Label(frm, text="Structured result (this capture)").grid(row=18, column=0, sticky="w", **pad)
+        self.out_box = scrolledtext.ScrolledText(frm, height=5, font=("Consolas", 10))
+        self.out_box.grid(row=19, column=0, sticky="nsew", **pad)
 
         self.status = tk.StringVar(value="Ready.")
-        ttk.Label(frm, textvariable=self.status, foreground="#333").grid(row=13, column=0, sticky="w", **pad)
+        ttk.Label(frm, textvariable=self.status, foreground="#333").grid(row=20, column=0, sticky="w", **pad)
 
         act = ttk.Frame(frm)
-        act.grid(row=14, column=0, sticky="ew", **pad)
+        act.grid(row=21, column=0, sticky="ew", **pad)
         ttk.Button(act, text="Copy", command=self._copy).pack(side=tk.LEFT, padx=4)
         ttk.Button(act, text="Type", command=self._type).pack(side=tk.LEFT, padx=4)
+        ttk.Button(act, text="Append to file now", command=self._append_manual).pack(side=tk.LEFT, padx=4)
 
         ttk.Label(
             frm,
-            text="Type: click the destination field first, then press Type (uses Ctrl+V).",
+            text="Type: focus the destination field, then Type (Ctrl+V). Use Enter option for one value per line.",
             font=("Segoe UI", 8),
             foreground="#555",
-        ).grid(row=15, column=0, sticky="w", **pad)
+            wraplength=480,
+        ).grid(row=22, column=0, sticky="w", **pad)
 
         frm.columnconfigure(0, weight=1)
-        frm.rowconfigure(10, weight=1)
-        frm.rowconfigure(12, weight=2)
+        frm.rowconfigure(13, weight=1)
+        frm.rowconfigure(17, weight=1)
+        frm.rowconfigure(19, weight=1)
 
     def _check_tesseract(self) -> None:
         if is_tesseract_available():
@@ -124,6 +158,44 @@ class ControlPanel:
             return
         self.status.set("Tesseract not found — install OCR before Capture.")
         messagebox.showwarning("Tesseract required", INSTALL_HELP)
+
+    def _browse_storage(self) -> None:
+        path = filedialog.asksaveasfilename(
+            title="Capture output file",
+            defaultextension=".txt",
+            filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+        )
+        if path:
+            self.storage_path.delete(0, tk.END)
+            self.storage_path.insert(0, path)
+
+    def _clear_stored(self) -> None:
+        self.stored_box.delete("1.0", tk.END)
+
+    def _append_to_storage(self, text: str) -> None:
+        if not text.strip():
+            return
+        path = self.storage_path.get().strip()
+        if self.append_file_var.get() and path:
+            try:
+                append_capture(path, text)
+            except OSError as exc:
+                messagebox.showerror("Save failed", str(exc))
+                return
+        self.stored_box.insert(tk.END, text.rstrip() + "\n")
+        self.stored_box.see(tk.END)
+
+    def _append_manual(self) -> None:
+        text = self.out_box.get("1.0", tk.END).strip()
+        if not text:
+            messagebox.showinfo("Append", "No structured result to save.")
+            return
+        path = self.storage_path.get().strip()
+        if not path:
+            messagebox.showinfo("Append", "Choose a file path first (Browse…).")
+            return
+        self._append_to_storage(text)
+        self.status.set(f"Appended to {path}")
 
     def _show_overlay(self) -> None:
         if hasattr(self, "overlay"):
@@ -167,7 +239,13 @@ class ControlPanel:
         self.raw_box.delete("1.0", tk.END)
         self.raw_box.insert(tk.END, self.raw_ocr)
         self._apply_filter()
-        self.status.set("Captured. OCR complete.")
+        if self.append_file_var.get() and self.result_text.strip():
+            self._append_to_storage(self.result_text)
+            path = self.storage_path.get().strip()
+            extra = f" Saved to {path}." if path else " (set a file path to save)."
+            self.status.set(f"Captured.{extra}")
+        else:
+            self.status.set("Captured. OCR complete.")
 
     def _apply_filter(self) -> None:
         self.raw_ocr = self.raw_box.get("1.0", tk.END).strip()
@@ -196,8 +274,11 @@ class ControlPanel:
 
     def _do_type(self, text: str) -> None:
         try:
-            type_into_focused_field(text, use_paste=True)
-            self.status.set("Pasted into focused field (Ctrl+V).")
+            type_into_focused_field(text, use_paste=True, press_enter_after=self.type_enter_var.get())
+            msg = "Pasted (Ctrl+V)"
+            if self.type_enter_var.get():
+                msg += " + Enter"
+            self.status.set(msg + ".")
         except Exception as exc:  # noqa: BLE001
             messagebox.showerror("Type failed", str(exc))
 
