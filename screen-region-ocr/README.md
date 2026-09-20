@@ -38,6 +38,16 @@ python main.py
 
 On Linux, overlay transparency may differ from Windows; the tool still runs for capture/OCR tests.
 
+### `KeyError: 'DISPLAY'` or PyAutoGUI / mouseinfo errors
+
+You are on **SSH or a headless server** with no GUI. This app needs a **desktop** (Windows, or Linux with X11/Wayland).
+
+- Run on your **PC desktop**, not a remote VPS without GUI.
+- **WSL2:** use [WSLg](https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps) or install/run with Windows Python from `screen-region-ocr`.
+- **SSH:** `ssh -X user@host` only if X forwarding is set up; local run is simpler.
+
+**Copy** uses the clipboard only; **Type** needs a display (same as the window).
+
 ## Install
 
 ```powershell
