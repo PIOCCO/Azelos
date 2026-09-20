@@ -64,8 +64,8 @@ class ControlPanel:
 
         btn_row = ttk.Frame(frm)
         btn_row.grid(row=2, column=0, sticky="ew", **pad)
-        ttk.Button(btn_row, text="Show overlay", command=self.overlay.show).pack(side=tk.LEFT, padx=2)
-        ttk.Button(btn_row, text="Hide overlay", command=self.overlay.hide).pack(side=tk.LEFT, padx=2)
+        ttk.Button(btn_row, text="Show overlay", command=self._show_overlay).pack(side=tk.LEFT, padx=2)
+        ttk.Button(btn_row, text="Hide overlay", command=self._hide_overlay).pack(side=tk.LEFT, padx=2)
 
         self.region_var = tk.StringVar(value="Region: (move overlay)")
         ttk.Label(frm, textvariable=self.region_var, font=("Consolas", 9)).grid(row=3, column=0, sticky="w", **pad)
@@ -111,6 +111,14 @@ class ControlPanel:
         frm.columnconfigure(0, weight=1)
         frm.rowconfigure(10, weight=1)
         frm.rowconfigure(12, weight=2)
+
+    def _show_overlay(self) -> None:
+        if hasattr(self, "overlay"):
+            self.overlay.show()
+
+    def _hide_overlay(self) -> None:
+        if hasattr(self, "overlay"):
+            self.overlay.hide()
 
     def _poll_overlay(self) -> None:
         try:
