@@ -1,0 +1,7 @@
+# Historical / policy baseline patterns (examples)
+{First}123!
+{First}2024!
+{first}@123
+Welcome{index}!
+literal:Welcome123!
+literal:Password1!

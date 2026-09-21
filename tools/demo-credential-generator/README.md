@@ -105,6 +105,10 @@ python generate_passwords.py emails.txt --pattern "{First}123!"
 # viewer@example.com   → Viewer123!
 ```
 
+## Enterprise baseline audit (offline)
+
+For authorized private tests (“do demo accounts still match our old password baseline?”), use **`baseline_audit.py`** — generates candidates from a baseline file and optionally checks an **internal hash export** (no login requests). See `docs/BASELINE_ASSESSMENT.md`.
+
 ## Security
 
 Store output CSV securely; delete when demo is torn down. Use unique passwords per environment in production.
