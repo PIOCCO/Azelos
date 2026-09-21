@@ -1,0 +1,4 @@
+# Demo accounts (example only)
+customer@example.com
+viewer@example.com
+provider@example.com
