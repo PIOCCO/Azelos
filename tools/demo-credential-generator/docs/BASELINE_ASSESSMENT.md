@@ -56,4 +56,37 @@ Recommendations: enforce unique passwords, block patterns in AD password filter,
 
 ## If leadership requires live login verification
 
-Ask AppSec to run an **in-scope password spray** with commercial/red-team tools, captcha/MFA behavior documented, and your intern role as **observer + candidate list provider** (export from `baseline_audit.py`), not operator of brute-force against production SSO.
+In a **dedicated lab** with written approval, teams often use **[THC-Hydra](https://github.com/vanhauser-thc/thc-hydra)** (public, not “dark web”). Hydra sends parallel login attempts; you supply the candidate list.
+
+### Prepare candidates (this repo)
+
+```bash
+python3 baseline_audit.py demo-emails.csv --baseline example-baseline.txt --candidates-out candidates.csv
+python3 export_hydra_c.py candidates.csv -o hydra-C.txt
+```
+
+Or from the pattern bot:
+
+```bash
+python3 demo_password_bot.py demo-emails.csv --base-email known@lab.local --base-password 'KnownPass!' --output pairs.csv --format csv
+python3 export_hydra_c.py pairs.csv -o hydra-C.txt
+```
+
+### Run Hydra (you / AppSec on lab targets only)
+
+Install or Docker (`docker pull vanhauser/hydra`). Syntax depends on **protocol** — see `hydra -h` and `hydra -U <module>`.
+
+Generic shape (example service types only; replace with your lab module):
+
+```bash
+# One pair file, many predefined user:password lines (good for baseline-derived per-user passwords)
+hydra -C hydra-C.txt -o hydra-results.txt -b text TARGET SERVICE
+
+# HTTP form logins need module-specific path and field names from hydra -U http-post-form
+```
+
+Use **low parallelism** (`-t 4` or per AppSec), watch lockouts, and keep `-o` logs for the internship report.
+
+### Still prefer offline when possible
+
+Hash export + `baseline_audit.py --hashes` answers the same risk question without touching the login endpoint.
