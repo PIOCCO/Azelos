@@ -8,6 +8,32 @@ Generates **passwords from a pattern** for a list of **emails** you already cont
 - Not for use against real users without explicit authorization  
 - Does not read databases or breach data — only applies **your** pattern template
 
+## Random variants from one seed password
+
+Hydra does **not** invent passwords. **`seed_variants.py`** mutates your seed and writes **`hydra-C.txt`**:
+
+```bash
+# One different variant per email (deterministic from seed + email)
+python3 seed_variants.py dummies/dummies.csv --seed-password 'MyBasePass123!' -o ~/hydra-out/hydra-C.txt
+
+# Same random variant tried on every email
+python3 seed_variants.py dummies/dummies.csv --seed-password 'MyBasePass123!' --mode one-for-all -o ~/hydra-out/hydra-C.txt
+
+# Many variants × every email (spray)
+python3 seed_variants.py dummies/dummies.csv --seed-password 'MyBasePass123!' --mode spray --variant-count 10 -o ~/hydra-out/hydra-C.txt
+```
+
+Or in one step with Hydra:
+
+```bash
+python3 run_hydra_test.py dummies/dummies.csv \
+  --seed-password 'MyBasePass123!' --seed-mode per-email \
+  --target student.emsi.ma --service https-post-form --form '...' \
+  --hydra-no-output-file --confirm-lab-scope
+```
+
+For **rule-based** passwords (e.g. `{First}123!` from one known account), use **`--base-email` + `--base-password`**, not `--seed-password`.
+
 ## One command (Python + Hydra)
 
 After `apt install hydra` or building `thc-hydra`, from this directory:

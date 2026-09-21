@@ -64,6 +64,40 @@ def normalize_hydra_target(raw: str) -> tuple[str, bool]:
     return raw, prefer_ssl
 
 
+def build_pairs_from_seed(
+    emails_path: Path,
+    seed: str,
+    mode: str,
+    variant_count: int,
+) -> list[tuple[str, str]]:
+    from seed_variants import (
+        global_variants,
+        one_variant_per_email,
+        variants_for_email,
+    )
+
+    emails = load_emails(emails_path)
+    pairs: list[tuple[str, str]] = []
+    if mode == "one-for-all":
+        import hashlib
+        import random
+        from seed_variants import _mutations
+
+        digest = hashlib.sha256(f"{seed}\0one".encode()).hexdigest()
+        rng = random.Random(digest)
+        pwd = rng.choice(_mutations(seed, rng))
+        pairs = [(e, pwd) for e in emails]
+    elif mode == "spray":
+        vars_ = global_variants(seed, variant_count, None)
+        for email in emails:
+            for pwd in vars_:
+                pairs.append((email, pwd))
+    else:
+        for email in emails:
+            pairs.append((email, one_variant_per_email(seed, email)))
+    return pairs
+
+
 def build_pairs(
     emails_path: Path,
     base_email: str | None,
@@ -71,7 +105,14 @@ def build_pairs(
     samples_path: Path | None,
     pattern: str | None,
     start_index: int,
+    seed_password: str | None = None,
+    seed_mode: str = "per-email",
+    seed_variant_count: int = 8,
 ) -> list[tuple[str, str]]:
+    if seed_password:
+        return build_pairs_from_seed(
+            emails_path, seed_password, seed_mode, seed_variant_count
+        )
     if pattern:
         pat = pattern
     else:
@@ -127,6 +168,22 @@ def main() -> int:
     parser.add_argument("--base-password", help="Known password for --base-email")
     parser.add_argument("--samples", type=Path, help="CSV email,password to infer pattern")
     parser.add_argument("--pattern", help="Explicit pattern instead of inference")
+    parser.add_argument(
+        "--seed-password",
+        help="Use random variants from this seed (see seed_variants.py) instead of pattern inference",
+    )
+    parser.add_argument(
+        "--seed-mode",
+        choices=("per-email", "one-for-all", "spray"),
+        default="per-email",
+        help="With --seed-password: variant strategy (default per-email)",
+    )
+    parser.add_argument(
+        "--seed-variant-count",
+        type=int,
+        default=8,
+        help="For --seed-mode spray: number of variants from seed",
+    )
     parser.add_argument("--start-index", type=int, default=1)
     parser.add_argument(
         "--target",
@@ -185,6 +242,15 @@ def main() -> int:
         args.ssl = True
         print("Enabled Hydra -S (HTTPS target).", file=sys.stderr)
 
+    if not args.seed_password and not args.pattern and not (
+        args.base_email and args.base_password
+    ) and not args.samples:
+        print(
+            "Provide --seed-password, or --base-email + --base-password, or --samples, or --pattern.",
+            file=sys.stderr,
+        )
+        return 1
+
     pairs = build_pairs(
         args.emails,
         args.base_email,
@@ -192,6 +258,9 @@ def main() -> int:
         args.samples,
         args.pattern,
         args.start_index,
+        args.seed_password,
+        args.seed_mode,
+        args.seed_variant_count,
     )
 
     if args.work_dir:
