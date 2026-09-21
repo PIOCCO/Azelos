@@ -8,6 +8,26 @@ Generates **passwords from a pattern** for a list of **emails** you already cont
 - Not for use against real users without explicit authorization  
 - Does not read databases or breach data — only applies **your** pattern template
 
+## One command (Python + Hydra)
+
+After `apt install hydra` or building `thc-hydra`, from this directory:
+
+```bash
+python3 run_hydra_test.py demo-emails.csv \
+  --base-email 'known@lab.local' --base-password 'KnownPass!' \
+  --target demo.lab.local --service https-post-form \
+  --form '/login:user=^USER^&pass=^PASS^:F=Invalid credentials' \
+  --confirm-lab-scope
+```
+
+Preview without sending requests:
+
+```bash
+python3 run_hydra_test.py demo-emails.csv ... --dry-run
+```
+
+Pass `--hydra-bin /path/to/thc-hydra/hydra` if Hydra is not on `PATH`.
+
 ## Bot inputs and output
 
 | Input | What it is |
