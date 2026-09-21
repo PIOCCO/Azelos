@@ -19,17 +19,49 @@ Example (SSH):
 from __future__ import annotations
 
 import argparse
-import csv
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from urllib.parse import urlparse
 
 from generate_passwords import apply_pattern, load_emails
 from pattern_infer import infer_pattern_from_samples, pattern_uses_index
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+
+
+def normalize_hydra_target(raw: str) -> tuple[str, bool]:
+    """
+    Hydra wants host or host:port — not https://host/path.
+    Returns (target, prefer_ssl_flag).
+    """
+    raw = raw.strip()
+    prefer_ssl = False
+    if "://" in raw:
+        parsed = urlparse(raw)
+        host = parsed.hostname
+        if not host:
+            raise SystemExit(f"Could not parse host from --target: {raw!r}")
+        prefer_ssl = parsed.scheme.lower() == "https"
+        if parsed.path not in ("", "/"):
+            print(
+                f"Note: URL path {parsed.path!r} is ignored in --target; "
+                "put it at the start of --form (e.g. '{path}:user=...').",
+                file=sys.stderr,
+            )
+        if parsed.port:
+            return f"{host}:{parsed.port}", prefer_ssl
+        return host, prefer_ssl
+    if "/" in raw:
+        host, _, rest = raw.partition("/")
+        print(
+            f"Note: using host {host!r}; path /{rest!r} belongs in --form, not --target.",
+            file=sys.stderr,
+        )
+        return host, prefer_ssl
+    return raw, prefer_ssl
 
 
 def build_pairs(
@@ -96,7 +128,11 @@ def main() -> int:
     parser.add_argument("--samples", type=Path, help="CSV email,password to infer pattern")
     parser.add_argument("--pattern", help="Explicit pattern instead of inference")
     parser.add_argument("--start-index", type=int, default=1)
-    parser.add_argument("--target", required=True, help="Lab host (no https://)")
+    parser.add_argument(
+        "--target",
+        required=True,
+        help="Lab host or URL (host is extracted; path goes in --form)",
+    )
     parser.add_argument(
         "--service",
         required=True,
@@ -139,6 +175,11 @@ def main() -> int:
         print("HTTP form tests require --form (see lab/hydra-http-form-test.md).", file=sys.stderr)
         return 1
 
+    target, prefer_ssl = normalize_hydra_target(args.target)
+    if prefer_ssl and not args.ssl and args.service.startswith("http"):
+        args.ssl = True
+        print("Enabled Hydra -S (HTTPS target).", file=sys.stderr)
+
     pairs = build_pairs(
         args.emails,
         args.base_email,
@@ -175,9 +216,9 @@ def main() -> int:
         cmd.append("-S")
 
     if args.form:
-        cmd.extend([args.target, args.service, args.form])
+        cmd.extend([target, args.service, args.form])
     else:
-        cmd.extend([args.target, args.service])
+        cmd.extend([target, args.service])
 
     print("Hydra command:", " ".join(cmd), file=sys.stderr)
 
