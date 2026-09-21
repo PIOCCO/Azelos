@@ -161,6 +161,11 @@ def main() -> int:
         action="store_true",
         help="Required to run Hydra (ack scoped lab authorization)",
     )
+    parser.add_argument(
+        "--hydra-no-output-file",
+        action="store_true",
+        help="Skip Hydra -o (avoids 'Invalid argument' on some systems; hits print to stdout)",
+    )
     args = parser.parse_args()
 
     if not args.emails.is_file():
@@ -210,11 +215,10 @@ def main() -> int:
         str(c_file),
         "-t",
         str(args.tasks),
-        "-o",
-        "results.txt",
-        "-b",
-        "text",
     ]
+    if not args.hydra_no_output_file:
+        results.touch(mode=0o600, exist_ok=True)
+        cmd.extend(["-o", str(results.resolve()), "-b", "text"])
     if args.exit_first:
         cmd.append("-f")
     if args.ssl:
