@@ -51,13 +51,31 @@ def main() -> int:
     parser.add_argument(
         "--samples",
         type=Path,
-        help="CSV or 'email,password' lines — used to infer pattern",
+        help="CSV with email,password — infer pattern from one or more known accounts",
+    )
+    parser.add_argument(
+        "--base-email",
+        help="One account you know (with --base-password): pattern is learned from this pair",
+    )
+    parser.add_argument(
+        "--base-password",
+        help="Password for --base-email (same rule applies to every email in the list)",
     )
     parser.add_argument(
         "--pattern",
         help="Skip inference; use this pattern directly",
     )
-    parser.add_argument("--output", type=Path, help="Write CSV (email,password)")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Output file: each row email + derived password",
+    )
+    parser.add_argument(
+        "--format",
+        choices=("csv", "pairs"),
+        default="csv",
+        help="csv = header email,password; pairs = one line per account: email: password",
+    )
     parser.add_argument("--start-index", type=int, default=1)
     parser.add_argument(
         "--print-pattern",
@@ -68,12 +86,16 @@ def main() -> int:
 
     pattern = args.pattern
     if not pattern:
-        if not args.samples:
-            print("Provide --pattern or --samples to infer one.", file=sys.stderr)
-            return 1
-        samples = load_samples(args.samples)
+        samples: list[tuple[str, str]] = []
+        if args.base_email and args.base_password:
+            samples.append((args.base_email.strip(), args.base_password))
+        elif args.samples:
+            samples = load_samples(args.samples)
         if not samples:
-            print("No samples in file.", file=sys.stderr)
+            print(
+                "Provide --pattern, or --base-email + --base-password, or --samples.",
+                file=sys.stderr,
+            )
             return 1
         try:
             pattern = infer_pattern_from_samples(samples)
@@ -106,16 +128,21 @@ def main() -> int:
             continue
         rows.append((email, pwd))
 
-    if args.output:
-        with args.output.open("w", newline="", encoding="utf-8") as f:
-            w = csv.writer(f)
+    def write_rows(target):
+        if args.format == "pairs":
+            for email, pwd in rows:
+                target.write(f"{email}: {pwd}\n")
+        else:
+            w = csv.writer(target)
             w.writerow(["email", "password"])
             w.writerows(rows)
+
+    if args.output:
+        with args.output.open("w", newline="", encoding="utf-8") as f:
+            write_rows(f)
         print(f"Wrote {len(rows)} rows to {args.output}", file=sys.stderr)
     else:
-        w = csv.writer(sys.stdout)
-        w.writerow(["email", "password"])
-        w.writerows(rows)
+        write_rows(sys.stdout)
     return 0
 
 
