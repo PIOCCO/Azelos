@@ -1,0 +1,4 @@
+# Rename to dummies.csv and replace with your demo emails (one per line or email column).
+# Lines starting with # are ignored.
+demo1@example.com
+demo2@example.com

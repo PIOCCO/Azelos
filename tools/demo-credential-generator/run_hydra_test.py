@@ -127,6 +127,14 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    if not args.emails.is_file():
+        print(
+            f"Email file not found: {args.emails.resolve()}\n"
+            "Create it (see dummies.csv.example) or pass the correct path as the first argument.",
+            file=sys.stderr,
+        )
+        return 1
+
     if args.service in ("http-post-form", "https-post-form") and not args.form:
         print("HTTP form tests require --form (see lab/hydra-http-form-test.md).", file=sys.stderr)
         return 1

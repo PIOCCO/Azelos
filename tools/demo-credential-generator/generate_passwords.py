@@ -64,6 +64,8 @@ def apply_pattern(pattern: str, email: str, index: int) -> str:
 
 
 def load_emails(path: Path) -> list[str]:
+    if not path.is_file():
+        raise FileNotFoundError(f"Email list not found: {path.resolve()}")
     lines = path.read_text(encoding="utf-8").splitlines()
     out = []
     for ln in lines:
