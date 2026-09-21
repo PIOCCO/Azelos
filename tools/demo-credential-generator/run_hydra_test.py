@@ -22,7 +22,7 @@ import argparse
 import shutil
 import subprocess
 import sys
-import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -189,10 +189,15 @@ def main() -> int:
         args.start_index,
     )
 
-    work = args.work_dir or Path(tempfile.mkdtemp(prefix="hydra-test-"))
+    if args.work_dir:
+        work = args.work_dir
+    else:
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        work = Path.home() / "hydra-test-runs" / stamp
+    work = work.expanduser().resolve()
     work.mkdir(parents=True, exist_ok=True)
     c_file = work / "hydra-C.txt"
-    results = work / "hydra-results.txt"
+    results = work / "results.txt"
     write_hydra_c(c_file, pairs)
     print(f"Wrote {len(pairs)} pairs to {c_file}", file=sys.stderr)
 
@@ -206,7 +211,7 @@ def main() -> int:
         "-t",
         str(args.tasks),
         "-o",
-        str(results),
+        "results.txt",
         "-b",
         "text",
     ]
@@ -234,9 +239,16 @@ def main() -> int:
         )
         return 1
 
-    proc = subprocess.run(cmd, capture_output=False)
+    print(f"Working directory: {work}", file=sys.stderr)
+    proc = subprocess.run(cmd, capture_output=False, cwd=work)
     if results.is_file():
         print(f"Results: {results}", file=sys.stderr)
+    else:
+        print(
+            "Hydra did not create results.txt (see errors above). "
+            "You can re-run Hydra manually from the work dir.",
+            file=sys.stderr,
+        )
     return proc.returncode
 
 
