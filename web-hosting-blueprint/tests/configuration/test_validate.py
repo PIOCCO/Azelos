@@ -26,6 +26,34 @@ def test_demo_vue_valid():
     assert run("config/clients/demo-vue-python.yaml") == 0
 
 
+def test_demo_shared_a_valid():
+    assert run("config/clients/demo-shared-a.yaml") == 0
+
+
+def test_demo_shared_b_valid():
+    assert run("config/clients/demo-shared-b.yaml") == 0
+
+
+def test_shared_proxy_requires_frontend_domain(tmp_path):
+    bad = tmp_path / "shared-nodomain.yaml"
+    bad.write_text(
+        """
+client: {name: x, id: x}
+application: {name: x, slug: x}
+environment: {name: dev, type: development}
+hosting: {profile: small, shared_proxy: true}
+frontend: {enabled: true, framework: static, port: 80, source: {build_context: frontend/examples/static}}
+backend: {enabled: false, framework: none, port: 8000, health_endpoint: /health}
+database: {enabled: false, engine: none}
+redis: {enabled: false}
+domains: {backend: api.local}
+ssl: {enabled: false}
+deployment: {strategy: rolling}
+"""
+    )
+    assert run(str(bad)) == 1
+
+
 def test_invalid_domain_fails(tmp_path):
     bad = tmp_path / "bad.yaml"
     bad.write_text(

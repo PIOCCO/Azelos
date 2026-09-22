@@ -14,6 +14,10 @@ environment:
 
 hosting:
   profile: small  # small | standard | resilient
+  # Set true to host many clients on one VM behind a single shared Traefik proxy
+  # (run deployment/edge-up.sh once per host). When false, this client renders its
+  # own nginx proxy bound to host :80/:443 (one client per host / dedicated VM).
+  shared_proxy: false
 
 frontend:
   enabled: true
@@ -38,7 +42,7 @@ backend:
 database:
   enabled: true
   engine: postgresql
-  version: "16" "16"
+  version: "16"
   name: appdb
   user: appuser
   # password via secrets — never in this file for production

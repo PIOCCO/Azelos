@@ -23,7 +23,8 @@
       "type": "object",
       "required": ["profile"],
       "properties": {
-        "profile": { "enum": ["small", "standard", "resilient"] }
+        "profile": { "enum": ["small", "standard", "resilient"] },
+        "shared_proxy": { "type": "boolean" }
       }
     },
     "frontend": {

@@ -54,6 +54,15 @@ fi
 log "Build and deploy version ${VERSION}"
 export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-whbp-$(basename "${GEN}")}"
 
+# Shared-proxy clients join the external edge network owned by Traefik.
+if is_shared_proxy; then
+  ensure_edge_network
+  if ! docker ps --filter "label=whbp.role=edge-proxy" --filter "status=running" \
+      --format '{{.Names}}' | grep -q .; then
+    log "WARNING: shared_proxy is enabled but no Traefik edge proxy is running — run deployment/edge-up.sh"
+  fi
+fi
+
 # Save previous image IDs for rollback
 docker compose -f "${COMPOSE}" --env-file "${DEPLOY_ENV}" images --quiet > "${GEN}/.previous-images" 2>/dev/null || true
 

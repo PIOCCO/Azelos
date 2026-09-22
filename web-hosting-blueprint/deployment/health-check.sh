@@ -46,16 +46,36 @@ for svc in [s for s in proc.stdout.split() if s]:
         failed.append(f"{svc}:not_running")
 
 import urllib.request
-try:
-    urllib.request.urlopen("http://127.0.0.1/healthz", timeout=5)
-except Exception as exc:
-    failed.append(f"proxy_http:{exc}")
+
+shared = bool(cfg.get("hosting", {}).get("shared_proxy", False))
+domains = cfg.get("domains", {})
+
+
+def http_get(path: str, host: str | None):
+    headers = {"Host": host} if host else {}
+    req = urllib.request.Request(f"http://127.0.0.1{path}", headers=headers)
+    return urllib.request.urlopen(req, timeout=5)
+
+
+if shared:
+    # Requests reach the client through the shared Traefik proxy, matched by Host.
+    if cfg.get("frontend", {}).get("enabled"):
+        fe_dom = domains.get("frontend")
+        try:
+            http_get("/", fe_dom)
+        except Exception as exc:
+            failed.append(f"frontend_http:{exc}")
+else:
+    try:
+        http_get("/healthz", None)
+    except Exception as exc:
+        failed.append(f"proxy_http:{exc}")
 
 if cfg.get("backend", {}).get("enabled"):
-    be_dom = cfg.get("domains", {}).get("backend", "localhost")
+    be_dom = domains.get("backend", "localhost")
+    be_path = cfg.get("backend", {}).get("health_endpoint", "/health")
     try:
-        req = urllib.request.Request("http://127.0.0.1/health", headers={"Host": be_dom})
-        urllib.request.urlopen(req, timeout=5)
+        http_get(be_path, be_dom)
     except Exception as exc:
         failed.append(f"backend_health:{exc}")
 

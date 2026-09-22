@@ -25,3 +25,14 @@ Framework matrix:
 | node, python, go, php | `backend/examples/<framework>/Dockerfile` |
 
 Redis deploys **only** when `redis.enabled: true`.
+
+## Proxy mode (`hosting.shared_proxy`)
+
+| Value | Behavior |
+|-------|----------|
+| `false` (default) | Client renders its own nginx proxy bound to host `:80/:443`. One client per host / dedicated VM. |
+| `true` | Client renders no proxy and no host ports; app containers join the external `whbp_edge` network with Traefik labels. Many clients share one host behind a single Traefik proxy (`deployment/edge-up.sh`). |
+
+When `shared_proxy: true`, a `domains.frontend` (and `domains.backend` if the
+backend is enabled) is required, since Traefik routes by Host header. Give each
+client distinct domains. See `docs/traefik.md`.

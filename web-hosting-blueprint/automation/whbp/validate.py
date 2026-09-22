@@ -105,6 +105,10 @@ def logical_checks(cfg: dict) -> list[str]:
     if not be.get("enabled") and be.get("framework") != "none":
         errors.append("backend.framework must be 'none' when backend.enabled is false")
 
+    shared = cfg.get("hosting", {}).get("shared_proxy", False)
+    if shared and fe.get("enabled") and not cfg.get("domains", {}).get("frontend"):
+        errors.append("frontend domain is required when hosting.shared_proxy is true")
+
     if fe.get("enabled") and cfg.get("domains", {}).get("frontend"):
         errors.extend(validate_domain("frontend", cfg.get("domains", {}).get("frontend")))
     elif fe.get("enabled") and cfg.get("environment", {}).get("type") != "development":

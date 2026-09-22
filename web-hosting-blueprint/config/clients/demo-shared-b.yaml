@@ -1,0 +1,63 @@
+client:
+  name: demo-shared-b
+  id: demo-shared-b
+
+application:
+  name: site-b
+  slug: site-b
+
+environment:
+  name: development
+  type: development
+
+hosting:
+  profile: small
+  shared_proxy: true
+
+frontend:
+  enabled: true
+  framework: static
+  source:
+    path: frontend/examples/static-b
+    build_context: frontend/examples/static-b
+  port: 80
+
+backend:
+  enabled: false
+  framework: none
+  port: 8000
+  health_endpoint: /health
+
+database:
+  enabled: false
+  engine: none
+
+redis:
+  enabled: false
+
+domains:
+  frontend: b.demo.local
+  backend: api-b.demo.local
+
+ssl:
+  enabled: false
+
+deployment:
+  strategy: rolling
+
+resources:
+  frontend:
+    cpus: "0.25"
+    memory: 128M
+
+secrets: {}
+
+logging:
+  driver: json-file
+  max_size: 10m
+  max_file: "3"
+
+integration:
+  business_continuity:
+    export_inventory: true
+    export_path: exports/inventory.json

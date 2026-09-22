@@ -28,6 +28,29 @@ render_stack() {
   python3 "${WHBP_ROOT}/automation/whbp/render.py" --config "${WHBP_CLIENT_CONFIG}"
 }
 
+WHBP_EDGE_NETWORK="${WHBP_EDGE_NETWORK:-whbp_edge}"
+
+is_shared_proxy() {
+  python3 - "${WHBP_CLIENT_CONFIG}" <<'PY'
+import sys
+from pathlib import Path
+from automation.whbp.config_loader import load_yaml
+from automation.whbp.paths import repo_root
+p = Path(sys.argv[1])
+if not p.is_absolute():
+    p = repo_root() / p
+cfg = load_yaml(p)
+sys.exit(0 if cfg.get("hosting", {}).get("shared_proxy", False) else 1)
+PY
+}
+
+ensure_edge_network() {
+  if ! docker network inspect "${WHBP_EDGE_NETWORK}" >/dev/null 2>&1; then
+    log "Creating shared edge network ${WHBP_EDGE_NETWORK}"
+    docker network create "${WHBP_EDGE_NETWORK}" >/dev/null
+  fi
+}
+
 generated_dir() {
   python3 - "${WHBP_CLIENT_CONFIG}" <<'PY'
 import sys

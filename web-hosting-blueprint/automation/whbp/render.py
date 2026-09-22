@@ -12,9 +12,15 @@ import yaml
 from automation.whbp.config_loader import load_yaml
 from automation.whbp.paths import repo_root
 
+EDGE_NETWORK = "whbp_edge"
+
 
 def project_name(cfg: dict) -> str:
     return f"{cfg['client']['id']}-{cfg['environment']['type']}"
+
+
+def shared_proxy_enabled(cfg: dict) -> bool:
+    return bool(cfg.get("hosting", {}).get("shared_proxy", False))
 
 
 def generated_dir(cfg: dict) -> Path:
@@ -29,11 +35,19 @@ def render_compose(cfg: dict) -> dict:
     db = cfg["database"]
     redis = cfg["redis"]
     resources = cfg.get("resources", {})
+    shared = shared_proxy_enabled(cfg)
+    ssl = bool(cfg.get("ssl", {}).get("enabled", False))
+    domains = cfg.get("domains", {})
 
     env_file = [".env.deploy"]
 
-    services: dict = {
-        "proxy": {
+    # In shared-proxy mode a single host-level Traefik owns :80/:443 and routes by
+    # Host header, so each client stack drops its own nginx proxy (which would
+    # otherwise collide on the host ports) and attaches app containers to the
+    # shared edge network with Traefik labels instead.
+    services: dict = {}
+    if not shared:
+        services["proxy"] = {
             "build": {"context": str(repo_root() / "proxy/nginx"), "dockerfile": "Dockerfile"},
             "ports": ["80:80", "443:443"],
             "depends_on": [],
@@ -46,30 +60,37 @@ def render_compose(cfg: dict) -> dict:
             "logging": _logging(cfg),
             "labels": _labels(cfg, "proxy"),
         }
-    }
 
     if fe.get("enabled"):
+        fe_port = int(fe.get("runtime_port") or fe.get("port") or 80)
         services["frontend"] = {
             "build": {
                 "context": str(repo_root() / fe["source"]["build_context"]),
                 "dockerfile": _frontend_dockerfile(fe["framework"]),
             },
-            "expose": [str(fe.get("runtime_port") or fe.get("port") or 80)],
+            "expose": [str(fe_port)],
             "env_file": env_file,
             "restart": "unless-stopped",
             **_compose_limits(resources.get("frontend", {})),
             "logging": _logging(cfg),
             "labels": _labels(cfg, "frontend"),
         }
-        services["proxy"]["depends_on"].append("frontend")
+        if shared:
+            services["frontend"]["networks"] = ["default", "edge"]
+            services["frontend"]["labels"].update(
+                _traefik_labels(name, "fe", domains.get("frontend"), fe_port, ssl)
+            )
+        else:
+            services["proxy"]["depends_on"].append("frontend")
 
     if be.get("enabled"):
+        be_port = int(be["port"])
         services["backend"] = {
             "build": {
                 "context": str(repo_root() / be["source"]["build_context"]),
                 "dockerfile": "Dockerfile",
             },
-            "expose": [str(be["port"])],
+            "expose": [str(be_port)],
             "environment": [
                 "WHBP_CLIENT_ID=${WHBP_CLIENT_ID}",
                 "WHBP_ENV=${WHBP_ENV}",
@@ -84,7 +105,13 @@ def render_compose(cfg: dict) -> dict:
             services["backend"]["environment"].append("DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}")
         if redis.get("enabled"):
             services["backend"]["environment"].append("REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0")
-        services["proxy"]["depends_on"].append("backend")
+        if shared:
+            services["backend"]["networks"] = ["default", "edge"]
+            services["backend"]["labels"].update(
+                _traefik_labels(name, "be", domains.get("backend"), be_port, ssl)
+            )
+        else:
+            services["proxy"]["depends_on"].append("backend")
 
     if db.get("enabled"):
         services["postgres"] = {
@@ -128,6 +155,12 @@ def render_compose(cfg: dict) -> dict:
             "labels": _labels(cfg, "redis"),
         }
 
+    networks: dict = {"default": {"name": f"whbp_{name}"}}
+    if shared:
+        # The edge network is created and owned by the shared Traefik stack
+        # (deployment/edge-up.sh); client stacks join it as an external network.
+        networks["edge"] = {"name": EDGE_NETWORK, "external": True}
+
     return {
         "name": name,
         "services": services,
@@ -135,8 +168,25 @@ def render_compose(cfg: dict) -> dict:
             "postgres_data": {},
             "redis_data": {},
         },
-        "networks": {"default": {"name": f"whbp_{name}"}},
+        "networks": networks,
     }
+
+
+def _traefik_labels(project: str, suffix: str, domain: str | None, port: int, ssl: bool) -> dict:
+    """Traefik dynamic routing labels for a client service on the shared edge."""
+    router = f"{project}-{suffix}"
+    entrypoint = "websecure" if ssl else "web"
+    labels = {
+        "traefik.enable": "true",
+        "traefik.docker.network": EDGE_NETWORK,
+        f"traefik.http.routers.{router}.rule": f"Host(`{domain}`)",
+        f"traefik.http.routers.{router}.entrypoints": entrypoint,
+        f"traefik.http.services.{router}.loadbalancer.server.port": str(port),
+    }
+    if ssl:
+        labels[f"traefik.http.routers.{router}.tls"] = "true"
+        labels[f"traefik.http.routers.{router}.tls.certresolver"] = "letsencrypt"
+    return labels
 
 
 def _frontend_dockerfile(framework: str) -> str:
@@ -283,9 +333,13 @@ def main() -> None:
     cfg = load_yaml(cfg_path)
 
     out = generated_dir(cfg)
-    nginx_dir = out / "nginx/conf.d"
-    nginx_dir.mkdir(parents=True, exist_ok=True)
-    (nginx_dir / "default.conf").write_text(render_nginx(cfg), encoding="utf-8")
+    out.mkdir(parents=True, exist_ok=True)
+    # In shared-proxy mode routing is handled by the host-level Traefik via
+    # container labels, so the per-client nginx vhost is not used.
+    if not shared_proxy_enabled(cfg):
+        nginx_dir = out / "nginx/conf.d"
+        nginx_dir.mkdir(parents=True, exist_ok=True)
+        (nginx_dir / "default.conf").write_text(render_nginx(cfg), encoding="utf-8")
     (out / "docker-compose.yml").write_text(yaml.safe_dump(render_compose(cfg), sort_keys=False), encoding="utf-8")
     (out / ".env.compose").write_text(render_env(cfg), encoding="utf-8")
     (out / "metadata.json").write_text(json.dumps({"project": project_name(cfg), "client": cfg["client"]["id"]}, indent=2), encoding="utf-8")
