@@ -2,12 +2,13 @@ import { Link } from "react-router-dom";
 import { Heart, Search } from "lucide-react";
 import { useLocale } from "../lib/useLocale";
 import { useFavorites } from "../context/FavoritesContext";
-import { properties } from "../data/properties";
+import { useListings } from "../context/ListingsContext";
 import PropertyCard from "../components/PropertyCard";
 
 export default function FavoritesPage() {
   const { t } = useLocale();
   const { favorites } = useFavorites();
+  const { properties } = useListings();
   const saved = properties.filter((p) => favorites.includes(p.id));
 
   return (

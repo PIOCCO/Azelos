@@ -12,8 +12,7 @@ import {
   MessageCircle,
   Check,
 } from "lucide-react";
-import { propertyBySlug, properties } from "../data/properties";
-import { ownerById } from "../data/owners";
+import { useListings } from "../context/ListingsContext";
 import { cityById } from "../data/cities";
 import { useLocale } from "../lib/useLocale";
 import { formatPrice, formatNumber, formatDate } from "../lib/format";
@@ -29,6 +28,7 @@ import NotFoundPage from "./NotFoundPage";
 export default function PropertyDetailsPage() {
   const { slug } = useParams();
   const { t, L, lang } = useLocale();
+  const { propertyBySlug, properties, ownerById } = useListings();
   const [contactOpen, setContactOpen] = useState(false);
   const property = slug ? propertyBySlug(slug) : undefined;
 

@@ -2,38 +2,23 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { LayoutGrid, List, SlidersHorizontal, X, SearchX } from "lucide-react";
 import { useLocale } from "../lib/useLocale";
-import { properties } from "../data/properties";
+import { useListings } from "../context/ListingsContext";
 import {
   filterProperties,
   sortProperties,
   type PropertyFilters,
   type SortKey,
 } from "../lib/filter";
+import { filtersToSearchParams, parseFilters } from "../lib/searchParams";
 import PropertyCard from "../components/PropertyCard";
 import FilterSidebar from "../components/FilterSidebar";
 import Pagination from "../components/Pagination";
 import { formatNumber } from "../lib/format";
-import type { PropertyType, TransactionType } from "../data/types";
-
 const PAGE_SIZE = 9;
-
-function parseFilters(params: URLSearchParams): PropertyFilters {
-  const num = (k: string) =>
-    params.get(k) ? Number(params.get(k)) : undefined;
-  return {
-    transaction: (params.get("transaction") as TransactionType) || "",
-    city: params.get("city") || "",
-    neighborhood: params.get("neighborhood") || "",
-    type: (params.get("type") as PropertyType) || "",
-    minPrice: num("minPrice"),
-    maxPrice: num("maxPrice"),
-    bedrooms: num("bedrooms"),
-    verifiedOnly: params.get("verified") === "1",
-  };
-}
 
 export default function SearchPage() {
   const { t, lang } = useLocale();
+  const { properties } = useListings();
   const [params, setParams] = useSearchParams();
   const [filters, setFilters] = useState<PropertyFilters>(() =>
     parseFilters(params),
@@ -52,7 +37,7 @@ export default function SearchPage() {
   const results = useMemo(() => {
     const filtered = filterProperties(properties, filters);
     return sortProperties(filtered, sort);
-  }, [filters, sort]);
+  }, [filters, sort, properties]);
 
   const totalPages = Math.ceil(results.length / PAGE_SIZE);
   const paged = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -60,6 +45,7 @@ export default function SearchPage() {
   const handleChange = (f: PropertyFilters) => {
     setFilters(f);
     setPage(1);
+    setParams(filtersToSearchParams(f), { replace: true });
   };
   const handleReset = () => {
     setFilters({});

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { BadgeCheck, Building2, MapPin } from "lucide-react";
 import type { Owner } from "../data/types";
-import { propertiesByOwner } from "../data/properties";
+import { useListings } from "../context/ListingsContext";
 import { cityById } from "../data/cities";
 import { useLocale } from "../lib/useLocale";
 import Avatar from "./Avatar";
@@ -9,6 +9,7 @@ import Stars from "./Stars";
 
 export default function OwnerCard({ owner }: { owner: Owner }) {
   const { t, L } = useLocale();
+  const { propertiesByOwner } = useListings();
   const count = propertiesByOwner(owner.id).length;
   const city = cityById(owner.cityId);
 

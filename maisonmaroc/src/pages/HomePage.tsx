@@ -5,7 +5,7 @@ import SearchBar from "../components/SearchBar";
 import PropertyCard from "../components/PropertyCard";
 import OwnerCard from "../components/OwnerCard";
 import SmartImage from "../components/SmartImage";
-import { properties } from "../data/properties";
+import { useListings } from "../context/ListingsContext";
 import { owners } from "../data/owners";
 import { cities } from "../data/cities";
 
@@ -42,6 +42,7 @@ function SectionHeader({
 
 export default function HomePage() {
   const { t, L } = useLocale();
+  const { properties } = useListings();
   const featured = properties.filter((p) => p.featured).slice(0, 6);
   const latest = [...properties]
     .sort(

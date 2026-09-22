@@ -3,7 +3,7 @@ import { Heart, Building2, LogOut, User2, Mail, Phone, PlusCircle } from "lucide
 import { useLocale } from "../lib/useLocale";
 import { useAuth } from "../context/AuthContext";
 import { useFavorites } from "../context/FavoritesContext";
-import { properties } from "../data/properties";
+import { useListings } from "../context/ListingsContext";
 import PropertyCard from "../components/PropertyCard";
 import AuthPage from "./AuthPage";
 
@@ -11,6 +11,7 @@ export default function AccountPage() {
   const { t } = useLocale();
   const { user, logout } = useAuth();
   const { favorites } = useFavorites();
+  const { properties } = useListings();
   const navigate = useNavigate();
 
   if (!user) return <AuthPage mode="login" />;

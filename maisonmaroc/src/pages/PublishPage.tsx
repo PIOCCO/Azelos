@@ -1,15 +1,19 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { CheckCircle2, ImagePlus, Eye, ArrowLeft, ArrowRight, PartyPopper } from "lucide-react";
 import { useLocale } from "../lib/useLocale";
+import { useListings } from "../context/ListingsContext";
 import { cities } from "../data/cities";
 import { propertyTypeKeys, amenityKeys } from "../data/meta";
 import { formatPrice } from "../lib/format";
-import type { AmenityKey } from "../data/types";
+import type { AmenityKey, PropertyType } from "../data/types";
 
 export default function PublishPage() {
   const { t, L, lang, isRTL } = useLocale();
+  const { publishListing } = useListings();
   const [step, setStep] = useState(1);
   const [done, setDone] = useState(false);
+  const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
   const Prev = isRTL ? ArrowRight : ArrowLeft;
   const Next = isRTL ? ArrowLeft : ArrowRight;
 
@@ -46,9 +50,23 @@ export default function PublishPage() {
       <div className="container-page flex flex-col items-center justify-center gap-4 py-24 text-center">
         <PartyPopper size={56} className="text-brand-600" />
         <h1 className="text-2xl font-extrabold text-ink-900">{t("publish.published")}</h1>
-        <button className="btn-primary mt-2" onClick={() => { setDone(false); setStep(1); }}>
-          {t("publish.title")}
-        </button>
+        <div className="mt-2 flex flex-wrap justify-center gap-3">
+          {publishedSlug && (
+            <Link to={`/property/${publishedSlug}`} className="btn-primary">
+              {t("publish.viewListing")}
+            </Link>
+          )}
+          <button
+            className="btn-outline"
+            onClick={() => {
+              setDone(false);
+              setStep(1);
+              setPublishedSlug(null);
+            }}
+          >
+            {t("publish.title")}
+          </button>
+        </div>
       </div>
     );
   }
@@ -244,7 +262,30 @@ export default function PublishPage() {
                 {t("publish.next")} <Next size={16} />
               </button>
             ) : (
-              <button onClick={() => setDone(true)} className="btn-primary">
+              <button
+                onClick={() => {
+                  const property = publishListing({
+                    transaction: form.transaction as "sale" | "rent",
+                    type: form.type as PropertyType,
+                    title: form.title,
+                    description: form.description,
+                    price: Number(form.price),
+                    cityId: form.city,
+                    neighborhood: form.neighborhood,
+                    surface: Number(form.surface),
+                    bedrooms: Number(form.bedrooms),
+                    bathrooms: Number(form.bathrooms),
+                    furnished: form.furnished,
+                    amenities: form.amenities,
+                    contactName: form.name,
+                    contactPhone: form.phone,
+                    contactEmail: form.email,
+                  });
+                  setPublishedSlug(property.slug);
+                  setDone(true);
+                }}
+                className="btn-primary"
+              >
                 <CheckCircle2 size={16} /> {t("publish.publishNow")}
               </button>
             )}

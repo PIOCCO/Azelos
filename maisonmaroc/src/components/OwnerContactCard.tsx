@@ -11,7 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import type { Owner, Property } from "../data/types";
-import { propertiesByOwner } from "../data/properties";
+import { useListings } from "../context/ListingsContext";
 import { useLocale } from "../lib/useLocale";
 import { formatDate } from "../lib/format";
 import Avatar from "./Avatar";
@@ -25,6 +25,7 @@ interface Props {
 
 export default function OwnerContactCard({ owner, property, onContact }: Props) {
   const { t, L, lang, isRTL } = useLocale();
+  const { propertiesByOwner } = useListings();
   const count = propertiesByOwner(owner.id).length;
   const waText = encodeURIComponent(
     property ? `${t("contact.prefill")}\n\n"${L(property.title)}"` : t("contact.prefill"),

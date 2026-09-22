@@ -1,9 +1,10 @@
 import { useLocale } from "../lib/useLocale";
-import { owners } from "../data/owners";
+import { useListings } from "../context/ListingsContext";
 import OwnerCard from "../components/OwnerCard";
 
 export default function AgentsPage() {
   const { t } = useLocale();
+  const { owners } = useListings();
   const sorted = [...owners].sort((a, b) => b.rating - a.rating);
   return (
     <div className="container-page py-8">

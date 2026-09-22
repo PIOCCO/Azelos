@@ -21,19 +21,19 @@ export default function Header() {
 
   const navClass = ({ isActive }: { isActive: boolean }) =>
     `rounded-lg px-3 py-2 text-sm font-semibold transition ${
-      isActive ? "text-brand-700" : "text-ink-600 hover:text-ink-900"
+      isActive ? "text-white" : "text-ink-300 hover:text-white"
     }`;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-ink-100 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-ink-950/95 text-white backdrop-blur">
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Link to="/" className="flex items-center gap-2">
           <img src="/logo.svg" alt="" className="h-9 w-9" />
           <div className="leading-tight">
-            <span className="block font-display text-lg font-extrabold text-ink-900">
+            <span className="block font-display text-lg font-extrabold text-white">
               {t("brand.name")}
             </span>
-            <span className="hidden text-[10px] font-medium text-ink-400 sm:block">
+            <span className="hidden text-[10px] font-medium text-ink-300 sm:block">
               {t("brand.tagline")}
             </span>
           </div>
@@ -93,7 +93,7 @@ export default function Header() {
       </div>
 
       {open && (
-        <div className="border-t border-ink-100 bg-white lg:hidden">
+        <div className="border-t border-white/10 bg-ink-950 lg:hidden">
           <div className="container-page space-y-1 py-3">
             {links.map((l) => (
               <NavLink
@@ -101,7 +101,7 @@ export default function Header() {
                 to={l.to}
                 end={l.end}
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-ink-700 hover:bg-ink-50"
+                className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-ink-200 hover:bg-white/10"
               >
                 <Home size={16} /> {l.label}
               </NavLink>

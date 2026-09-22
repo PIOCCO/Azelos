@@ -15,8 +15,8 @@ TypeScript + Tailwind CSS.
 - Property details: image gallery, key facts, description, amenities, OpenStreetMap, similar
   properties, and a trustworthy owner/agent contact card.
 - Owner profiles: bio, rating, reviews, contact, and **all** of the owner's properties.
-- Favorites (persisted in `localStorage`), publish wizard with live preview, login/register,
-  and a user account page.
+- Favorites (persisted in `localStorage`), publish wizard with live preview (new listings are
+  saved to `localStorage` and appear in search/home), login/register, and a user account page.
 - Contact flow: call / WhatsApp / prefilled contact form per property.
 - Fully responsive with a mobile bottom navigation and sticky contact bar.
 

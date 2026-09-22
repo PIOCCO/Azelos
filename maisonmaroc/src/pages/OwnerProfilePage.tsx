@@ -11,8 +11,8 @@ import {
   Building2,
   Languages,
 } from "lucide-react";
-import { ownerById, owners } from "../data/owners";
-import { propertiesByOwner } from "../data/properties";
+import { owners } from "../data/owners";
+import { useListings } from "../context/ListingsContext";
 import { reviewsByOwner } from "../data/reviews";
 import { cityById } from "../data/cities";
 import { useLocale } from "../lib/useLocale";
@@ -29,6 +29,7 @@ export default function OwnerProfilePage() {
   const [contactOpen, setContactOpen] = useState(false);
   const [tab, setTab] = useState<"all" | "sale" | "rent">("all");
 
+  const { ownerById, propertiesByOwner } = useListings();
   const owner = id ? ownerById(id) : undefined;
   if (!owner) return <NotFoundPage />;
 
