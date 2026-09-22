@@ -18,6 +18,9 @@ if ! docker network inspect "${WHBP_EDGE_NETWORK:-whbp_edge}" >/dev/null 2>&1; t
   docker network create "${WHBP_EDGE_NETWORK:-whbp_edge}" >/dev/null
 fi
 
+# Traefik v3.7 negotiates the Docker API version with the host daemon. Only pin
+# it (export WHBP_DOCKER_API_VERSION) if you run an older Traefik that falls back
+# to an API version the daemon rejects.
 log "Rendering Traefik edge stack (acme=${WHBP_TRAEFIK_ACME:-false} dashboard=${WHBP_TRAEFIK_DASHBOARD:-false})"
 python3 "${WHBP_ROOT}/automation/whbp/render_edge.py" --output "${COMPOSE}" >/dev/null
 

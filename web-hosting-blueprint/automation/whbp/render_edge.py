@@ -17,7 +17,7 @@ import yaml
 from automation.whbp.paths import repo_root
 from automation.whbp.render import EDGE_NETWORK
 
-TRAEFIK_IMAGE = "traefik:v3.1"
+TRAEFIK_IMAGE = "traefik:v3.7"
 LETSENCRYPT_STAGING = "https://acme-staging-v02.api.letsencrypt.org/directory"
 
 
@@ -33,6 +33,7 @@ def render_edge(
     acme_email: str = "",
     acme_staging: bool = False,
     dashboard: bool = False,
+    docker_api_version: str = "",
 ) -> dict:
     """Build the Traefik edge compose document.
 
@@ -93,6 +94,12 @@ def render_edge(
         "labels": {"whbp.role": "edge-proxy"},
     }
 
+    # Optional escape hatch: pin the Docker API version if a very old Traefik or
+    # an unusual daemon needs it. Left unset by default — Traefik v3.7 negotiates
+    # the API version with the host daemon on its own.
+    if docker_api_version:
+        traefik["environment"] = [f"DOCKER_API_VERSION={docker_api_version}"]
+
     return {
         "name": "whbp-edge",
         "services": {"traefik": traefik},
@@ -113,6 +120,7 @@ def main() -> None:
         acme_email=os.environ.get("WHBP_ACME_EMAIL", ""),
         acme_staging=_as_bool(os.environ.get("WHBP_ACME_STAGING")),
         dashboard=_as_bool(os.environ.get("WHBP_TRAEFIK_DASHBOARD")),
+        docker_api_version=os.environ.get("WHBP_DOCKER_API_VERSION", ""),
     )
 
     out = Path(args.output)
