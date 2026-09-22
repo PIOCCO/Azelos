@@ -1,3 +1,2 @@
-/** Demo on dribex.ma: `npm run build:dribex` → https://dribex.ma/apio/ */
-declare const _default: import("vite").UserConfigFnObject;
+declare const _default: import("vite").UserConfig;
 export default _default;

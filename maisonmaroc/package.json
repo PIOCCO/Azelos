@@ -7,9 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:dribex": "tsc -b && vite build --mode dribex",
     "preview": "vite preview --host",
-    "preview:dribex": "vite preview --host --mode dribex",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

@@ -1,9 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-/** Demo on dribex.ma: `npm run build:dribex` → https://dribex.ma/apio/ */
-export default defineConfig(({ mode }) => ({
-  base: mode === "dribex" ? "/apio/" : "/",
+export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
@@ -13,4 +11,4 @@ export default defineConfig(({ mode }) => ({
     host: true,
     port: 4173,
   },
-}));
+});

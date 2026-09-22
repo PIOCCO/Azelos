@@ -25,44 +25,8 @@ TypeScript + Tailwind CSS.
 ```bash
 npm install
 npm run dev       # http://localhost:5173
-npm run build     # type-check + production build (site root `/`)
+npm run build     # type-check + production build
 npm run preview   # preview the production build
-```
-
-## Demo on dribex.ma (`/apio`)
-
-Build with the subpath base so routing and assets work under **https://dribex.ma/apio/**:
-
-```bash
-npm run build:dribex
-```
-
-Upload the contents of **`dist/`** to your server directory that maps to `/apio/` (e.g. `public_html/apio/` or `/var/www/dribex/apio/`).
-
-**Nginx** (adjust root to your path):
-
-```nginx
-location /apio/ {
-  alias /var/www/dribex/apio/;
-  try_files $uri $uri/ /apio/index.html;
-}
-```
-
-If you use **Apache** (`.htaccess` inside the `apio` folder):
-
-```apache
-RewriteBase /apio/
-RewriteRule ^index\.html$ - [L]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /apio/index.html [L]
-```
-
-Local check before upload:
-
-```bash
-npm run build:dribex && npm run preview:dribex
-# open http://localhost:4173/apio/
 ```
 
 ## Tech
