@@ -1,9 +1,10 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Menu, X, LogOut, User2 } from "lucide-react";
 import { useState } from "react";
 import { useLocale } from "../lib/useLocale";
 import { useAuth } from "../context/AuthContext";
 import LanguageSwitcher from "./LanguageSwitcher";
+import BrandLogo from "./BrandLogo";
 
 export default function Header() {
   const { t } = useLocale();
@@ -25,25 +26,14 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 bg-navy text-white shadow-md">
-      {/* Top language bar — visual left in RTL */}
       <div className="border-b border-white/10 bg-navy-800/80">
         <div className="container-page flex h-9 items-center justify-end">
           <LanguageSwitcher variant="dark" />
         </div>
       </div>
 
-      <div className="container-page flex h-[60px] items-center justify-between gap-4">
-        <Link to="/" className="flex shrink-0 items-center gap-2.5">
-          <img src="/logo.svg" alt="" className="h-10 w-10" />
-          <div className="leading-tight">
-            <span className="block font-display text-base font-extrabold sm:text-lg">
-              {t("brand.name")}
-            </span>
-            <span className="hidden text-[10px] font-semibold text-white/50 sm:block">
-              {t("brand.tagline")}
-            </span>
-          </div>
-        </Link>
+      <div className="container-page flex h-[64px] items-center justify-between gap-4">
+        <BrandLogo variant="header" showTagline />
 
         <nav className="hidden items-center gap-7 lg:flex">
           {links.map((l) => (
@@ -54,21 +44,22 @@ export default function Header() {
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
-          <Link
+          <NavLink
             to="/publish"
             className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-bold text-white hover:bg-brand-500"
           >
             {t("nav.publishShort")}
-          </Link>
+          </NavLink>
           {user ? (
             <>
-              <Link
+              <NavLink
                 to="/account"
                 className="text-sm font-bold text-white/90 hover:text-white"
               >
                 {user.name.split(" ")[0]}
-              </Link>
+              </NavLink>
               <button
+                type="button"
                 onClick={() => {
                   logout();
                   navigate("/");
@@ -80,16 +71,17 @@ export default function Header() {
               </button>
             </>
           ) : (
-            <Link
+            <NavLink
               to="/login"
               className="text-sm font-bold text-white/90 hover:text-white"
             >
               {t("nav.login")}
-            </Link>
+            </NavLink>
           )}
         </div>
 
         <button
+          type="button"
           className="rounded-lg p-2 text-white lg:hidden"
           onClick={() => setOpen((o) => !o)}
           aria-label="menu"
@@ -101,6 +93,9 @@ export default function Header() {
       {open && (
         <div className="border-t border-white/10 bg-navy lg:hidden">
           <div className="container-page space-y-1 py-3">
+            <div className="mb-3 px-1">
+              <BrandLogo variant="compact" showTagline linkToHome={false} />
+            </div>
             {links.map((l) => (
               <NavLink
                 key={l.to}
@@ -112,20 +107,20 @@ export default function Header() {
                 {l.label}
               </NavLink>
             ))}
-            <Link
+            <NavLink
               to="/publish"
               onClick={() => setOpen(false)}
               className="block rounded-lg bg-brand-600 px-3 py-2.5 text-center text-sm font-bold"
             >
               {t("nav.publishShort")}
-            </Link>
-            <Link
+            </NavLink>
+            <NavLink
               to={user ? "/account" : "/login"}
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-3 py-2.5 text-sm font-bold text-white/80"
             >
               <User2 size={16} /> {user ? t("nav.account") : t("nav.login")}
-            </Link>
+            </NavLink>
           </div>
         </div>
       )}

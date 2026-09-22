@@ -2,19 +2,15 @@ import { Link } from "react-router-dom";
 import { Facebook, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 import { useLocale } from "../lib/useLocale";
 import { cities } from "../data/cities";
+import BrandLogo from "./BrandLogo";
 
 export default function Footer() {
   const { t, L } = useLocale();
   return (
-    <footer className="mt-16 border-t border-ink-100 bg-ink-950 text-ink-200">
+    <footer className="mt-16 border-t border-ink-100 bg-navy text-ink-200">
       <div className="container-page grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <div className="flex items-center gap-2">
-            <img src="/logo.svg" alt="" className="h-9 w-9" />
-            <span className="font-display text-lg font-extrabold text-white">
-              {t("brand.name")}
-            </span>
-          </div>
+          <BrandLogo variant="footer" linkToHome={false} />
           <p className="mt-4 text-sm leading-relaxed text-ink-400">
             {t("footer.about")}
           </p>
@@ -71,7 +67,8 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-white/10 py-5 text-center text-xs text-ink-500">
-        © {new Date().getFullYear()} {t("brand.name")} — {t("footer.rights")}
+        © {new Date().getFullYear()}{" "}
+        <span className="font-black tracking-widest text-white/90">APIO</span> — {t("footer.rights")}
       </div>
     </footer>
   );

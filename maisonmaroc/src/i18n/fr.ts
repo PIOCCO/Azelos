@@ -54,7 +54,7 @@ export const fr: Dict = {
   home: {
     heroTitle: "Trouvez votre bien idéal",
     heroSubtitle:
-      "Des milliers de biens vérifiés dans les plus grandes villes du Maroc, proposés par des agents et propriétaires de confiance.",
+      "APIO — Des milliers de biens vérifiés dans les plus grandes villes du Maroc, proposés par des agents et propriétaires de confiance.",
     searchType: "Type d'opération",
     city: "Ville",
     neighborhood: "Quartier",

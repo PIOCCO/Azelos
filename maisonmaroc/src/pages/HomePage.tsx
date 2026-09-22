@@ -8,6 +8,7 @@ import SmartImage from "../components/SmartImage";
 import { useListings } from "../context/ListingsContext";
 import { owners } from "../data/owners";
 import { cities } from "../data/cities";
+import BrandLogo from "../components/BrandLogo";
 
 const HERO_IMAGE =
   "https://images.unsplash.com/photo-1518548419970-58e985b0a4a2?auto=format&fit=crop&w=1920&q=80";
@@ -70,7 +71,10 @@ export default function HomePage() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-navy/75 via-navy/55 to-navy/85" />
         </div>
-        <div className="container-page relative flex flex-col items-center pt-12 pb-28 text-center sm:pt-16 sm:pb-32">
+        <div className="container-page relative flex flex-col items-center pt-10 pb-28 text-center sm:pt-14 sm:pb-32">
+          <div className="mb-6 rounded-2xl bg-white/10 px-5 py-3 ring-1 ring-white/20 backdrop-blur-sm">
+            <BrandLogo variant="hero" showTagline linkToHome={false} />
+          </div>
           <h1 className="max-w-2xl font-display text-3xl font-extrabold leading-tight text-white sm:text-4xl md:text-[2.75rem]">
             {t("home.heroTitle")}
           </h1>

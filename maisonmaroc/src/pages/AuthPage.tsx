@@ -4,6 +4,7 @@ import { Mail, Lock, User2, Phone } from "lucide-react";
 import { useLocale } from "../lib/useLocale";
 import { useAuth } from "../context/AuthContext";
 import SmartImage from "../components/SmartImage";
+import BrandLogo from "../components/BrandLogo";
 
 export default function AuthPage({ mode }: { mode: "login" | "register" }) {
   const { t } = useLocale();
@@ -38,14 +39,15 @@ export default function AuthPage({ mode }: { mode: "login" | "register" }) {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-brand-900/90 to-brand-700/40 p-8 text-white">
             <div className="flex h-full flex-col justify-end">
-              <img src="/logo.svg" alt="" className="mb-3 h-12 w-12" />
-              <h2 className="text-2xl font-extrabold">{t("brand.name")}</h2>
-              <p className="mt-2 text-brand-100">{t("brand.tagline")}</p>
+              <BrandLogo variant="auth" linkToHome={false} />
             </div>
           </div>
         </div>
 
         <div className="bg-white p-8">
+          <div className="mb-6 lg:hidden">
+            <BrandLogo variant="onLight" showTagline linkToHome={false} />
+          </div>
           <h1 className="text-2xl font-extrabold text-ink-900">
             {isLogin ? t("auth.loginTitle") : t("auth.registerTitle")}
           </h1>
