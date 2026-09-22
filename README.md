@@ -1,6 +1,6 @@
 # Azelos
 
-Client project: **دار المغرب (MaisonMaroc)** — bilingual Moroccan real-estate marketplace.
+Client project: **APIO** — bilingual Moroccan real-estate marketplace.
 
 ## Run the marketplace
 

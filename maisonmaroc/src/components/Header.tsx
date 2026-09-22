@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function Header() {
-  const { t, lang } = useLocale();
+  const { t } = useLocale();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -40,7 +40,7 @@ export default function Header() {
               {t("brand.name")}
             </span>
             <span className="hidden text-[10px] font-semibold text-white/50 sm:block">
-              {lang === "ar" ? "Maison Maroc" : "Dar Al Maghrib"}
+              {t("brand.tagline")}
             </span>
           </div>
         </Link>

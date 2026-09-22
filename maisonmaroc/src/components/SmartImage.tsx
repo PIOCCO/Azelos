@@ -15,7 +15,7 @@ export default function SmartImage({
   alt = "",
   ...rest
 }: SmartImageProps) {
-  const seed = fallbackSeed || encodeURIComponent(src).slice(-24) || "maisonmaroc";
+  const seed = fallbackSeed || encodeURIComponent(src).slice(-24) || "apio";
   const fallback = `https://picsum.photos/seed/${seed}/1200/800`;
   const [current, setCurrent] = useState(src);
 

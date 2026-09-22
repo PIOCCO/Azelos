@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "دار المغرب — Moroccan real-estate marketplace (Arabic RTL / French)",
+  "description": "APIO — Moroccan real-estate marketplace (Arabic RTL / French)",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

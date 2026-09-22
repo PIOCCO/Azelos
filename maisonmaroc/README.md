@@ -1,4 +1,4 @@
-# دار المغرب — MaisonMaroc
+# APIO
 
 A complete, bilingual **Moroccan real-estate marketplace** built with React + Vite +
 TypeScript + Tailwind CSS.

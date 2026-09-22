@@ -65,7 +65,7 @@ export default function Footer() {
               <Phone size={16} /> +212 5 22 00 00 00
             </li>
             <li className="flex items-center gap-2" dir="ltr">
-              <Mail size={16} /> contact@maisonmaroc.ma
+              <Mail size={16} /> contact@apio.ma
             </li>
           </ul>
         </div>

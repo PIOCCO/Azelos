@@ -131,8 +131,8 @@ export function ListingsProvider({ children }: { children: ReactNode }) {
       memberSince: new Date().toISOString().slice(0, 10),
       responseTimeMinutes: 60,
       bio: {
-        ar: "مالك عقار ينشر عبر دار المغرب.",
-        fr: "Propriétaire publiant via MaisonMaroc.",
+        ar: "مالك عقار ينشر عبر APIO.",
+        fr: "Propriétaire publiant via APIO.",
       },
       languages: ["ar", "fr"],
     };

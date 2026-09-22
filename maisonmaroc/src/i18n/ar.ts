@@ -1,5 +1,5 @@
 export const ar = {
-  brand: { name: "دار المغرب", tagline: "سوق العقارات في المغرب" },
+  brand: { name: "APIO", tagline: "سوق العقارات في المغرب" },
   nav: {
     home: "الرئيسية",
     properties: "العقارات",
@@ -205,9 +205,9 @@ export const ar = {
   },
   auth: {
     loginTitle: "تسجيل الدخول",
-    loginSubtitle: "مرحبًا بعودتك إلى دار المغرب",
+    loginSubtitle: "مرحبًا بعودتك إلى APIO",
     registerTitle: "إنشاء حساب",
-    registerSubtitle: "انضم إلى دار المغرب وابدأ رحلتك العقارية",
+    registerSubtitle: "انضم إلى APIO وابدأ رحلتك العقارية",
     email: "البريد الإلكتروني",
     password: "كلمة المرور",
     fullName: "الاسم الكامل",
@@ -232,7 +232,7 @@ export const ar = {
     profileInfo: "المعلومات الشخصية",
   },
   footer: {
-    about: "دار المغرب هي المنصة الرائدة للعقارات في المغرب، تربط الباحثين عن عقار بأفضل الوكلاء والملاك الموثوقين.",
+    about: "APIO هي المنصة الرائدة للعقارات في المغرب، تربط الباحثين عن عقار بأفضل الوكلاء والملاك الموثوقين.",
     quickLinks: "روابط سريعة",
     cities: "المدن",
     contactUs: "اتصل بنا",

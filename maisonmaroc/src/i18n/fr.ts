@@ -1,7 +1,7 @@
 import type { Dict } from "./ar";
 
 export const fr: Dict = {
-  brand: { name: "MaisonMaroc", tagline: "La marketplace immobilière du Maroc" },
+  brand: { name: "APIO", tagline: "La marketplace immobilière du Maroc" },
   nav: {
     home: "Accueil",
     properties: "Propriétés",
@@ -210,9 +210,9 @@ export const fr: Dict = {
   },
   auth: {
     loginTitle: "Connexion",
-    loginSubtitle: "Bon retour sur MaisonMaroc",
+    loginSubtitle: "Bon retour sur APIO",
     registerTitle: "Créer un compte",
-    registerSubtitle: "Rejoignez MaisonMaroc et démarrez votre projet immobilier",
+    registerSubtitle: "Rejoignez APIO et démarrez votre projet immobilier",
     email: "E-mail",
     password: "Mot de passe",
     fullName: "Nom complet",
@@ -238,7 +238,7 @@ export const fr: Dict = {
   },
   footer: {
     about:
-      "MaisonMaroc est la plateforme immobilière de référence au Maroc, reliant les chercheurs de biens aux meilleurs agents et propriétaires de confiance.",
+      "APIO est la plateforme immobilière de référence au Maroc, reliant les chercheurs de biens aux meilleurs agents et propriétaires de confiance.",
     quickLinks: "Liens rapides",
     cities: "Villes",
     contactUs: "Contactez-nous",
