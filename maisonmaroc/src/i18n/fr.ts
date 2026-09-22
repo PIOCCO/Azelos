@@ -8,6 +8,7 @@ export const fr: Dict = {
     agents: "Agents",
     favorites: "Favoris",
     publish: "Publier une annonce",
+    publishShort: "Publier",
     login: "Connexion",
     account: "Mon compte",
     logout: "Déconnexion",
@@ -103,6 +104,7 @@ export const fr: Dict = {
     furnishedOnly: "Meublé",
     clearAll: "Tout effacer",
     mobileFilters: "Filtres",
+    showMap: "Afficher la carte",
   },
   property: {
     overview: "Aperçu",

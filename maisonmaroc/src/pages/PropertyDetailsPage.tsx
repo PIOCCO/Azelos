@@ -62,6 +62,7 @@ export default function PropertyDetailsPage() {
   }&layer=mapnik&marker=${property.lat}%2C${property.lng}`;
 
   return (
+    <div className="bg-ink-50">
     <div className="container-page py-6">
       {/* Breadcrumb */}
       <nav className="mb-4 flex flex-wrap items-center gap-1.5 text-sm text-ink-500">
@@ -205,7 +206,7 @@ export default function PropertyDetailsPage() {
 
         {/* Sidebar */}
         <aside>
-          <div className="lg:sticky lg:top-20">
+          <div className="lg:sticky lg:top-[118px]">
             {owner && (
               <OwnerContactCard
                 owner={owner}
@@ -261,6 +262,7 @@ export default function PropertyDetailsPage() {
           onClose={() => setContactOpen(false)}
         />
       )}
+    </div>
     </div>
   );
 }

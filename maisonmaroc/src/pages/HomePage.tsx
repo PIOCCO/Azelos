@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Building2, Users, MapPinned, Smile, PlusCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, MapPin } from "lucide-react";
 import { useLocale } from "../lib/useLocale";
 import SearchBar from "../components/SearchBar";
 import PropertyCard from "../components/PropertyCard";
@@ -9,6 +9,9 @@ import { useListings } from "../context/ListingsContext";
 import { owners } from "../data/owners";
 import { cities } from "../data/cities";
 
+const HERO_IMAGE =
+  "https://images.unsplash.com/photo-1518548419970-58e985b0a4a2?auto=format&fit=crop&w=1920&q=80";
+
 function SectionHeader({
   title,
   subtitle,
@@ -16,22 +19,22 @@ function SectionHeader({
   cta,
 }: {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   to?: string;
   cta?: string;
 }) {
   const { isRTL } = useLocale();
   const Arrow = isRTL ? ArrowLeft : ArrowRight;
   return (
-    <div className="mb-6 flex items-end justify-between gap-4">
+    <div className="mb-5 flex items-end justify-between gap-4 border-b border-ink-100 pb-4">
       <div>
-        <h2 className="text-2xl font-extrabold text-ink-900 sm:text-3xl">{title}</h2>
-        <p className="mt-1 text-sm text-ink-500">{subtitle}</p>
+        <h2 className="section-title">{title}</h2>
+        {subtitle && <p className="section-sub">{subtitle}</p>}
       </div>
       {to && cta && (
         <Link
           to={to}
-          className="hidden shrink-0 items-center gap-1 text-sm font-semibold text-brand-700 hover:text-brand-800 sm:inline-flex"
+          className="inline-flex shrink-0 items-center gap-1 text-sm font-bold text-brand-600 hover:text-brand-700"
         >
           {cta} <Arrow size={16} />
         </Link>
@@ -43,7 +46,7 @@ function SectionHeader({
 export default function HomePage() {
   const { t, L } = useLocale();
   const { properties } = useListings();
-  const featured = properties.filter((p) => p.featured).slice(0, 6);
+  const featured = properties.filter((p) => p.featured).slice(0, 4);
   const latest = [...properties]
     .sort(
       (a, b) =>
@@ -54,105 +57,72 @@ export default function HomePage() {
     .sort((a, b) => b.rating - a.rating)
     .slice(0, 4);
 
-  const stats = [
-    { icon: Building2, value: `${properties.length}+`, label: t("home.statsProperties") },
-    { icon: Users, value: `${owners.length}+`, label: t("home.statsAgents") },
-    { icon: MapPinned, value: `${cities.length}`, label: t("home.statsCities") },
-    { icon: Smile, value: "2 500+", label: t("home.statsClients") },
-  ];
-
   return (
-    <div>
-      {/* Hero */}
-      <section className="relative">
+    <div className="bg-white">
+      {/* Hero — mockup: architecture bg + headline + search */}
+      <section className="relative min-h-[420px] sm:min-h-[480px]">
         <div className="absolute inset-0">
           <SmartImage
-            src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1920&q=70"
-            fallbackSeed="mm-hero"
+            src={HERO_IMAGE}
+            fallbackSeed="mm-hero-morocco"
             alt=""
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-ink-950/85 via-ink-950/70 to-ink-950/85" />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy/75 via-navy/55 to-navy/85" />
         </div>
-        <div className="container-page relative py-16 sm:py-24">
-          <div className="mx-auto max-w-3xl text-center text-white">
-            <span className="chip bg-white/15 text-white ring-1 ring-white/20">
-              🇲🇦 {t("brand.tagline")}
-            </span>
-            <h1 className="mt-4 font-display text-3xl font-extrabold leading-tight sm:text-5xl">
-              {t("home.heroTitle")} <span className="text-gold-400">✨</span>
-            </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-base text-ink-100 sm:text-lg">
-              {t("home.heroSubtitle")}
-            </p>
-          </div>
-          <div className="mx-auto mt-8 max-w-4xl">
-            <SearchBar />
+        <div className="container-page relative flex flex-col items-center pt-12 pb-28 text-center sm:pt-16 sm:pb-32">
+          <h1 className="max-w-2xl font-display text-3xl font-extrabold leading-tight text-white sm:text-4xl md:text-[2.75rem]">
+            {t("home.heroTitle")}
+          </h1>
+          <p className="mt-3 max-w-xl text-sm text-white/85 sm:text-base">
+            {t("home.heroSubtitle")}
+          </p>
+          <div className="mt-8 w-full max-w-[980px] text-start">
+            <SearchBar hero />
           </div>
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="border-b border-ink-100 bg-white">
-        <div className="container-page grid grid-cols-2 gap-4 py-8 lg:grid-cols-4">
-          {stats.map(({ icon: Icon, value, label }) => (
-            <div key={label} className="flex items-center gap-3">
-              <span className="grid h-12 w-12 place-items-center rounded-xl bg-brand-50 text-brand-600">
-                <Icon size={22} />
-              </span>
-              <div>
-                <div className="text-xl font-extrabold text-ink-900">{value}</div>
-                <div className="text-xs text-ink-500">{label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Featured */}
-      <section className="container-page py-12">
+      {/* Featured — 4 cards row */}
+      <section className="container-page py-10 sm:py-12">
         <SectionHeader
           title={t("home.featured")}
           subtitle={t("home.featuredSub")}
           to="/search"
           cta={t("common.viewAll")}
         />
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {featured.map((p) => (
-            <PropertyCard key={p.id} property={p} />
+            <PropertyCard key={p.id} property={p} variant="compact" />
           ))}
         </div>
       </section>
 
-      {/* Popular cities */}
-      <section className="bg-white py-12">
+      {/* Popular cities — text-forward tiles */}
+      <section className="border-y border-ink-100 bg-ink-50 py-10 sm:py-12">
         <div className="container-page">
-          <SectionHeader
-            title={t("home.popularCities")}
-            subtitle={t("home.popularCitiesSub")}
-          />
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <SectionHeader title={t("home.popularCities")} subtitle={t("home.popularCitiesSub")} />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {cities.map((c) => {
               const count = properties.filter((p) => p.cityId === c.id).length;
               return (
                 <Link
                   key={c.id}
                   to={`/search?city=${c.id}`}
-                  className="group relative overflow-hidden rounded-2xl shadow-card"
+                  className="group flex flex-col items-center rounded-xl border border-ink-200 bg-white px-3 py-5 text-center shadow-sm transition hover:border-brand-300 hover:shadow-md"
                 >
-                  <SmartImage
-                    src={c.image}
-                    fallbackSeed={`city-${c.id}`}
-                    alt={L(c.name)}
-                    className="h-32 w-full object-cover transition duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-3 text-white">
-                    <div className="font-bold">{L(c.name)}</div>
-                    <div className="text-[11px] text-white/80">
-                      {count} {t("home.propertiesCount")}
-                    </div>
-                  </div>
+                  <span className="mb-2 grid h-10 w-10 place-items-center rounded-full bg-brand-50 text-brand-600">
+                    <MapPin size={18} />
+                  </span>
+                  <span className="font-extrabold text-ink-900 group-hover:text-brand-700">
+                    {L(c.name)}
+                  </span>
+                  <span className="mt-0.5 text-[11px] font-medium text-ink-400">
+                    {c.name.fr}
+                  </span>
+                  <span className="mt-2 text-xs font-bold text-brand-600">
+                    {count} {t("home.propertiesCount")}
+                  </span>
                 </Link>
               );
             })}
@@ -161,22 +131,22 @@ export default function HomePage() {
       </section>
 
       {/* Verified owners */}
-      <section className="container-page py-12">
+      <section className="container-page py-10 sm:py-12">
         <SectionHeader
           title={t("home.verifiedOwners")}
           subtitle={t("home.verifiedOwnersSub")}
           to="/agents"
           cta={t("common.viewAll")}
         />
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {topOwners.map((o) => (
             <OwnerCard key={o.id} owner={o} />
           ))}
         </div>
       </section>
 
-      {/* Latest */}
-      <section className="bg-white py-12">
+      {/* Latest properties */}
+      <section className="border-t border-ink-100 bg-ink-50 py-10 sm:py-12">
         <div className="container-page">
           <SectionHeader
             title={t("home.latest")}
@@ -184,29 +154,11 @@ export default function HomePage() {
             to="/search"
             cta={t("common.viewAll")}
           />
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {latest.map((p) => (
-              <PropertyCard key={p.id} property={p} />
+              <PropertyCard key={p.id} property={p} variant="compact" />
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="container-page py-12">
-        <div className="relative overflow-hidden rounded-3xl bg-brand-700 px-6 py-12 text-center text-white sm:px-12">
-          <div className="relative mx-auto max-w-2xl">
-            <h2 className="text-2xl font-extrabold sm:text-3xl">{t("home.ctaTitle")}</h2>
-            <p className="mx-auto mt-3 max-w-xl text-brand-100">{t("home.ctaSub")}</p>
-            <Link
-              to="/publish"
-              className="btn mt-6 bg-white text-brand-700 hover:bg-brand-50"
-            >
-              <PlusCircle size={18} /> {t("home.ctaButton")}
-            </Link>
-          </div>
-          <div className="pointer-events-none absolute -end-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
-          <div className="pointer-events-none absolute -bottom-16 -start-10 h-56 w-56 rounded-full bg-white/10" />
         </div>
       </section>
     </div>

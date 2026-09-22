@@ -1,28 +1,33 @@
-import { Globe } from "lucide-react";
 import { useLocale } from "../lib/useLocale";
 
-export default function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
+/** Mockup style: `Français | العربية` text toggle */
+export default function LanguageSwitcher({
+  variant = "dark",
+}: {
+  variant?: "dark" | "light";
+}) {
   const { lang, changeLang } = useLocale();
+  const inactive =
+    variant === "dark" ? "text-white/55 hover:text-white" : "text-ink-500 hover:text-ink-800";
+  const active = variant === "dark" ? "text-white font-bold" : "text-brand-700 font-bold";
+  const sep = variant === "dark" ? "text-white/30" : "text-ink-300";
+
   return (
-    <div className="inline-flex items-center gap-1 rounded-full border border-ink-200 bg-white p-0.5 text-sm">
-      {!compact && <Globe size={16} className="mx-1 text-ink-400" />}
-      <button
-        type="button"
-        onClick={() => changeLang("ar")}
-        className={`rounded-full px-3 py-1 font-semibold transition ${
-          lang === "ar" ? "bg-brand-600 text-white" : "text-ink-600 hover:text-ink-900"
-        }`}
-      >
-        العربية
-      </button>
+    <div className="flex items-center gap-2 text-sm font-semibold">
       <button
         type="button"
         onClick={() => changeLang("fr")}
-        className={`rounded-full px-3 py-1 font-semibold transition ${
-          lang === "fr" ? "bg-brand-600 text-white" : "text-ink-600 hover:text-ink-900"
-        }`}
+        className={lang === "fr" ? active : inactive}
       >
         Français
+      </button>
+      <span className={sep}>|</span>
+      <button
+        type="button"
+        onClick={() => changeLang("ar")}
+        className={lang === "ar" ? active : inactive}
+      >
+        العربية
       </button>
     </div>
   );

@@ -11,7 +11,6 @@ import {
   Building2,
   Languages,
 } from "lucide-react";
-import { owners } from "../data/owners";
 import { useListings } from "../context/ListingsContext";
 import { reviewsByOwner } from "../data/reviews";
 import { cityById } from "../data/cities";
@@ -29,7 +28,7 @@ export default function OwnerProfilePage() {
   const [contactOpen, setContactOpen] = useState(false);
   const [tab, setTab] = useState<"all" | "sale" | "rent">("all");
 
-  const { ownerById, propertiesByOwner } = useListings();
+  const { ownerById, propertiesByOwner, owners } = useListings();
   const owner = id ? ownerById(id) : undefined;
   if (!owner) return <NotFoundPage />;
 
@@ -43,8 +42,16 @@ export default function OwnerProfilePage() {
   return (
     <div>
       {/* Cover + profile header */}
-      <div className="bg-gradient-to-br from-brand-700 to-brand-900">
-        <div className="container-page py-10">
+      <div className="relative bg-navy">
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-40"
+          style={{
+            backgroundImage:
+              "url(https://images.unsplash.com/photo-1518548419970-58e985b0a4a2?auto=format&fit=crop&w=1600&q=70)",
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-navy/90 to-navy" />
+        <div className="container-page relative py-10">
           <div className="flex flex-col items-center gap-5 text-center text-white sm:flex-row sm:text-start rtl:sm:text-right">
             <Avatar
               src={owner.avatar}
