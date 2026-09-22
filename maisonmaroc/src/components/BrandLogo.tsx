@@ -51,7 +51,7 @@ export default function BrandLogo({
   const inner = (
     <div className={`flex items-center gap-2.5 ${className}`}>
       <img
-        src="/logo-mark.svg"
+        src={`${import.meta.env.BASE_URL}logo-mark.svg`}
         alt=""
         className={`shrink-0 ${iconClass[variant]}`}
       />
