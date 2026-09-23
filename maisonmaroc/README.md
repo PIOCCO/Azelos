@@ -22,12 +22,38 @@ TypeScript + Tailwind CSS.
 
 ## Getting started
 
+### Frontend (marketplace)
+
 ```bash
+cd maisonmaroc
 npm install
-npm run dev       # http://localhost:5173
+npm run dev       # http://localhost:5173 — proxies /api to the backend
 npm run build     # type-check + production build
 npm run preview   # preview the production build
 ```
+
+### Backend (auth API)
+
+```bash
+cd maisonmaroc/server
+cp .env.example .env
+npm install
+npm run migrate   # SQLite schema + bootstrap super-admin (+ optional demo owner)
+npm run dev       # http://localhost:3001
+```
+
+See [AUTH.md](./AUTH.md) for roles, Google OAuth setup, and security notes.
+
+### Auth routes (frontend)
+
+| Path | Purpose |
+|------|---------|
+| `/client/login`, `/client/register` | Client email/password + Google |
+| `/client/account` | Client dashboard |
+| `/owner/login`, `/owner` | Owner portal (admin-provisioned accounts) |
+| `/admin/login`, `/admin` | Super-admin owner management |
+
+Legacy `/login` and `/register` redirect to client auth.
 
 ## Tech
 
@@ -39,7 +65,7 @@ React 18, React Router 6, i18next / react-i18next, Tailwind CSS 3, lucide-react,
 src/
   data/        # types + seed data (cities, owners, properties, reviews) and selectors
   i18n/        # ar / fr dictionaries + i18n init (sets <html dir> automatically)
-  context/     # favorites + auth (localStorage)
+  context/     # favorites + auth (API session cookie)
   lib/         # locale hook, formatting, filtering/sorting
   components/  # header, footer, cards, gallery, filters, contact modal, ...
   pages/       # home, search, details, owner, agents, favorites, publish, auth, account

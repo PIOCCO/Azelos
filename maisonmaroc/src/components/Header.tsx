@@ -3,6 +3,7 @@ import { Menu, X, LogOut, User2 } from "lucide-react";
 import { useState } from "react";
 import { useLocale } from "../lib/useLocale";
 import { useAuth } from "../context/AuthContext";
+import { dashboardPathForRole } from "../lib/api";
 import LanguageSwitcher from "./LanguageSwitcher";
 import BrandLogo from "./BrandLogo";
 
@@ -53,15 +54,15 @@ export default function Header() {
           {user ? (
             <>
               <NavLink
-                to="/account"
+                to={dashboardPathForRole(user.role)}
                 className="text-sm font-bold text-white/90 hover:text-white"
               >
                 {user.name.split(" ")[0]}
               </NavLink>
               <button
                 type="button"
-                onClick={() => {
-                  logout();
+                onClick={async () => {
+                  await logout();
                   navigate("/");
                 }}
                 className="text-white/60 hover:text-white"
@@ -72,7 +73,7 @@ export default function Header() {
             </>
           ) : (
             <NavLink
-              to="/login"
+              to="/client/login"
               className="text-sm font-bold text-white/90 hover:text-white"
             >
               {t("nav.login")}
@@ -115,7 +116,7 @@ export default function Header() {
               {t("nav.publishShort")}
             </NavLink>
             <NavLink
-              to={user ? "/account" : "/login"}
+              to={user ? dashboardPathForRole(user.role) : "/client/login"}
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-3 py-2.5 text-sm font-bold text-white/80"
             >

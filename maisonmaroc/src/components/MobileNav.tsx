@@ -12,7 +12,7 @@ export default function MobileNav() {
     { to: "/search", icon: Search, label: t("nav.properties") },
     { to: "/publish", icon: PlusCircle, label: t("nav.publishShort") },
     { to: "/favorites", icon: Heart, label: t("nav.favorites"), badge: count },
-    { to: "/account", icon: User2, label: t("nav.account") },
+    { to: "/client/account", icon: User2, label: t("nav.account") },
   ];
 
   return (

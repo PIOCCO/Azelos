@@ -7,42 +7,40 @@ import {
   useState,
   type ReactNode,
 } from "react";
-
-const STORAGE_KEY = "mm.user";
-
-export interface User {
-  name: string;
-  email: string;
-  phone?: string;
-}
+import { apiFetch, type ApiUser } from "../lib/api";
 
 interface AuthContextValue {
-  user: User | null;
-  login: (user: User) => void;
-  logout: () => void;
+  user: ApiUser | null;
+  loading: boolean;
+  refresh: () => Promise<void>;
+  logout: () => Promise<void>;
+  setUser: (user: ApiUser | null) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? (JSON.parse(raw) as User) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState<ApiUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    const { data } = await apiFetch<{ user: ApiUser }>("/api/auth/me");
+    setUser(data?.user ?? null);
+  }, []);
 
   useEffect(() => {
-    if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    else localStorage.removeItem(STORAGE_KEY);
-  }, [user]);
+    refresh().finally(() => setLoading(false));
+  }, [refresh]);
 
-  const login = useCallback((u: User) => setUser(u), []);
-  const logout = useCallback(() => setUser(null), []);
+  const logout = useCallback(async () => {
+    await apiFetch("/api/auth/logout", { method: "POST" });
+    setUser(null);
+  }, []);
 
-  const value = useMemo(() => ({ user, login, logout }), [user, login, logout]);
+  const value = useMemo(
+    () => ({ user, loading, refresh, logout, setUser }),
+    [user, loading, refresh, logout],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

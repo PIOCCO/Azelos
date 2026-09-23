@@ -5,16 +5,18 @@ import { useAuth } from "../context/AuthContext";
 import { useFavorites } from "../context/FavoritesContext";
 import { useListings } from "../context/ListingsContext";
 import PropertyCard from "../components/PropertyCard";
-import AuthPage from "./AuthPage";
+import { Navigate } from "react-router-dom";
 
 export default function AccountPage() {
   const { t } = useLocale();
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const { favorites } = useFavorites();
   const { properties } = useListings();
   const navigate = useNavigate();
 
-  if (!user) return <AuthPage mode="login" />;
+  if (loading) return null;
+  if (!user) return <Navigate to="/client/login" replace />;
+  if (user.role !== "CLIENT") return <Navigate to="/" replace />;
 
   const saved = properties.filter((p) => favorites.includes(p.id));
   const initials = user.name
@@ -45,8 +47,8 @@ export default function AccountPage() {
               )}
             </div>
             <button
-              onClick={() => {
-                logout();
+              onClick={async () => {
+                await logout();
                 navigate("/");
               }}
               className="btn-outline mt-5 w-full"
