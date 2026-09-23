@@ -2,8 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 function normalizeBase(raw: string | undefined) {
-  const base = (raw ?? "/").trim() || "/";
-  if (base === "/") return "/";
+  const base = (raw ?? "./").trim() || "./";
+  if (base === "/" || base === "./" || base === ".") return "./";
   return base.endsWith("/") ? base : `${base}/`;
 }
 

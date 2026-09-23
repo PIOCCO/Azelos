@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:dribex": "tsc -b && VITE_BASE_PATH=/apio/ vite build",
     "build:aipo": "tsc -b && VITE_BASE_PATH=/AIPO/ vite build",
     "preview": "vite preview --host",
     "lint": "tsc --noEmit"

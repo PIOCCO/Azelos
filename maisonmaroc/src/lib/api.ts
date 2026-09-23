@@ -28,22 +28,26 @@ export async function apiFetch<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<{ data?: T; error?: string; status: number }> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(init.headers || {}),
-    },
-  });
-  const body = await parseJson(res);
-  if (!res.ok) {
-    const err =
-      (body && typeof body.error === "string" && body.error) ||
-      `Request failed (${res.status})`;
-    return { error: err, status: res.status };
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(init.headers || {}),
+      },
+    });
+    const body = await parseJson(res);
+    if (!res.ok) {
+      const err =
+        (body && typeof body.error === "string" && body.error) ||
+        `Request failed (${res.status})`;
+      return { error: err, status: res.status };
+    }
+    return { data: body as T, status: res.status };
+  } catch {
+    return { error: "Network error", status: 0 };
   }
-  return { data: body as T, status: res.status };
 }
 
 export function googleOAuthStartUrl() {

@@ -28,20 +28,32 @@ TypeScript + Tailwind CSS.
 cd maisonmaroc
 npm install
 npm run dev       # http://localhost:5173 — proxies /api to the backend
-npm run build     # type-check + production build (site root `/`)
-npm run build:aipo # build for subdirectory https://your-domain.com/AIPO/
-npm run preview   # preview the production build
+npm run build        # default: works at site root **or** in /apio, /AIPO, /APIO
+npm run build:dribex # explicit base for https://dribex.ma/apio/ (same as before)
+npm run build:aipo   # explicit base for https://your-domain.com/AIPO/
+npm run preview      # preview the production build
 ```
 
-### Deploy under `/AIPO`
+### Deploy on dribex.ma (`/apio`) or `/AIPO`
 
-If the host serves the app at **`/AIPO`** (not the domain root), build with the matching base path and upload **`dist/`** into that folder:
+**If it worked yesterday and shows 404 today**, the files are usually missing on the server or the wrong build was uploaded (root `/` assets into a subfolder). Re-upload after building:
 
 ```bash
-npm run build:aipo
+npm run build:dribex   # for dribex.ma/apio/
+# or
+npm run build          # one build for /apio, /AIPO, or domain root (relative assets)
 ```
 
-Then open **`https://your-domain.com/AIPO/`** (trailing slash). Apache hosts include `public/.htaccess` for SPA routing inside that folder. Set `VITE_BASE_PATH` in `.env` if you use a different folder name.
+Upload everything inside **`dist/`** into the folder that maps to that URL (e.g. `public_html/apio/` or `AIPO/`). Open **`https://dribex.ma/apio/`** or **`https://your-domain.com/AIPO/`** with a trailing slash.
+
+Apache: `public/.htaccess` is copied into `dist/` for SPA fallback. Nginx example:
+
+```nginx
+location /apio/ {
+  alias /var/www/.../apio/;
+  try_files $uri $uri/ /apio/index.html;
+}
+```
 
 ### Backend (auth API)
 
