@@ -4,13 +4,14 @@ import { BrowserRouter } from "react-router-dom";
 import "./i18n";
 import "./index.css";
 import App from "./App";
+import { appBasename } from "./lib/appBase";
 import { FavoritesProvider } from "./context/FavoritesContext";
 import { AuthProvider } from "./context/AuthContext";
 import { ListingsProvider } from "./context/ListingsContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={appBasename()}>
       <AuthProvider>
         <ListingsProvider>
           <FavoritesProvider>

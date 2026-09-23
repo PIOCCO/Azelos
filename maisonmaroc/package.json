@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:aipo": "tsc -b && VITE_BASE_PATH=/AIPO/ vite build",
     "preview": "vite preview --host",
     "lint": "tsc --noEmit"
   },
@@ -19,6 +20,7 @@
     "react-router-dom": "^6.24.0"
   },
   "devDependencies": {
+    "@types/node": "^26.6.2",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

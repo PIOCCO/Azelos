@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useLocale } from "../lib/useLocale";
+import { withBase } from "../lib/appBase";
 
 type Variant = "header" | "footer" | "hero" | "auth" | "compact" | "onLight";
 
@@ -51,7 +52,7 @@ export default function BrandLogo({
   const inner = (
     <div className={`flex items-center gap-2.5 ${className}`}>
       <img
-        src="/logo-mark.svg"
+        src={withBase("/logo-mark.svg")}
         alt=""
         className={`shrink-0 ${iconClass[variant]}`}
       />

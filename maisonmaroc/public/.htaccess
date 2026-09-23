@@ -1,0 +1,7 @@
+# SPA fallback when the app is deployed in a subdirectory (e.g. /AIPO/).
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>

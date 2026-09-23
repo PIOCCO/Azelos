@@ -28,9 +28,20 @@ TypeScript + Tailwind CSS.
 cd maisonmaroc
 npm install
 npm run dev       # http://localhost:5173 — proxies /api to the backend
-npm run build     # type-check + production build
+npm run build     # type-check + production build (site root `/`)
+npm run build:aipo # build for subdirectory https://your-domain.com/AIPO/
 npm run preview   # preview the production build
 ```
+
+### Deploy under `/AIPO`
+
+If the host serves the app at **`/AIPO`** (not the domain root), build with the matching base path and upload **`dist/`** into that folder:
+
+```bash
+npm run build:aipo
+```
+
+Then open **`https://your-domain.com/AIPO/`** (trailing slash). Apache hosts include `public/.htaccess` for SPA routing inside that folder. Set `VITE_BASE_PATH` in `.env` if you use a different folder name.
 
 ### Backend (auth API)
 

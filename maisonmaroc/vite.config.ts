@@ -1,7 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+function normalizeBase(raw: string | undefined) {
+  const base = (raw ?? "/").trim() || "/";
+  if (base === "/") return "/";
+  return base.endsWith("/") ? base : `${base}/`;
+}
+
 export default defineConfig({
+  base: normalizeBase(process.env.VITE_BASE_PATH),
   plugins: [react()],
   server: {
     host: true,
