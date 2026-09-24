@@ -66,7 +66,7 @@ export default function HomePage() {
             src={HERO_IMAGE}
             fallbackSeed="mm-hero-morocco"
             alt=""
-            className="h-full w-full origin-center scale-[1.28] object-cover object-center"
+            className="absolute inset-0 h-full w-full origin-center scale-[1.18] object-cover object-center sm:scale-[1.2]"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-navy/75 via-navy/55 to-navy/85" />
         </div>
