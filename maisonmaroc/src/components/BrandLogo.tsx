@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 import { useLocale } from "../lib/useLocale";
 import { withBase } from "../lib/appBase";
 
-/** Single official APIO brand mark in `public/apio-logo.png`. */
-export const OFFICIAL_LOGO_PATH = "/apio-logo.png";
+/** Official mark at `public/public/apio-logo.png` → URL `/public/apio-logo.png`. */
+export const OFFICIAL_LOGO_PATH = "/public/apio-logo.png";
 
 function logoSrc(): string {
   return withBase(OFFICIAL_LOGO_PATH);
