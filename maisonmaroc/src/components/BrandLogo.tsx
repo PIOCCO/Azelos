@@ -14,11 +14,11 @@ type Variant = "header" | "footer" | "hero" | "auth" | "compact" | "onLight";
 /** Height-led sizing; width follows asset aspect ratio (~1408×768). */
 const sizeClass: Record<Variant, string> = {
   header:
-    "h-[4.75rem] w-auto max-w-[min(440px,72vw)] sm:h-20 sm:max-w-[520px] md:h-24 md:max-w-[580px] lg:h-28 lg:max-w-[640px]",
+    "h-16 w-auto max-w-[min(400px,68vw)] sm:h-[4.75rem] sm:max-w-[460px] md:h-20 md:max-w-[500px] lg:h-[5.5rem] lg:max-w-[540px]",
   footer: "h-16 w-auto max-w-[320px] sm:h-[4.5rem] sm:max-w-[360px]",
   hero: "h-24 w-auto max-w-[min(420px,92vw)] sm:h-28 md:h-32 lg:max-w-[480px]",
   auth: "h-20 w-auto max-w-[360px] sm:h-24 sm:max-w-[420px]",
-  compact: "h-16 w-auto max-w-[340px] sm:h-[4.75rem] sm:max-w-[400px]",
+  compact: "h-14 w-auto max-w-[300px] sm:h-16 sm:max-w-[340px]",
   onLight: "h-14 w-auto max-w-[320px] sm:h-16 sm:max-w-[360px]",
 };
 

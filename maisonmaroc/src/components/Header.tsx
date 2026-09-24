@@ -22,18 +22,18 @@ export default function Header() {
 
   const navClass = ({ isActive }: { isActive: boolean }) =>
     `text-sm font-bold transition ${
-      isActive ? "text-white" : "text-white/75 hover:text-white"
+      isActive ? "text-brand-700" : "text-ink-600 hover:text-brand-700"
     }`;
 
   return (
-    <header className="sticky top-0 z-40 bg-navy text-white shadow-md">
-      <div className="border-b border-white/10 bg-navy-800/80">
+    <header className="sticky top-0 z-40 border-b border-ink-100 bg-white text-ink-900 shadow-sm">
+      <div className="border-b border-white/10 bg-navy-800/90">
         <div className="container-page flex h-9 items-center justify-end">
           <LanguageSwitcher variant="dark" />
         </div>
       </div>
 
-      <div className="container-page flex min-h-[96px] items-center justify-between gap-4 py-2 sm:min-h-[112px] sm:py-3">
+      <div className="container-page flex min-h-[92px] items-center justify-between gap-4 py-2 sm:min-h-[104px] sm:py-3">
         <BrandLogo variant="header" />
 
         <nav className="hidden items-center gap-7 lg:flex">
@@ -49,7 +49,7 @@ export default function Header() {
             <>
               <NavLink
                 to={dashboardPathForRole(user.role)}
-                className="text-sm font-bold text-white/90 hover:text-white"
+                className="text-sm font-bold text-ink-700 hover:text-brand-700"
               >
                 {user.name.split(" ")[0]}
               </NavLink>
@@ -59,7 +59,7 @@ export default function Header() {
                   await logout();
                   navigate("/");
                 }}
-                className="text-white/60 hover:text-white"
+                className="text-ink-400 hover:text-ink-700"
                 aria-label={t("nav.logout")}
               >
                 <LogOut size={18} />
@@ -68,7 +68,7 @@ export default function Header() {
           ) : (
             <NavLink
               to="/client/login"
-              className="text-sm font-bold text-white/90 hover:text-white"
+              className="text-sm font-bold text-ink-700 hover:text-brand-700"
             >
               {t("nav.login")}
             </NavLink>
@@ -77,7 +77,7 @@ export default function Header() {
 
         <button
           type="button"
-          className="rounded-lg p-2 text-white lg:hidden"
+          className="rounded-lg p-2 text-ink-700 lg:hidden"
           onClick={() => setOpen((o) => !o)}
           aria-label="menu"
         >
@@ -86,7 +86,7 @@ export default function Header() {
       </div>
 
       {open && (
-        <div className="border-t border-white/10 bg-navy lg:hidden">
+        <div className="border-t border-ink-100 bg-white lg:hidden">
           <div className="container-page space-y-1 py-3">
             <div className="mb-3 px-1">
               <BrandLogo variant="compact" linkToHome={false} />
@@ -97,7 +97,7 @@ export default function Header() {
                 to={l.to}
                 end={l.end}
                 onClick={() => setOpen(false)}
-                className="block rounded-lg px-3 py-2.5 text-sm font-bold text-white/90 hover:bg-white/10"
+                className="block rounded-lg px-3 py-2.5 text-sm font-bold text-ink-700 hover:bg-ink-50"
               >
                 {l.label}
               </NavLink>
@@ -105,14 +105,14 @@ export default function Header() {
             <NavLink
               to="/publish"
               onClick={() => setOpen(false)}
-              className="block rounded-lg bg-brand-600 px-3 py-2.5 text-center text-sm font-bold"
+              className="block rounded-lg bg-brand-600 px-3 py-2.5 text-center text-sm font-bold text-white"
             >
               {t("nav.publishShort")}
             </NavLink>
             <NavLink
               to={user ? dashboardPathForRole(user.role) : "/client/login"}
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-3 py-2.5 text-sm font-bold text-white/80"
+              className="flex items-center gap-2 px-3 py-2.5 text-sm font-bold text-ink-600"
             >
               <User2 size={16} /> {user ? t("nav.account") : t("nav.login")}
             </NavLink>
