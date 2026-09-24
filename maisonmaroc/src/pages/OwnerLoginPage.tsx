@@ -41,7 +41,7 @@ export default function OwnerLoginPage() {
   return (
     <div className="container-page py-10">
       <div className="mx-auto max-w-md rounded-3xl bg-white p-8 shadow-card ring-1 ring-ink-100">
-        <BrandLogo variant="onLight" showTagline linkToHome={false} />
+        <BrandLogo variant="onLight" linkToHome={false} />
         <h1 className="mt-6 text-2xl font-extrabold text-ink-900">{t("auth.ownerLoginTitle")}</h1>
         <p className="mt-1 text-sm text-ink-500">{t("auth.ownerLoginSubtitle")}</p>
 

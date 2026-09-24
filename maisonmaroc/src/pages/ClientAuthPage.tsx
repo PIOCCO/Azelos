@@ -110,7 +110,7 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
 
         <div className="bg-white p-8">
           <div className="mb-6 lg:hidden">
-            <BrandLogo variant="onLight" showTagline linkToHome={false} />
+            <BrandLogo variant="onLight" linkToHome={false} />
           </div>
           <h1 className="text-2xl font-extrabold text-ink-900">
             {isLogin ? t("auth.loginTitle") : t("auth.registerTitle")}

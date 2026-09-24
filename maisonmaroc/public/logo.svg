@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none" role="img" aria-label="APIO">
-  <rect width="40" height="40" rx="8" fill="#2563eb"/>
-  <path d="M20 7c-1.6 0-3.2 1.2-3.2 3.2v1.6h-4.8c-1.2 0-2 1-2 2v14.4h25.6V14.8c0-1-.8-2-2-2h-4.8v-1.6c0-2-1.6-3.2-3.2-3.2z" fill="#fff"/>
-  <path d="M10 15h20v3.2H10z" fill="#fbbf24"/>
-  <path d="M15 21.5h10v10H15z" fill="#dbeafe"/>
-  <text x="48" y="27" fill="#2563eb" font-family="system-ui, sans-serif" font-size="22" font-weight="800" letter-spacing="0.12em">APIO</text>
-</svg>

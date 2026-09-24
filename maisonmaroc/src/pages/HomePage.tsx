@@ -73,7 +73,7 @@ export default function HomePage() {
         </div>
         <div className="container-page relative flex flex-col items-center pt-10 pb-28 text-center sm:pt-14 sm:pb-32">
           <div className="mb-6 rounded-2xl bg-white/10 px-5 py-3 ring-1 ring-white/20 backdrop-blur-sm">
-            <BrandLogo variant="hero" showTagline linkToHome={false} />
+            <BrandLogo variant="hero" linkToHome={false} />
           </div>
           <h1 className="max-w-2xl font-display text-3xl font-extrabold leading-tight text-white sm:text-4xl md:text-[2.75rem]">
             {t("home.heroTitle")}

@@ -34,7 +34,7 @@ export default function Header() {
       </div>
 
       <div className="container-page flex h-[64px] items-center justify-between gap-4">
-        <BrandLogo variant="header" showTagline />
+        <BrandLogo variant="header" />
 
         <nav className="hidden items-center gap-7 lg:flex">
           {links.map((l) => (
@@ -89,7 +89,7 @@ export default function Header() {
         <div className="border-t border-white/10 bg-navy lg:hidden">
           <div className="container-page space-y-1 py-3">
             <div className="mb-3 px-1">
-              <BrandLogo variant="compact" showTagline linkToHome={false} />
+              <BrandLogo variant="compact" linkToHome={false} />
             </div>
             {links.map((l) => (
               <NavLink
