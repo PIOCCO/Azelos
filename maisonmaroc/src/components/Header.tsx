@@ -27,13 +27,13 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink-100 bg-white text-ink-900 shadow-sm">
-      <div className="border-b border-ink-100 bg-white">
+      <div className="border-b border-white/10 bg-navy-800/90">
         <div className="container-page flex h-9 items-center justify-end">
-          <LanguageSwitcher variant="light" />
+          <LanguageSwitcher variant="dark" />
         </div>
       </div>
 
-      <div className="container-page flex min-h-[84px] items-center justify-between gap-4 py-2 sm:min-h-[92px] sm:py-2.5">
+      <div className="container-page flex min-h-[92px] items-center justify-between gap-4 py-2 sm:min-h-[104px] sm:py-3">
         <BrandLogo variant="header" />
 
         <nav className="hidden items-center gap-7 lg:flex">
