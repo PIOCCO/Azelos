@@ -66,6 +66,7 @@ export const ar = {
     anyType: "كل الأنواع",
     anyBedrooms: "أي عدد",
     searchNow: "ابحث الآن",
+    discover: "اكتشف",
     featured: "الخصائص المميزة",
     featuredSub: "مختارة بعناية من محفظتنا",
     popularCities: "مدن Oriental",

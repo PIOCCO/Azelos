@@ -17,7 +17,7 @@ export default function HomePage() {
 
   return (
     <div className="bg-white">
-      <section className="relative min-h-[520px] sm:min-h-[600px]">
+      <section className="relative flex min-h-[520px] items-center justify-center sm:min-h-[600px]">
         <div className="absolute inset-0">
           <SmartImage
             src={HERO_IMAGE}
@@ -27,15 +27,18 @@ export default function HomePage() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-navy/75 via-navy/55 to-navy/85" />
         </div>
-        <div className="container-page relative flex flex-col items-center justify-center py-16 text-center sm:py-24">
+        <div className="container-page relative z-10 flex flex-col items-center justify-center px-4 text-center">
           <h1 className="max-w-2xl font-display text-3xl font-extrabold leading-tight text-white sm:text-4xl md:text-[2.75rem]">
             {t("home.heroTitle")}
           </h1>
-          <p className="mt-3 max-w-xl text-sm text-white/85 sm:text-base">
+          <p className="mx-auto mt-3 max-w-xl text-sm text-white/85 sm:text-base">
             {t("home.heroSubtitle")}
           </p>
-          <Link to="/search" className="btn-primary mt-8 min-w-[200px]">
-            {t("common.search")}
+          <Link
+            to="/search"
+            className="btn mt-8 min-w-[200px] border-2 border-white/90 bg-transparent text-white hover:bg-white/10"
+          >
+            {t("home.discover")}
           </Link>
         </div>
       </section>

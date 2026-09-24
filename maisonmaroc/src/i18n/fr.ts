@@ -71,6 +71,7 @@ export const fr: Dict = {
     anyType: "Tous les types",
     anyBedrooms: "Indifférent",
     searchNow: "Rechercher",
+    discover: "Découvrir",
     featured: "Biens en vedette",
     featuredSub: "Sélectionnés avec soin dans notre portefeuille",
     popularCities: "Villes de l'Oriental",
