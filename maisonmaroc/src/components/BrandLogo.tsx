@@ -2,8 +2,12 @@ import { Link } from "react-router-dom";
 import { useLocale } from "../lib/useLocale";
 import { withBase } from "../lib/appBase";
 
-/** Single official APIO brand mark (full logo with icon and wordmark). */
+/** Single official APIO brand mark in `public/apio-logo.png`. */
 export const OFFICIAL_LOGO_PATH = "/apio-logo.png";
+
+function logoSrc(): string {
+  return withBase(OFFICIAL_LOGO_PATH);
+}
 
 type Variant = "header" | "footer" | "hero" | "auth" | "compact" | "onLight";
 
@@ -34,7 +38,7 @@ export default function BrandLogo({
 
   const img = (
     <img
-      src={withBase(OFFICIAL_LOGO_PATH)}
+      src={logoSrc()}
       alt={t("brand.name")}
       className={`block shrink-0 object-contain object-left ${sizeClass[variant]} ${className}`}
       width={1408}

@@ -22,16 +22,28 @@ export function appBasename(): string | undefined {
   return trimmed.length ? trimmed : undefined;
 }
 
-/** Prefix for static assets when not using React Router `Link`. */
+/**
+ * Absolute URL path for a file in `public/` (leading slash, includes subfolder when deployed).
+ * Avoids `./file` which breaks on nested client routes like `/apio/search`.
+ */
 export function withBase(path: string): string {
-  const base = import.meta.env.BASE_URL ?? "/";
   const file = path.startsWith("/") ? path.slice(1) : path;
+  const configured = (import.meta.env.BASE_URL ?? "/").trim();
 
-  if (base === "./" || base === ".") {
-    return `./${file}`;
+  if (
+    configured !== "./" &&
+    configured !== "." &&
+    configured !== "/" &&
+    configured !== ""
+  ) {
+    const prefix = configured.replace(/\/+$/, "");
+    return `${prefix}/${file}`;
   }
-  if (base === "/") {
-    return `/${file}`;
+
+  const runtime = runtimeSubpathBasename();
+  if (runtime) {
+    return `${runtime}/${file}`;
   }
-  return `${base.replace(/\/+$/, "")}/${file}`;
+
+  return `/${file}`;
 }
