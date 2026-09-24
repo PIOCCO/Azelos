@@ -1,12 +1,20 @@
 import type { AmenityKey, PropertyType, TransactionType } from "../data/types";
+import { DEFAULT_CITY_ID } from "../data/cities";
 import type { PropertyFilters } from "./filter";
+
+export function defaultFilters(): PropertyFilters {
+  return { city: DEFAULT_CITY_ID };
+}
 
 export function parseFilters(params: URLSearchParams): PropertyFilters {
   const num = (k: string) => (params.get(k) ? Number(params.get(k)) : undefined);
   const amenities = params.getAll("amenity") as AmenityKey[];
+  const city = params.has("city")
+    ? params.get("city") || ""
+    : DEFAULT_CITY_ID;
   return {
     transaction: (params.get("transaction") as TransactionType) || "",
-    city: params.get("city") || "",
+    city,
     neighborhood: params.get("neighborhood") || "",
     type: (params.get("type") as PropertyType) || "",
     minPrice: num("minPrice"),

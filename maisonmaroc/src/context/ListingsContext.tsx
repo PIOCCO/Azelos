@@ -110,7 +110,7 @@ export function ListingsProvider({ children }: { children: ReactNode }) {
     const baseSlug = slugify(input.title) || "listing";
     const slug = `${baseSlug}-${Date.now().toString(36)}`;
     const ownerId = `pub-${slug}`;
-    const coords = cityCoords[input.cityId] ?? cityCoords.casablanca;
+    const coords = cityCoords[input.cityId] ?? cityCoords.oujda;
     const phone = input.contactPhone.startsWith("+")
       ? input.contactPhone
       : `+212${input.contactPhone.replace(/\D/g, "").slice(-9)}`;

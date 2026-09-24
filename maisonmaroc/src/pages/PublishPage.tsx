@@ -23,7 +23,7 @@ export default function PublishPage() {
     title: "",
     description: "",
     price: "",
-    city: "casablanca",
+    city: "oujda",
     neighborhood: "",
     surface: "",
     bedrooms: "2",

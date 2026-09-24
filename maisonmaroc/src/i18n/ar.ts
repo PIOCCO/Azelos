@@ -1,5 +1,5 @@
 export const ar = {
-  brand: { name: "APIO", tagline: "سوق العقارات في المغرب" },
+  brand: { name: "APIO", tagline: "عقاراتك في وجدة والمنطقة الشرقية" },
   nav: {
     home: "الرئيسية",
     properties: "العقارات",
@@ -51,8 +51,9 @@ export const ar = {
     optional: "اختياري",
   },
   home: {
-    heroTitle: "اعثر على عقارك المثالي",
-    heroSubtitle: "APIO — آلاف العقارات الموثّقة في أهم المدن المغربية، من وكلاء وملاك موثوقين.",
+    heroTitle: "عقاراتك في وجدة والمنطقة الشرقية",
+    heroSubtitle:
+      "APIO — عقارات موثّقة في وجدة، الناظور، بركان، السعيدية ومدن Oriental، من وكلاء وملاك موثوقين.",
     searchType: "نوع العملية",
     city: "المدينة",
     neighborhood: "الحي",
@@ -67,8 +68,8 @@ export const ar = {
     searchNow: "ابحث الآن",
     featured: "الخصائص المميزة",
     featuredSub: "مختارة بعناية من محفظتنا",
-    popularCities: "المدن الشهيرة",
-    popularCitiesSub: "استكشف العقارات حسب المدينة",
+    popularCities: "مدن Oriental",
+    popularCitiesSub: "استكشف العقارات في وجدة والمدن المجاورة",
     verifiedOwners: "وكلاء وملاك موثّقون",
     verifiedOwnersSub: "تعامل مع خبراء عقاريين موثوقين",
     latest: "أحدث العقارات",
@@ -286,7 +287,8 @@ export const ar = {
     profileInfo: "المعلومات الشخصية",
   },
   footer: {
-    about: "APIO هي المنصة الرائدة للعقارات في المغرب، تربط الباحثين عن عقار بأفضل الوكلاء والملاك الموثوقين.",
+    about:
+      "APIO هي وكالتك العقارية في وجدة والمنطقة الشرقية، تربط الباحثين عن عقار بأفضل الوكلاء والملاك الموثوقين.",
     quickLinks: "روابط سريعة",
     cities: "المدن",
     contactUs: "اتصل بنا",

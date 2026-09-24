@@ -4,7 +4,7 @@ A complete, bilingual **Moroccan real-estate marketplace** built with React + Vi
 TypeScript + Tailwind CSS.
 
 - **Arabic (RTL) by default**, full **French (LTR)** alternative — switch anytime with `العربية | Français`.
-- Realistic, internally consistent seed data: **22 properties**, **8 agents/owners**, 6 cities.
+- Realistic, internally consistent seed data: **20 properties**, **8 agents/owners**, focused on **Oujda and the Oriental region** (9 cities).
 - Connected marketplace: property → owner → all of that owner's listings → another property.
 
 ## Features

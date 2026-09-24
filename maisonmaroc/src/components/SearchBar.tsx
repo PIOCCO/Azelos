@@ -2,14 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { useLocale } from "../lib/useLocale";
-import { cities } from "../data/cities";
+import { cities, DEFAULT_CITY_ID } from "../data/cities";
 import { propertyTypeKeys } from "../data/meta";
 
 export default function SearchBar({ hero = false }: { hero?: boolean }) {
   const { t, L } = useLocale();
   const navigate = useNavigate();
   const [transaction, setTransaction] = useState("");
-  const [city, setCity] = useState("");
+  const [city, setCity] = useState(DEFAULT_CITY_ID);
   const [neighborhood, setNeighborhood] = useState("");
   const [type, setType] = useState("");
   const [minPrice, setMinPrice] = useState("");
@@ -21,7 +21,7 @@ export default function SearchBar({ hero = false }: { hero?: boolean }) {
   const submit = () => {
     const params = new URLSearchParams();
     if (transaction) params.set("transaction", transaction);
-    if (city) params.set("city", city);
+    params.set("city", city || DEFAULT_CITY_ID);
     if (neighborhood) params.set("neighborhood", neighborhood);
     if (type) params.set("type", type);
     if (minPrice) params.set("minPrice", minPrice);

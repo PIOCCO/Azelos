@@ -43,7 +43,7 @@ export default function Footer() {
           <h4 className="font-bold text-white">{t("footer.contactUs")}</h4>
           <ul className="mt-4 space-y-3 text-sm text-ink-400">
             <li className="flex items-center gap-2">
-              <MapPin size={16} /> {L({ ar: "الدار البيضاء، المغرب", fr: "Casablanca, Maroc" })}
+              <MapPin size={16} /> {L({ ar: "وجدة، المغرب", fr: "Oujda, Maroc" })}
             </li>
             <li className="flex items-center gap-2" dir="ltr">
               <Mail size={16} /> contact@apio.ma

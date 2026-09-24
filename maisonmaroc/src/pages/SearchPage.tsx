@@ -9,12 +9,12 @@ import {
   type PropertyFilters,
   type SortKey,
 } from "../lib/filter";
-import { filtersToSearchParams, parseFilters } from "../lib/searchParams";
+import { defaultFilters, filtersToSearchParams, parseFilters } from "../lib/searchParams";
+import { mapEmbedBbox } from "../lib/cityCoords";
 import PropertyCard from "../components/PropertyCard";
 import FilterSidebar from "../components/FilterSidebar";
 import Pagination from "../components/Pagination";
 import { formatNumber } from "../lib/format";
-import { cityById } from "../data/cities";
 
 const PAGE_SIZE = 9;
 
@@ -44,10 +44,9 @@ export default function SearchPage() {
   const totalPages = Math.ceil(results.length / PAGE_SIZE);
   const paged = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const mapCity = filters.city ? cityById(filters.city) : null;
-  const mapSrc = mapCity
-    ? `https://www.openstreetmap.org/export/embed.html?bbox=-8.5%2C33.4%2C-6.2%2C34.1&layer=mapnik`
-    : `https://www.openstreetmap.org/export/embed.html?bbox=-13.5%2C27.5%2C-0.5%2C36.0&layer=mapnik`;
+  const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${mapEmbedBbox(
+    filters.city || undefined,
+  )}&layer=mapnik`;
 
   const handleChange = (f: PropertyFilters) => {
     setFilters(f);
@@ -55,8 +54,9 @@ export default function SearchPage() {
     setParams(filtersToSearchParams(f), { replace: true });
   };
   const handleReset = () => {
-    setFilters({});
-    setParams({});
+    const reset = defaultFilters();
+    setFilters(reset);
+    setParams(filtersToSearchParams(reset), { replace: true });
     setPage(1);
   };
 

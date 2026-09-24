@@ -51,6 +51,7 @@ export async function apiFetch<T>(
         ...(init.headers || {}),
       },
     });
+    apiUnreachable = false;
     const body = await parseJson(res);
     if (!res.ok) {
       const err =

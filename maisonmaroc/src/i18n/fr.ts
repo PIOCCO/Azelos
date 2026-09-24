@@ -1,7 +1,10 @@
 import type { Dict } from "./ar";
 
 export const fr: Dict = {
-  brand: { name: "APIO", tagline: "La marketplace immobilière du Maroc" },
+  brand: {
+    name: "APIO",
+    tagline: "Votre agence immobilière à Oujda et dans l'Oriental",
+  },
   nav: {
     home: "Accueil",
     properties: "Propriétés",
@@ -53,9 +56,9 @@ export const fr: Dict = {
     optional: "optionnel",
   },
   home: {
-    heroTitle: "Trouvez votre bien idéal",
+    heroTitle: "Votre agence immobilière à Oujda et dans l'Oriental",
     heroSubtitle:
-      "APIO — Des milliers de biens vérifiés dans les plus grandes villes du Maroc, proposés par des agents et propriétaires de confiance.",
+      "APIO — Biens vérifiés à Oujda, Nador, Berkane, Saïdia et dans toute la région de l'Oriental, proposés par des agents et propriétaires de confiance.",
     searchType: "Type d'opération",
     city: "Ville",
     neighborhood: "Quartier",
@@ -70,8 +73,8 @@ export const fr: Dict = {
     searchNow: "Rechercher",
     featured: "Biens en vedette",
     featuredSub: "Sélectionnés avec soin dans notre portefeuille",
-    popularCities: "Villes populaires",
-    popularCitiesSub: "Explorez les biens par ville",
+    popularCities: "Villes de l'Oriental",
+    popularCitiesSub: "Explorez les biens à Oujda et dans les villes voisines",
     verifiedOwners: "Agents & propriétaires vérifiés",
     verifiedOwnersSub: "Faites affaire avec des experts immobiliers de confiance",
     latest: "Dernières annonces",
@@ -292,7 +295,7 @@ export const fr: Dict = {
   },
   footer: {
     about:
-      "APIO est la plateforme immobilière de référence au Maroc, reliant les chercheurs de biens aux meilleurs agents et propriétaires de confiance.",
+      "APIO est votre agence immobilière à Oujda et dans l'Oriental, reliant les chercheurs de biens aux meilleurs agents et propriétaires de confiance.",
     quickLinks: "Liens rapides",
     cities: "Villes",
     contactUs: "Contactez-nous",
