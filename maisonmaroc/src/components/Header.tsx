@@ -33,7 +33,7 @@ export default function Header() {
         </div>
       </div>
 
-      <div className="container-page flex min-h-[92px] items-center justify-between gap-4 py-2 sm:min-h-[104px] sm:py-3">
+      <div className="container-page flex min-h-[100px] items-center justify-between gap-4 py-2 sm:min-h-[116px] sm:py-3">
         <BrandLogo variant="header" />
 
         <nav className="hidden items-center gap-7 lg:flex">
