@@ -17,6 +17,10 @@ function client() {
 }
 
 export function isGoogleConfigured() {
+  return Boolean(process.env.GOOGLE_CLIENT_ID);
+}
+
+export function isGoogleRedirectConfigured() {
   return Boolean(
     process.env.GOOGLE_CLIENT_ID &&
       process.env.GOOGLE_CLIENT_SECRET &&
@@ -48,6 +52,11 @@ function pruneStates() {
 }
 
 export function googleAuthUrl(state) {
+  if (!isGoogleRedirectConfigured()) {
+    const err = new Error("Google OAuth redirect is not configured");
+    err.status = 503;
+    throw err;
+  }
   const oauth = client();
   return oauth.generateAuthUrl({
     access_type: "offline",
@@ -69,10 +78,16 @@ export async function exchangeCodeForProfile(code) {
 }
 
 export async function verifyIdToken(idToken) {
-  const oauth = client();
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    const err = new Error("Google OAuth is not configured");
+    err.status = 503;
+    throw err;
+  }
+  const oauth = new OAuth2Client(clientId);
   const ticket = await oauth.verifyIdToken({
     idToken,
-    audience: process.env.GOOGLE_CLIENT_ID,
+    audience: clientId,
   });
   const payload = ticket.getPayload();
   if (!payload?.sub || !payload.email) {

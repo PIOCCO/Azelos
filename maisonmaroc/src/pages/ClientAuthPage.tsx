@@ -5,7 +5,9 @@ import { useLocale } from "../lib/useLocale";
 import { useAuth } from "../context/AuthContext";
 import SmartImage from "../components/SmartImage";
 import BrandLogo from "../components/BrandLogo";
+import GoogleSignInButton from "../components/GoogleSignInButton";
 import { apiFetch, dashboardPathForRole, googleOAuthStartUrl } from "../lib/api";
+import { resolveGoogleClientId, signInWithGoogleIdToken } from "../lib/googleAuth";
 
 export default function ClientAuthPage({ mode }: { mode: "login" | "register" }) {
   const { t } = useLocale();
@@ -19,8 +21,10 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [googleEnabled, setGoogleEnabled] = useState(false);
+  const [apiGoogleClientId, setApiGoogleClientId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const googleClientId = resolveGoogleClientId(apiGoogleClientId);
 
   useEffect(() => {
     if (user) {
@@ -35,10 +39,26 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
   }, [params, t]);
 
   useEffect(() => {
-    apiFetch<{ enabled: boolean }>("/api/auth/google/config").then(({ data }) => {
-      setGoogleEnabled(Boolean(data?.enabled));
-    });
+    apiFetch<{ enabled: boolean; clientId: string | null }>("/api/auth/google/config").then(
+      ({ data }) => {
+        if (data?.clientId) setApiGoogleClientId(data.clientId);
+      },
+    );
   }, []);
+
+  const handleGoogleCredential = async (idToken: string) => {
+    setError(null);
+    setSubmitting(true);
+    const { data, error: err } = await signInWithGoogleIdToken(idToken);
+    setSubmitting(false);
+    if (err || !data?.user) {
+      setError(err || t("auth.oauthFailed"));
+      return;
+    }
+    setUser(data.user);
+    await refresh();
+    navigate(dashboardPathForRole(data.user.role));
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,15 +159,25 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
             </button>
           </form>
 
-          {googleEnabled && (
-            <div className="mt-4">
-              <p className="mb-2 text-center text-xs text-ink-400">{t("auth.orContinue")}</p>
-              <a href={googleOAuthStartUrl()} className="btn-secondary flex w-full items-center justify-center gap-2">
+          <div className="mt-4">
+            <p className="mb-2 text-center text-xs text-ink-400">{t("auth.orContinue")}</p>
+            {googleClientId ? (
+              <GoogleSignInButton
+                clientId={googleClientId}
+                onCredential={handleGoogleCredential}
+                onError={(msg) => setError(msg)}
+              />
+            ) : (
+              <a
+                href={googleOAuthStartUrl()}
+                className="btn-secondary flex w-full items-center justify-center gap-2"
+              >
+                <GoogleIcon />
                 {t("auth.google")}
               </a>
-              <p className="mt-2 text-center text-[11px] text-ink-400">{t("auth.googleClientOnly")}</p>
-            </div>
-          )}
+            )}
+            <p className="mt-2 text-center text-[11px] text-ink-400">{t("auth.googleClientOnly")}</p>
+          </div>
 
           <p className="mt-4 text-center text-sm text-ink-600">
             {isLogin ? t("auth.noAccount") : t("auth.haveAccount")}{" "}
@@ -166,5 +196,28 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
         </div>
       </div>
     </div>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
+      <path
+        fill="#FFC107"
+        d="M43.611 20.083H42V20H24v8h11.303C33.654 32.657 29.223 36 24 36c-5.522 0-10-4.477-10-10s4.478-10 10-10c2.523 0 4.817.926 6.603 2.463l6.062-6.062C33.408 9.835 28.956 8 24 8 12.955 8 4 16.955 4 28s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.651-.389-3.917z"
+      />
+      <path
+        fill="#FF3D00"
+        d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c2.523 0 4.817.926 6.603 2.463l6.062-6.062C33.408 9.835 28.956 8 24 8 16.318 8 9.656 13.337 6.306 14.691z"
+      />
+      <path
+        fill="#4CAF50"
+        d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"
+      />
+      <path
+        fill="#1976D2"
+        d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.651-.389-3.917z"
+      />
+    </svg>
   );
 }

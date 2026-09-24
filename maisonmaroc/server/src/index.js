@@ -33,6 +33,7 @@ import {
   exchangeCodeForProfile,
   googleAuthUrl,
   isGoogleConfigured,
+  isGoogleRedirectConfigured,
   verifyIdToken,
 } from "./google.js";
 import { deleteOwner, findOwner, listOwners, updateOwner } from "./users.js";
@@ -231,8 +232,8 @@ async function handleGoogleProfile(res, profile) {
 
 app.get("/api/auth/google", (req, res) => {
   try {
-    if (!isGoogleConfigured()) {
-      return res.status(503).json({ error: "Google OAuth is not configured" });
+    if (!isGoogleRedirectConfigured()) {
+      return res.status(503).json({ error: "Google OAuth redirect is not configured" });
     }
     const state = createOAuthState();
     res.redirect(googleAuthUrl(state));
@@ -263,7 +264,7 @@ app.get("/api/auth/google/callback", async (req, res) => {
 app.post("/api/auth/google", authLimiter, async (req, res) => {
   try {
     if (!isGoogleConfigured()) {
-      return res.status(503).json({ error: "Google OAuth is not configured" });
+      return res.status(503).json({ error: "Google client ID is not configured on the server" });
     }
     const { idToken } = req.body || {};
     if (!idToken) {

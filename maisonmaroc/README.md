@@ -67,6 +67,18 @@ npm run dev       # http://localhost:3001
 
 See [AUTH.md](./AUTH.md) for roles, Google OAuth setup, and security notes.
 
+**Google button on login/register:** set the same client ID in both places, then rebuild the frontend:
+
+```env
+# maisonmaroc/.env
+VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+
+# maisonmaroc/server/.env
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_REDIRECT_URI=...   # optional if you use the popup/button flow only
+```
+
 ### Auth routes (frontend)
 
 | Path | Purpose |
