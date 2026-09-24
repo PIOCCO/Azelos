@@ -4,20 +4,28 @@ import Header from "./Header";
 import Footer from "./Footer";
 import MobileNav from "./MobileNav";
 
+const MINIMAL_FOOTER_PATHS = [
+  "/client/login",
+  "/client/register",
+  "/owner/login",
+  "/admin/login",
+];
+
 export default function Layout() {
   const { pathname } = useLocation();
+  const minimalFooter = MINIMAL_FOOTER_PATHS.some((p) => pathname.startsWith(p));
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [pathname]);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-white">
       <Header />
-      <main className="flex-1 pb-20 lg:pb-0">
+      <main className="fade-in flex-1 pb-20 lg:pb-0">
         <Outlet />
       </main>
-      <Footer />
+      {!minimalFooter && <Footer />}
       <MobileNav />
     </div>
   );

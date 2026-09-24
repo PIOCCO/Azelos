@@ -10,6 +10,10 @@ export default {
         latin: ["Inter", "system-ui", "sans-serif"],
       },
       colors: {
+        surface: {
+          DEFAULT: "#f4f6f9",
+          muted: "#eef1f6",
+        },
         brand: {
           50: "#eff6ff",
           100: "#dbeafe",

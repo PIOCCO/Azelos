@@ -58,7 +58,7 @@ export default function PropertyDetailsPage() {
   }&layer=mapnik&marker=${property.lat}%2C${property.lng}`;
 
   return (
-    <div className="bg-ink-50">
+    <div className="page-shell">
       <div className="container-page py-6 pb-24 lg:pb-6">
         <nav className="mb-4 flex flex-wrap items-center gap-1.5 text-sm text-ink-500">
           <Link to="/" className="hover:text-brand-700">{t("nav.home")}</Link>

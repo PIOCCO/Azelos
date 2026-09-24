@@ -103,6 +103,8 @@ export const ar = {
     furnishedOnly: "مفروش",
     clearAll: "مسح الكل",
     mobileFilters: "التصفية",
+    advancedFilters: "فلاتر متقدمة (السعر، الحي، التجهيزات…)",
+    moreFilters: "المزيد من الفلاتر",
   },
   property: {
     overview: "نظرة عامة",
@@ -292,6 +294,7 @@ export const ar = {
     quickLinks: "روابط سريعة",
     cities: "المدن",
     contactUs: "اتصل بنا",
+    location: "وجدة، المغرب",
     rights: "جميع الحقوق محفوظة",
     followUs: "تابعنا",
     newsletter: "النشرة البريدية",

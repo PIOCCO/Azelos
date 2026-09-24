@@ -4,6 +4,8 @@ import { useLocale } from "../lib/useLocale";
 import { useFavorites } from "../context/FavoritesContext";
 import { useListings } from "../context/ListingsContext";
 import PropertyCard from "../components/PropertyCard";
+import PageHeader from "../components/PageHeader";
+import EmptyState from "../components/EmptyState";
 
 export default function FavoritesPage() {
   const { t } = useLocale();
@@ -12,33 +14,29 @@ export default function FavoritesPage() {
   const saved = properties.filter((p) => favorites.includes(p.id));
 
   return (
-    <div className="container-page py-8">
-      <div className="mb-6 flex items-center gap-3">
-        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-50 text-rose-500">
-          <Heart size={24} className="fill-rose-500" />
-        </span>
-        <div>
-          <h1 className="text-2xl font-extrabold text-ink-900">{t("favorites.title")}</h1>
-          <p className="text-sm text-ink-500">{t("favorites.subtitle")}</p>
-        </div>
-      </div>
+    <div className="page-shell">
+      <div className="container-page">
+        <PageHeader title={t("favorites.title")} description={t("favorites.subtitle")} />
 
-      {saved.length === 0 ? (
-        <div className="card flex flex-col items-center justify-center gap-3 py-20 text-center">
-          <Heart size={48} className="text-ink-300" />
-          <p className="text-lg font-bold text-ink-800">{t("favorites.empty")}</p>
-          <p className="max-w-sm text-sm text-ink-500">{t("favorites.emptyHint")}</p>
-          <Link to="/search" className="btn-primary mt-2">
-            <Search size={16} /> {t("favorites.browse")}
-          </Link>
-        </div>
-      ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {saved.map((p) => (
-            <PropertyCard key={p.id} property={p} />
-          ))}
-        </div>
-      )}
+        {saved.length === 0 ? (
+          <EmptyState
+            icon={<Heart size={48} className="text-ink-300" />}
+            title={t("favorites.empty")}
+            description={t("favorites.emptyHint")}
+            action={
+              <Link to="/search" className="btn-primary">
+                <Search size={16} /> {t("favorites.browse")}
+              </Link>
+            }
+          />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {saved.map((p) => (
+              <PropertyCard key={p.id} property={p} variant="compact" />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

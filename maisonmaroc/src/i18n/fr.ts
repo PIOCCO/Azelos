@@ -109,6 +109,8 @@ export const fr: Dict = {
     clearAll: "Tout effacer",
     mobileFilters: "Filtres",
     showMap: "Afficher la carte",
+    advancedFilters: "Filtres avancés (prix, quartier, équipements…)",
+    moreFilters: "Plus de filtres",
   },
   property: {
     overview: "Aperçu",
@@ -299,6 +301,7 @@ export const fr: Dict = {
     quickLinks: "Liens rapides",
     cities: "Villes",
     contactUs: "Contactez-nous",
+    location: "Oujda, Maroc",
     rights: "Tous droits réservés",
     followUs: "Suivez-nous",
     newsletter: "Newsletter",

@@ -30,7 +30,7 @@ export default function PropertyCard({
   return (
     <Link
       to={`/property/${property.slug}`}
-      className={`group overflow-hidden rounded-xl border border-ink-100 bg-white shadow-sm transition hover:border-brand-200 hover:shadow-card ${
+      className={`group card-interactive overflow-hidden ${
         isList ? "flex flex-col sm:flex-row" : "flex flex-col"
       }`}
     >
