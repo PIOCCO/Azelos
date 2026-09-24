@@ -13,12 +13,12 @@ type Variant = "header" | "footer" | "hero" | "auth" | "compact" | "onLight";
 
 /** Height-led sizing; width follows asset aspect ratio (~1408×768). */
 const sizeClass: Record<Variant, string> = {
-  header: "h-9 w-auto max-w-[min(200px,42vw)] sm:h-10 sm:max-w-[220px]",
-  footer: "h-12 w-auto max-w-[240px]",
-  hero: "h-16 w-auto max-w-[min(320px,85vw)] sm:h-20 md:h-24",
-  auth: "h-14 w-auto max-w-[280px]",
-  compact: "h-8 w-auto max-w-[180px]",
-  onLight: "h-10 w-auto max-w-[220px] sm:h-11",
+  header: "h-12 w-auto max-w-[min(300px,55vw)] sm:h-14 sm:max-w-[340px]",
+  footer: "h-16 w-auto max-w-[320px] sm:h-[4.5rem] sm:max-w-[360px]",
+  hero: "h-24 w-auto max-w-[min(420px,92vw)] sm:h-28 md:h-32 lg:max-w-[480px]",
+  auth: "h-20 w-auto max-w-[360px] sm:h-24 sm:max-w-[420px]",
+  compact: "h-11 w-auto max-w-[260px] sm:h-12",
+  onLight: "h-14 w-auto max-w-[320px] sm:h-16 sm:max-w-[360px]",
 };
 
 interface Props {
