@@ -25,9 +25,16 @@ TypeScript + Tailwind CSS.
 ### Frontend (marketplace)
 
 ```bash
-cd maisonmaroc
+cd maisonmaroc/server
+cp .env.example .env
 npm install
-npm run dev       # http://localhost:5173 — proxies /api to the backend
+npm run migrate
+
+cd ..
+npm install
+npm run dev:all   # API :3001 + Vite :5173 (required for login/messages)
+# Or two terminals: npm run dev:api  |  npm run dev
+npm run dev       # frontend only — /api will fail unless the server is running
 npm run build        # default: works at site root **or** in /apio, /AIPO, /APIO
 npm run build:dribex # explicit base for https://dribex.ma/apio/ (same as before)
 npm run build:aipo   # explicit base for https://your-domain.com/AIPO/
