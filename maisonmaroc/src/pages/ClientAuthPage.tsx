@@ -139,12 +139,13 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
             </button>
           </form>
 
-          {isLogin && googleEnabled && (
+          {googleEnabled && (
             <div className="mt-4">
               <p className="mb-2 text-center text-xs text-ink-400">{t("auth.orContinue")}</p>
               <a href={googleOAuthStartUrl()} className="btn-secondary flex w-full items-center justify-center gap-2">
                 {t("auth.google")}
               </a>
+              <p className="mt-2 text-center text-[11px] text-ink-400">{t("auth.googleClientOnly")}</p>
             </div>
           )}
 

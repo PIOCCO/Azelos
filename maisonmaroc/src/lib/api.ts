@@ -51,7 +51,12 @@ export async function apiFetch<T>(
 }
 
 export function googleOAuthStartUrl() {
-  return `${API_BASE}/api/auth/google`;
+  const path = "/api/auth/google";
+  if (API_BASE) return `${API_BASE.replace(/\/+$/, "")}${path}`;
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}${path}`;
+  }
+  return path;
 }
 
 export function dashboardPathForRole(role: UserRole | undefined) {
