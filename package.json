@@ -1,0 +1,14 @@
+{
+  "name": "azelos",
+  "private": true,
+  "description": "APIO monorepo wrapper — app lives in maisonmaroc/",
+  "scripts": {
+    "install:app": "npm install --prefix maisonmaroc",
+    "migrate": "npm run migrate --prefix maisonmaroc",
+    "dev": "npm run dev --prefix maisonmaroc",
+    "dev:web": "npm run dev:web --prefix maisonmaroc",
+    "dev:api": "npm run dev:api --prefix maisonmaroc",
+    "build": "npm run build --prefix maisonmaroc",
+    "build:dribex": "npm run build:dribex --prefix maisonmaroc"
+  }
+}
