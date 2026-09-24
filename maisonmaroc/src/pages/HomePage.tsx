@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { MapPin } from "lucide-react";
 import { useLocale } from "../lib/useLocale";
-import SearchBar from "../components/SearchBar";
 import PropertyCard from "../components/PropertyCard";
 import SmartImage from "../components/SmartImage";
 import SectionHeader from "../components/SectionHeader";
@@ -28,16 +27,16 @@ export default function HomePage() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-navy/75 via-navy/55 to-navy/85" />
         </div>
-        <div className="container-page relative flex flex-col items-center pt-10 pb-[calc(7rem+100px)] text-center sm:pt-14 sm:pb-[calc(8rem+120px)]">
+        <div className="container-page relative flex flex-col items-center justify-center py-16 text-center sm:py-24">
           <h1 className="max-w-2xl font-display text-3xl font-extrabold leading-tight text-white sm:text-4xl md:text-[2.75rem]">
             {t("home.heroTitle")}
           </h1>
           <p className="mt-3 max-w-xl text-sm text-white/85 sm:text-base">
             {t("home.heroSubtitle")}
           </p>
-          <div className="mt-8 w-full max-w-[720px] text-start">
-            <SearchBar hero />
-          </div>
+          <Link to="/search" className="btn-primary mt-8 min-w-[200px]">
+            {t("common.search")}
+          </Link>
         </div>
       </section>
 
