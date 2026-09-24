@@ -60,13 +60,13 @@ export default function HomePage() {
   return (
     <div className="bg-white">
       {/* Hero — mockup: architecture bg + headline + search */}
-      <section className="relative min-h-[480px] sm:min-h-[540px]">
-        <div className="absolute inset-0 overflow-hidden">
+      <section className="relative min-h-[420px] sm:min-h-[480px]">
+        <div className="absolute inset-0">
           <SmartImage
             src={HERO_IMAGE}
             fallbackSeed="mm-hero-morocco"
             alt=""
-            className="absolute inset-0 h-full w-full origin-center scale-[1.77] object-cover object-center sm:scale-[1.8]"
+            className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-navy/75 via-navy/55 to-navy/85" />
         </div>
