@@ -5,8 +5,9 @@
 ```bash
 cd maisonmaroc
 npm install          # also installs server/ (postinstall)
-cd server && cp .env.example .env && npm run migrate && cd ..
-npm run dev          # starts API (:3001) then Vite (:5173)
+cp server/.env.example server/.env
+npm run migrate      # from maisonmaroc/ (runs server migrate)
+npm run dev          # Node 18+ — starts API (:3001) then Vite (:5173)
 ```
 
 Open **http://localhost:5173**
