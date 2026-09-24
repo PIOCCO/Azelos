@@ -60,7 +60,7 @@ export default function HomePage() {
   return (
     <div className="bg-white">
       {/* Hero — mockup: architecture bg + headline + search */}
-      <section className="relative min-h-[420px] sm:min-h-[480px]">
+      <section className="relative min-h-[520px] sm:min-h-[600px]">
         <div className="absolute inset-0">
           <SmartImage
             src={HERO_IMAGE}
@@ -70,7 +70,7 @@ export default function HomePage() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-navy/75 via-navy/55 to-navy/85" />
         </div>
-        <div className="container-page relative flex flex-col items-center pt-10 pb-28 text-center sm:pt-14 sm:pb-32">
+        <div className="container-page relative flex flex-col items-center pt-10 pb-[calc(7rem+100px)] text-center sm:pt-14 sm:pb-[calc(8rem+120px)]">
           <h1 className="max-w-2xl font-display text-3xl font-extrabold leading-tight text-white sm:text-4xl md:text-[2.75rem]">
             {t("home.heroTitle")}
           </h1>
