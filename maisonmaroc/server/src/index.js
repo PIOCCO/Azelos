@@ -26,6 +26,7 @@ import {
   requireAuth,
   requireSuperAdmin,
   requireOwner,
+  requireClient,
 } from "./middleware.js";
 import {
   createOAuthState,
@@ -42,6 +43,17 @@ import {
   listPropertiesForOwnerProfile,
   listPublicProperties,
 } from "./catalog.js";
+import {
+  addMessage,
+  archiveConversation,
+  canAccessConversation,
+  createConversation,
+  getConversation,
+  listConversationsForUser,
+  listMessages,
+  markConversationRead,
+  unreadCountForUser,
+} from "./messages.js";
 
 const db = openDb();
 migrate(db);
@@ -374,6 +386,123 @@ app.get("/api/admin/owners/:id/properties", requireAuth, requireSuperAdmin, (req
   res.json({
     properties: listPropertiesForOwnerProfile(owner.owner_profile_id),
   });
+});
+
+function serializeConversation(db, conv) {
+  const msgs = listMessages(db, conv.id);
+  const last = msgs[msgs.length - 1] || null;
+  const client = findUserById(db, conv.client_id);
+  const property = getPropertyBySlugOrId(conv.property_slug) || getPropertyBySlugOrId(conv.property_id);
+  return {
+    id: conv.id,
+    propertyId: conv.property_id,
+    propertySlug: conv.property_slug,
+    agentProfileId: conv.agent_profile_id,
+    status: conv.status,
+    updatedAt: conv.updated_at,
+    client: client
+      ? { id: client.id, name: client.name, email: client.email }
+      : { id: conv.client_id, name: "Client", email: "" },
+    propertyPreview: property
+      ? { id: property.id, slug: property.slug, title: property.title }
+      : { id: conv.property_id, slug: conv.property_slug, title: { fr: conv.property_slug, ar: conv.property_slug } },
+    lastMessage: last
+      ? { body: last.body, createdAt: last.created_at, senderId: last.sender_id }
+      : null,
+  };
+}
+
+app.get("/api/messages/unread-count", requireAuth, (req, res) => {
+  if (![ROLES.CLIENT, ROLES.REAL_ESTATE_OWNER].includes(req.user.role)) {
+    return res.json({ count: 0 });
+  }
+  res.json({ count: unreadCountForUser(db, req.user) });
+});
+
+app.get("/api/messages/conversations", requireAuth, (req, res) => {
+  if (![ROLES.CLIENT, ROLES.REAL_ESTATE_OWNER].includes(req.user.role)) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  const q = String(req.query.q || "").toLowerCase();
+  let rows = listConversationsForUser(db, req.user).map((c) => serializeConversation(db, c));
+  if (q) {
+    rows = rows.filter(
+      (c) =>
+        c.client.name.toLowerCase().includes(q) ||
+        c.propertyPreview.title.fr.toLowerCase().includes(q) ||
+        c.propertyPreview.title.ar.includes(q) ||
+        c.lastMessage?.body.toLowerCase().includes(q),
+    );
+  }
+  res.json({ conversations: rows });
+});
+
+app.post("/api/messages/conversations", requireAuth, requireClient, (req, res) => {
+  const { propertyId, propertySlug, agentProfileId } = req.body || {};
+  if (!propertyId || !propertySlug || !agentProfileId) {
+    return res.status(400).json({ error: "propertyId, propertySlug, and agentProfileId are required" });
+  }
+  const conv = createConversation(db, {
+    clientId: req.user.id,
+    propertyId,
+    propertySlug,
+    agentProfileId,
+  });
+  res.status(201).json({ conversation: serializeConversation(db, conv) });
+});
+
+app.get("/api/messages/conversations/:id", requireAuth, (req, res) => {
+  const conv = getConversation(db, req.params.id);
+  if (!canAccessConversation(conv, req.user)) return res.status(404).json({ error: "Not found" });
+  markConversationRead(db, conv, req.user);
+  const messages = listMessages(db, conv.id).map((m) => ({
+    id: m.id,
+    body: m.body,
+    senderId: m.sender_id,
+    createdAt: m.created_at,
+  }));
+  res.json({
+    conversation: serializeConversation(db, conv),
+    messages,
+  });
+});
+
+app.post("/api/messages/conversations/:id/messages", requireAuth, (req, res) => {
+  const conv = getConversation(db, req.params.id);
+  if (!canAccessConversation(conv, req.user)) return res.status(404).json({ error: "Not found" });
+  const { body } = req.body || {};
+  if (!body || !String(body).trim()) {
+    return res.status(400).json({ error: "Message body is required" });
+  }
+  const msg = addMessage(db, {
+    conversationId: conv.id,
+    senderId: req.user.id,
+    body: String(body),
+  });
+  const updated = getConversation(db, conv.id);
+  res.status(201).json({
+    message: {
+      id: msg.id,
+      body: msg.body,
+      senderId: msg.sender_id,
+      createdAt: msg.created_at,
+    },
+    conversation: serializeConversation(db, updated),
+  });
+});
+
+app.patch("/api/messages/conversations/:id/read", requireAuth, (req, res) => {
+  const conv = getConversation(db, req.params.id);
+  if (!canAccessConversation(conv, req.user)) return res.status(404).json({ error: "Not found" });
+  markConversationRead(db, conv, req.user);
+  res.json({ ok: true });
+});
+
+app.patch("/api/messages/conversations/:id/archive", requireAuth, (req, res) => {
+  const conv = getConversation(db, req.params.id);
+  if (!canAccessConversation(conv, req.user)) return res.status(404).json({ error: "Not found" });
+  archiveConversation(db, conv, req.user);
+  res.json({ ok: true });
 });
 
 // Block legacy public owner registration

@@ -46,6 +46,15 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
     );
   }, []);
 
+  const navigateAfterAuth = (role: NonNullable<typeof user>["role"]) => {
+    const next = params.get("next");
+    if (next && next.startsWith("/")) {
+      navigate(next);
+      return;
+    }
+    navigate(dashboardPathForRole(role));
+  };
+
   const handleGoogleCredential = async (idToken: string) => {
     setError(null);
     setSubmitting(true);
@@ -57,7 +66,7 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
     }
     setUser(data.user);
     await refresh();
-    navigate(dashboardPathForRole(data.user.role));
+    navigateAfterAuth(data.user.role);
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -79,7 +88,7 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
     }
     setUser(data.user);
     await refresh();
-    navigate(dashboardPathForRole(data.user.role));
+    navigateAfterAuth(data.user.role);
   };
 
   return (

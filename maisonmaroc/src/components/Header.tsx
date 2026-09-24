@@ -4,19 +4,29 @@ import { useState } from "react";
 import { useLocale } from "../lib/useLocale";
 import { useAuth } from "../context/AuthContext";
 import { dashboardPathForRole } from "../lib/api";
+import { useMessaging } from "../context/MessagingContext";
 import LanguageSwitcher from "./LanguageSwitcher";
 import BrandLogo from "./BrandLogo";
 
 export default function Header() {
   const { t } = useLocale();
   const { user, logout } = useAuth();
+  const { unreadCount } = useMessaging();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+
+  const messagesTo =
+    user?.role === "REAL_ESTATE_OWNER"
+      ? "/owner/messages"
+      : user?.role === "CLIENT"
+        ? "/client/messages"
+        : "/client/login";
 
   const links = [
     { to: "/", label: t("nav.home"), end: true },
     { to: "/search", label: t("nav.properties") },
     { to: "/agents", label: t("nav.agents") },
+    { to: messagesTo, label: t("nav.messages"), badge: unreadCount },
     { to: "/favorites", label: t("nav.favorites") },
   ];
 
@@ -39,18 +49,19 @@ export default function Header() {
         <nav className="hidden items-center gap-7 lg:flex">
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.end} className={navClass}>
-              {l.label}
+              <span className="relative inline-flex items-center gap-1">
+                {l.label}
+                {"badge" in l && l.badge ? (
+                  <span className="grid h-4 min-w-4 place-items-center rounded-full bg-gold-400 px-1 text-[9px] font-bold text-navy">
+                    {l.badge}
+                  </span>
+                ) : null}
+              </span>
             </NavLink>
           ))}
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
-          <NavLink
-            to="/publish"
-            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-bold text-white hover:bg-brand-500"
-          >
-            {t("nav.publishShort")}
-          </NavLink>
           {user ? (
             <>
               <NavLink

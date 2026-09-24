@@ -15,6 +15,7 @@ import OwnerLoginPage from "./pages/OwnerLoginPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import OwnerDashboardPage from "./pages/OwnerDashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import MessagesPage from "./pages/MessagesPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 export default function App() {
@@ -39,8 +40,15 @@ export default function App() {
         <Route path="/owner/login" element={<OwnerLoginPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
 
+        <Route element={<ProtectedRoute roles={["CLIENT"]} loginPath="/client/login" />}>
+          <Route path="/client/messages" element={<MessagesPage role="CLIENT" />} />
+          <Route path="/client/messages/:id" element={<MessagesPage role="CLIENT" />} />
+        </Route>
+
         <Route element={<ProtectedRoute roles={["REAL_ESTATE_OWNER"]} loginPath="/owner/login" />}>
           <Route path="/owner" element={<OwnerDashboardPage />} />
+          <Route path="/owner/messages" element={<MessagesPage role="REAL_ESTATE_OWNER" />} />
+          <Route path="/owner/messages/:id" element={<MessagesPage role="REAL_ESTATE_OWNER" />} />
         </Route>
 
         <Route element={<ProtectedRoute roles={["SUPER_ADMIN"]} loginPath="/admin/login" />}>

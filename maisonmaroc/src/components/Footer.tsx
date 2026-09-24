@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Facebook, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 import { useLocale } from "../lib/useLocale";
 import { cities } from "../data/cities";
 import BrandLogo from "./BrandLogo";
@@ -14,18 +14,6 @@ export default function Footer() {
           <p className="mt-4 text-sm leading-relaxed text-ink-400">
             {t("footer.about")}
           </p>
-          <div className="mt-5 flex gap-2">
-            {[Facebook, Instagram, Linkedin].map((Icon, i) => (
-              <a
-                key={i}
-                href="#"
-                onClick={(e) => e.preventDefault()}
-                className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white transition hover:bg-brand-600"
-              >
-                <Icon size={16} />
-              </a>
-            ))}
-          </div>
         </div>
 
         <div>
@@ -34,7 +22,7 @@ export default function Footer() {
             <li><Link to="/search" className="hover:text-white">{t("nav.properties")}</Link></li>
             <li><Link to="/agents" className="hover:text-white">{t("nav.agents")}</Link></li>
             <li><Link to="/favorites" className="hover:text-white">{t("nav.favorites")}</Link></li>
-            <li><Link to="/publish" className="hover:text-white">{t("nav.publish")}</Link></li>
+            <li><Link to="/client/messages" className="hover:text-white">{t("nav.messages")}</Link></li>
           </ul>
         </div>
 
@@ -56,9 +44,6 @@ export default function Footer() {
           <ul className="mt-4 space-y-3 text-sm text-ink-400">
             <li className="flex items-center gap-2">
               <MapPin size={16} /> {L({ ar: "الدار البيضاء، المغرب", fr: "Casablanca, Maroc" })}
-            </li>
-            <li className="flex items-center gap-2" dir="ltr">
-              <Phone size={16} /> +212 5 22 00 00 00
             </li>
             <li className="flex items-center gap-2" dir="ltr">
               <Mail size={16} /> contact@apio.ma

@@ -8,16 +8,19 @@ import { appBasename } from "./lib/appBase";
 import { FavoritesProvider } from "./context/FavoritesContext";
 import { AuthProvider } from "./context/AuthContext";
 import { ListingsProvider } from "./context/ListingsContext";
+import { MessagingProvider } from "./context/MessagingContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter basename={appBasename()}>
       <AuthProvider>
-        <ListingsProvider>
-          <FavoritesProvider>
-            <App />
-          </FavoritesProvider>
-        </ListingsProvider>
+        <MessagingProvider>
+          <ListingsProvider>
+            <FavoritesProvider>
+              <App />
+            </FavoritesProvider>
+          </ListingsProvider>
+        </MessagingProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

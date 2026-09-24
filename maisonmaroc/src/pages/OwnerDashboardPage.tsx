@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Building2, LogOut } from "lucide-react";
+import { Building2, LogOut, MessageSquare } from "lucide-react";
+import { useMessaging } from "../context/MessagingContext";
 import { useLocale } from "../lib/useLocale";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../lib/api";
@@ -17,6 +18,7 @@ export default function OwnerDashboardPage() {
   const navigate = useNavigate();
   const [properties, setProperties] = useState<OwnerProperty[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const { unreadCount } = useMessaging();
 
   useEffect(() => {
     apiFetch<{ properties: OwnerProperty[] }>("/api/owner/properties").then(({ data, error: err }) => {
@@ -32,16 +34,24 @@ export default function OwnerDashboardPage() {
           <h1 className="text-2xl font-extrabold text-ink-900">{t("ownerDash.title")}</h1>
           <p className="text-sm text-ink-500">{user?.name}</p>
         </div>
-        <button
-          type="button"
-          className="btn-secondary inline-flex items-center gap-2"
-          onClick={async () => {
-            await logout();
-            navigate("/owner/login");
-          }}
-        >
-          <LogOut size={16} /> {t("nav.logout")}
-        </button>
+        <div className="flex gap-2">
+          <Link to="/owner/messages" className="btn-primary inline-flex items-center gap-2">
+            <MessageSquare size={16} /> {t("nav.messages")}
+            {unreadCount > 0 && (
+              <span className="rounded-full bg-white/20 px-2 text-xs">{unreadCount}</span>
+            )}
+          </Link>
+          <button
+            type="button"
+            className="btn-secondary inline-flex items-center gap-2"
+            onClick={async () => {
+              await logout();
+              navigate("/owner/login");
+            }}
+          >
+            <LogOut size={16} /> {t("nav.logout")}
+          </button>
+        </div>
       </div>
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
