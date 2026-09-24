@@ -1,5 +1,16 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
+/** Set when fetch fails (API not running or wrong VITE_API_URL). */
+let apiUnreachable = false;
+
+export function isApiUnreachable() {
+  return apiUnreachable;
+}
+
+export function resetApiReachability() {
+  apiUnreachable = false;
+}
+
 export type UserRole = "SUPER_ADMIN" | "REAL_ESTATE_OWNER" | "CLIENT";
 
 export interface ApiUser {
@@ -28,6 +39,9 @@ export async function apiFetch<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<{ data?: T; error?: string; status: number }> {
+  if (apiUnreachable && !API_BASE) {
+    return { error: "Network error", status: 0 };
+  }
   try {
     const res = await fetch(`${API_BASE}${path}`, {
       ...init,
@@ -46,6 +60,7 @@ export async function apiFetch<T>(
     }
     return { data: body as T, status: res.status };
   } catch {
+    apiUnreachable = true;
     return { error: "Network error", status: 0 };
   }
 }

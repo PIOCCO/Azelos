@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { apiFetch, type ApiUser } from "../lib/api";
+import { apiFetch, isApiUnreachable, type ApiUser } from "../lib/api";
 
 interface AuthContextValue {
   user: ApiUser | null;
@@ -24,7 +24,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    const { data } = await apiFetch<{ user: ApiUser }>("/api/auth/me");
+    if (isApiUnreachable()) {
+      setUser(null);
+      return;
+    }
+    const { data, status } = await apiFetch<{ user: ApiUser }>("/api/auth/me");
+    if (status === 0) {
+      setUser(null);
+      return;
+    }
     setUser(data?.user ?? null);
   }, []);
 
