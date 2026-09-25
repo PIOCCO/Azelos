@@ -185,12 +185,18 @@ html[dir="rtl"] .home-section-title {
   @apply bg-transparent px-0 py-2;
 }
 .oriental-map-svg {
-  @apply mx-auto h-auto w-full min-w-[260px] max-w-[340px] sm:max-w-[360px];
+  @apply mx-auto h-auto w-full max-w-[420px];
 }
 .oriental-map-label {
   font-family: Inter, system-ui, sans-serif;
-  font-size: 10px;
+  font-size: 9.5px;
+  font-weight: 600;
   letter-spacing: 0.01em;
+}
+.oriental-map-label--light {
+  paint-order: stroke fill;
+  stroke: rgba(26, 35, 50, 0.35);
+  stroke-width: 2px;
 }
 .oriental-map-label--active {
   font-weight: 700;
