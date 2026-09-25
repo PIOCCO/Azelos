@@ -1,5 +1,37 @@
 import { v4 as uuidv4 } from "uuid";
 import { ROLES } from "./auth.js";
+import { getPropertyBySlugOrId } from "./catalog.js";
+
+const MAX_MESSAGE_LENGTH = 5000;
+
+export function validateConversationPayload(body) {
+  const propertyId = String(body?.propertyId ?? "").trim();
+  const propertySlug = String(body?.propertySlug ?? "").trim();
+  const agentProfileId = String(body?.agentProfileId ?? "").trim();
+  if (!propertyId || !propertySlug || !agentProfileId) {
+    return { ok: false, error: "propertyId, propertySlug, and agentProfileId are required" };
+  }
+  if (propertyId.length > 128 || propertySlug.length > 200 || agentProfileId.length > 128) {
+    return { ok: false, error: "Invalid property reference" };
+  }
+  const property = getPropertyBySlugOrId(propertyId);
+  if (!property || property.id !== propertyId || property.slug !== propertySlug) {
+    return { ok: false, error: "Invalid property" };
+  }
+  if (property.ownerId !== agentProfileId) {
+    return { ok: false, error: "Invalid agent for this property" };
+  }
+  return { ok: true, data: { propertyId, propertySlug, agentProfileId } };
+}
+
+export function validateMessageBody(body) {
+  const text = String(body ?? "").trim();
+  if (!text) return { ok: false, error: "Message body is required" };
+  if (text.length > MAX_MESSAGE_LENGTH) {
+    return { ok: false, error: "Message is too long" };
+  }
+  return { ok: true, value: text };
+}
 
 export function listConversationsForUser(db, user) {
   if (user.role === ROLES.CLIENT) {

@@ -423,8 +423,8 @@ export function adminDeleteDocument(db, id) {
 
 function writeTemplateFile(docId, html) {
   const storageName = `apio-${docId}.html`;
-  const abs = path.join(UPLOAD_DIR, storageName);
-  if (!abs.startsWith(UPLOAD_DIR)) throw new Error("Invalid template path");
+  const abs = path.resolve(UPLOAD_DIR, storageName);
+  if (!abs.startsWith(UPLOAD_DIR + path.sep)) throw new Error("Invalid template path");
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
   fs.writeFileSync(abs, html, { encoding: "utf8", mode: 0o640 });
   return {

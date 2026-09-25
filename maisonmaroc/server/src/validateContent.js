@@ -101,14 +101,11 @@ export function validateEventPayload(body, { partial = false } = {}) {
 }
 
 const DOC_CATEGORIES = new Set([
-  "publication",
-  "report",
-  "association",
-  "sector",
-  "announcement",
-  "form",
-  "press",
-  "other",
+  "institutionnel",
+  "membres",
+  "professionnel",
+  "administratif",
+  "juridique",
 ]);
 
 const VISIBILITY = new Set(["public", "members", "admin"]);

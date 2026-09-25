@@ -55,7 +55,7 @@ import {
 import { validateContactBody } from "./contact.js";
 import { registerAdminContentRoutes } from "./adminContentRoutes.js";
 import { applySecurityMiddleware } from "./security.js";
-import { clampPagination, validateSlug } from "./validateContent.js";
+import { clampPagination, validateSlug, EMAIL_RE } from "./validateContent.js";
 import { ensureUploadDir, resolveStoredFile } from "./uploads.js";
 import {
   addMessage,
@@ -67,7 +67,14 @@ import {
   listMessages,
   markConversationRead,
   unreadCountForUser,
+  validateConversationPayload,
+  validateMessageBody,
 } from "./messages.js";
+import { assertServerConfig } from "./startup.js";
+import { frontendRedirect } from "./redirect.js";
+import { validateDocumentId, validateUuid } from "./validateIds.js";
+
+assertServerConfig();
 
 const db = openDb();
 migrate(db);
@@ -76,7 +83,6 @@ ensureUploadDir();
 
 const app = express();
 const port = Number(process.env.PORT) || 3001;
-const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 
 app.set("trust proxy", 1);
 applySecurityMiddleware(app);
@@ -143,10 +149,25 @@ const uploadLimiter = rateLimit({
   },
 });
 
+const messageLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler(_req, res) {
+    res.status(429).json({ error: "Too many messages", code: "RATE_LIMIT" });
+  },
+});
+
 app.use(attachUser(db));
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true });
+  try {
+    db.prepare("SELECT 1").get();
+    res.json({ ok: true });
+  } catch {
+    res.status(503).json({ ok: false });
+  }
 });
 
 // ——— Public catalog (marketplace remains public) ———
@@ -183,7 +204,9 @@ app.get("/api/content/documents", publicContentLimiter, (_req, res) => {
 });
 
 app.get("/api/content/documents/:id/file", publicContentLimiter, (req, res) => {
-  const doc = getPublicDocumentFile(db, req.params.id);
+  const idCheck = validateDocumentId(req.params.id);
+  if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
+  const doc = getPublicDocumentFile(db, idCheck.value);
   if (!doc || !doc.file_storage) return res.status(404).json({ error: "Not found" });
   const abs = resolveStoredFile(doc.file_storage);
   if (!abs) return res.status(404).json({ error: "Not found" });
@@ -211,14 +234,21 @@ app.post("/api/auth/client/register", authLimiter, async (req, res) => {
     if (!email || !password || !name) {
       return res.status(400).json({ error: "Email, password, and name are required" });
     }
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (!EMAIL_RE.test(normalizedEmail) || normalizedEmail.length > 254) {
+      return res.status(400).json({ error: "Invalid email" });
+    }
     if (String(password).length < 8) {
       return res.status(400).json({ error: "Password must be at least 8 characters" });
     }
-    if (findUserByEmail(db, email)) {
+    if (String(name).trim().length > 200) {
+      return res.status(400).json({ error: "Invalid name" });
+    }
+    if (findUserByEmail(db, normalizedEmail)) {
       return res.status(409).json({ error: "An account with this email already exists" });
     }
     const row = createUser(db, {
-      email,
+      email: normalizedEmail,
       passwordHash: hashPassword(password),
       name: String(name).trim(),
       phone: phone ? String(phone) : null,
@@ -363,19 +393,19 @@ app.get("/api/auth/google", (req, res) => {
 app.get("/api/auth/google/callback", async (req, res) => {
   try {
     if (!isGoogleConfigured()) {
-      return res.redirect(`${frontendUrl}/client/login?error=oauth_not_configured`);
+      return res.redirect(frontendRedirect("/client/login?error=oauth_not_configured"));
     }
     const { code, state, error } = req.query;
     if (error) {
-      return res.redirect(`${frontendUrl}/client/login?error=oauth_cancelled`);
+      return res.redirect(frontendRedirect("/client/login?error=oauth_cancelled"));
     }
     consumeOAuthState(String(state || ""));
     const profile = await exchangeCodeForProfile(String(code || ""));
     await handleGoogleProfile(res, profile);
-    res.redirect(`${frontendUrl}/client/account`);
+    res.redirect(frontendRedirect("/client/account"));
   } catch (err) {
     console.error("Google callback error", err.message);
-    res.redirect(`${frontendUrl}/client/login?error=oauth_failed`);
+    res.redirect(frontendRedirect("/client/login?error=oauth_failed"));
   }
 });
 
@@ -451,7 +481,9 @@ app.post("/api/admin/owners", requireAuth, requireSuperAdmin, async (req, res) =
 });
 
 app.get("/api/admin/owners/:id", requireAuth, requireSuperAdmin, (req, res) => {
-  const owner = findOwner(db, req.params.id);
+  const idCheck = validateUuid(req.params.id);
+  if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
+  const owner = findOwner(db, idCheck.value);
   if (!owner) return res.status(404).json({ error: "Not found" });
   res.json({ owner });
 });
@@ -459,13 +491,15 @@ app.get("/api/admin/owners/:id", requireAuth, requireSuperAdmin, (req, res) => {
 app.patch("/api/admin/owners/:id", requireAuth, requireSuperAdmin, async (req, res) => {
   try {
     rejectRoleInBody(req.body);
-    const existing = findOwner(db, req.params.id);
+    const idCheck = validateUuid(req.params.id);
+    if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
+    const existing = findOwner(db, idCheck.value);
     if (!existing) return res.status(404).json({ error: "Not found" });
     const { name, phone, status, ownerProfileId, password, email } = req.body || {};
-    if (email && findUserByEmail(db, email) && findUserByEmail(db, email).id !== req.params.id) {
+    if (email && findUserByEmail(db, email) && findUserByEmail(db, email).id !== idCheck.value) {
       return res.status(409).json({ error: "Email already in use" });
     }
-    const updated = updateOwner(db, req.params.id, {
+    const updated = updateOwner(db, idCheck.value, {
       name,
       phone,
       status,
@@ -487,14 +521,21 @@ registerAdminContentRoutes(app, db, {
 });
 
 app.delete("/api/admin/owners/:id", requireAuth, requireSuperAdmin, (req, res) => {
-  if (!deleteOwner(db, req.params.id)) {
+  const idCheck = validateUuid(req.params.id);
+  if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
+  if (req.user?.id === idCheck.value) {
+    return res.status(400).json({ error: "Cannot delete your own account" });
+  }
+  if (!deleteOwner(db, idCheck.value)) {
     return res.status(404).json({ error: "Not found" });
   }
   res.json({ ok: true });
 });
 
 app.get("/api/admin/owners/:id/properties", requireAuth, requireSuperAdmin, (req, res) => {
-  const owner = findOwner(db, req.params.id);
+  const idCheck = validateUuid(req.params.id);
+  if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
+  const owner = findOwner(db, idCheck.value);
   if (!owner) return res.status(404).json({ error: "Not found" });
   res.json({
     properties: listPropertiesForOwnerProfile(owner.owner_profile_id),
@@ -550,22 +591,20 @@ app.get("/api/messages/conversations", requireAuth, (req, res) => {
   res.json({ conversations: rows });
 });
 
-app.post("/api/messages/conversations", requireAuth, requireClient, (req, res) => {
-  const { propertyId, propertySlug, agentProfileId } = req.body || {};
-  if (!propertyId || !propertySlug || !agentProfileId) {
-    return res.status(400).json({ error: "propertyId, propertySlug, and agentProfileId are required" });
-  }
+app.post("/api/messages/conversations", requireAuth, requireClient, messageLimiter, (req, res) => {
+  const validated = validateConversationPayload(req.body || {});
+  if (!validated.ok) return res.status(400).json({ error: validated.error });
   const conv = createConversation(db, {
     clientId: req.user.id,
-    propertyId,
-    propertySlug,
-    agentProfileId,
+    ...validated.data,
   });
   res.status(201).json({ conversation: serializeConversation(db, conv) });
 });
 
 app.get("/api/messages/conversations/:id", requireAuth, (req, res) => {
-  const conv = getConversation(db, req.params.id);
+  const idCheck = validateUuid(req.params.id);
+  if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
+  const conv = getConversation(db, idCheck.value);
   if (!canAccessConversation(conv, req.user)) return res.status(404).json({ error: "Not found" });
   markConversationRead(db, conv, req.user);
   const messages = listMessages(db, conv.id).map((m) => ({
@@ -580,17 +619,17 @@ app.get("/api/messages/conversations/:id", requireAuth, (req, res) => {
   });
 });
 
-app.post("/api/messages/conversations/:id/messages", requireAuth, (req, res) => {
-  const conv = getConversation(db, req.params.id);
+app.post("/api/messages/conversations/:id/messages", requireAuth, messageLimiter, (req, res) => {
+  const idCheck = validateUuid(req.params.id);
+  if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
+  const conv = getConversation(db, idCheck.value);
   if (!canAccessConversation(conv, req.user)) return res.status(404).json({ error: "Not found" });
-  const { body } = req.body || {};
-  if (!body || !String(body).trim()) {
-    return res.status(400).json({ error: "Message body is required" });
-  }
+  const validated = validateMessageBody(req.body?.body);
+  if (!validated.ok) return res.status(400).json({ error: validated.error });
   const msg = addMessage(db, {
     conversationId: conv.id,
     senderId: req.user.id,
-    body: String(body),
+    body: validated.value,
   });
   const updated = getConversation(db, conv.id);
   res.status(201).json({
@@ -605,14 +644,18 @@ app.post("/api/messages/conversations/:id/messages", requireAuth, (req, res) => 
 });
 
 app.patch("/api/messages/conversations/:id/read", requireAuth, (req, res) => {
-  const conv = getConversation(db, req.params.id);
+  const idCheck = validateUuid(req.params.id);
+  if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
+  const conv = getConversation(db, idCheck.value);
   if (!canAccessConversation(conv, req.user)) return res.status(404).json({ error: "Not found" });
   markConversationRead(db, conv, req.user);
   res.json({ ok: true });
 });
 
 app.patch("/api/messages/conversations/:id/archive", requireAuth, (req, res) => {
-  const conv = getConversation(db, req.params.id);
+  const idCheck = validateUuid(req.params.id);
+  if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
+  const conv = getConversation(db, idCheck.value);
   if (!canAccessConversation(conv, req.user)) return res.status(404).json({ error: "Not found" });
   archiveConversation(db, conv, req.user);
   res.json({ ok: true });
@@ -641,6 +684,22 @@ app.use((err, _req, res, _next) => {
 const server = app.listen(port, () => {
   console.log(`APIO API listening on http://localhost:${port}`);
 });
+
+function shutdown(signal) {
+  console.log(`[apio-server] ${signal} — closing HTTP server`);
+  server.close(() => {
+    try {
+      db.close();
+    } catch {
+      /* ignore */
+    }
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 10_000).unref();
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
 server.on("error", (err) => {
   if (err?.code === "EADDRINUSE") {

@@ -5,8 +5,9 @@ import { fileURLToPath } from "node:url";
 import multer from "multer";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const UPLOAD_DIR =
+const UPLOAD_DIR_RAW =
   process.env.UPLOAD_DIR || path.join(__dirname, "..", "data", "uploads");
+export const UPLOAD_DIR = path.resolve(UPLOAD_DIR_RAW);
 
 const MAX_BYTES = Number(process.env.UPLOAD_MAX_BYTES) || 10 * 1024 * 1024;
 
@@ -66,8 +67,8 @@ export function persistValidatedUpload(buffer, claimedMime) {
   }
   const ext = EXT_BY_MIME[detected];
   const storageName = `${randomUUID()}${ext}`;
-  const abs = path.join(UPLOAD_DIR, storageName);
-  if (!abs.startsWith(UPLOAD_DIR)) {
+  const abs = path.resolve(UPLOAD_DIR, storageName);
+  if (!abs.startsWith(UPLOAD_DIR + path.sep) && abs !== UPLOAD_DIR) {
     throw Object.assign(new Error("Invalid storage path"), { status: 500 });
   }
   fs.writeFileSync(abs, buffer, { mode: 0o640 });
@@ -77,8 +78,8 @@ export function persistValidatedUpload(buffer, claimedMime) {
 export function resolveStoredFile(storageName) {
   const base = path.basename(String(storageName || ""));
   if (!base || base !== storageName || base.includes("..")) return null;
-  const abs = path.join(UPLOAD_DIR, base);
-  if (!abs.startsWith(UPLOAD_DIR)) return null;
+  const abs = path.resolve(UPLOAD_DIR, base);
+  if (!abs.startsWith(UPLOAD_DIR + path.sep)) return null;
   if (!fs.existsSync(abs)) return null;
   return abs;
 }

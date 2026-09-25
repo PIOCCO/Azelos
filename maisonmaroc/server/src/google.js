@@ -41,7 +41,13 @@ export function consumeOAuthState(state) {
     err.status = 400;
     throw err;
   }
+  const exp = pendingStates.get(state);
   pendingStates.delete(state);
+  if (!exp || exp < Date.now()) {
+    const err = new Error("Invalid OAuth state");
+    err.status = 400;
+    throw err;
+  }
 }
 
 function pruneStates() {

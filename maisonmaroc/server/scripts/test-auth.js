@@ -197,7 +197,7 @@ async function main() {
       method: "POST",
       headers: { Cookie: adminLogin.cookie },
       body: JSON.stringify({
-        category: "publication",
+        category: "institutionnel",
         titleFr: "Doc test",
         titleAr: "وثيقة",
         visibility: "admin",

@@ -1,4 +1,5 @@
 import { hashPassword } from "./auth.js";
+import { EMAIL_RE } from "./validateContent.js";
 
 export function listOwners(db) {
   return db
@@ -16,6 +17,27 @@ export function updateOwner(db, id, fields) {
   const normalized = { ...fields };
   if (fields.ownerProfileId !== undefined) {
     normalized.owner_profile_id = fields.ownerProfileId;
+  }
+  if (normalized.email !== undefined) {
+    const email = String(normalized.email).trim().toLowerCase();
+    if (!EMAIL_RE.test(email) || email.length > 254) {
+      const err = new Error("Invalid email");
+      err.status = 400;
+      throw err;
+    }
+    normalized.email = email;
+  }
+  if (fields.password) {
+    if (String(fields.password).length < 8) {
+      const err = new Error("Password must be at least 8 characters");
+      err.status = 400;
+      throw err;
+    }
+  }
+  if (normalized.status !== undefined && !["ACTIVE", "DISABLED"].includes(normalized.status)) {
+    const err = new Error("Invalid status");
+    err.status = 400;
+    throw err;
   }
   for (const key of allowed) {
     if (normalized[key] !== undefined) {

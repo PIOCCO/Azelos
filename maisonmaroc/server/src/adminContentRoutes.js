@@ -16,6 +16,25 @@ import {
 } from "./content.js";
 import { validateDocumentPayload, validateEventPayload, validateNewsPayload } from "./validateContent.js";
 import { documentUploadMiddleware, persistValidatedUpload } from "./uploads.js";
+import { validateDocumentId, validateUuid } from "./validateIds.js";
+
+function paramUuid(req, res) {
+  const check = validateUuid(req.params.id);
+  if (!check.ok) {
+    res.status(404).json({ error: "Not found" });
+    return null;
+  }
+  return check.value;
+}
+
+function paramDocumentId(req, res) {
+  const check = validateDocumentId(req.params.id);
+  if (!check.ok) {
+    res.status(404).json({ error: "Not found" });
+    return null;
+  }
+  return check.value;
+}
 
 function sendContentError(err, res) {
   const status = err.status || 500;
@@ -29,7 +48,9 @@ export function registerAdminContentRoutes(app, db, { requireAuth, requireSuperA
   });
 
   app.get("/api/admin/news/:id", requireAuth, requireSuperAdmin, (req, res) => {
-    const article = adminGetNews(db, req.params.id);
+    const id = paramUuid(req, res);
+    if (!id) return;
+    const article = adminGetNews(db, id);
     if (!article) return res.status(404).json({ error: "Not found" });
     res.json({ article });
   });
@@ -46,12 +67,14 @@ export function registerAdminContentRoutes(app, db, { requireAuth, requireSuperA
   });
 
   app.patch("/api/admin/news/:id", requireAuth, requireSuperAdmin, adminMutationLimiter, (req, res) => {
+    const id = paramUuid(req, res);
+    if (!id) return;
     const validated = validateNewsPayload(req.body || {}, { partial: true });
     if (!validated.ok) return res.status(400).json({ error: "Validation failed", details: validated.errors });
-    const existing = adminGetNews(db, req.params.id);
+    const existing = adminGetNews(db, id);
     if (!existing) return res.status(404).json({ error: "Not found" });
     const merged = {
-      id: req.params.id,
+      id,
       slug: validated.data.slug ?? existing.slug,
       titleFr: validated.data.titleFr ?? existing.titleFr,
       titleAr: validated.data.titleAr ?? existing.titleAr,
@@ -67,19 +90,23 @@ export function registerAdminContentRoutes(app, db, { requireAuth, requireSuperA
     };
     try {
       adminUpsertNews(db, merged);
-      res.json({ article: adminGetNews(db, req.params.id) });
+      res.json({ article: adminGetNews(db, id) });
     } catch (err) {
       sendContentError(err, res);
     }
   });
 
   app.post("/api/admin/news/:id/archive", requireAuth, requireSuperAdmin, adminMutationLimiter, (req, res) => {
-    if (!adminArchiveNews(db, req.params.id)) return res.status(404).json({ error: "Not found" });
+    const id = paramUuid(req, res);
+    if (!id) return;
+    if (!adminArchiveNews(db, id)) return res.status(404).json({ error: "Not found" });
     res.json({ ok: true });
   });
 
   app.delete("/api/admin/news/:id", requireAuth, requireSuperAdmin, adminMutationLimiter, (req, res) => {
-    if (!adminDeleteNews(db, req.params.id)) return res.status(404).json({ error: "Not found" });
+    const id = paramUuid(req, res);
+    if (!id) return;
+    if (!adminDeleteNews(db, id)) return res.status(404).json({ error: "Not found" });
     res.json({ ok: true });
   });
 
@@ -88,7 +115,9 @@ export function registerAdminContentRoutes(app, db, { requireAuth, requireSuperA
   });
 
   app.get("/api/admin/events/:id", requireAuth, requireSuperAdmin, (req, res) => {
-    const event = adminGetEvent(db, req.params.id);
+    const id = paramUuid(req, res);
+    if (!id) return;
+    const event = adminGetEvent(db, id);
     if (!event) return res.status(404).json({ error: "Not found" });
     res.json({ event });
   });
@@ -105,21 +134,25 @@ export function registerAdminContentRoutes(app, db, { requireAuth, requireSuperA
   });
 
   app.patch("/api/admin/events/:id", requireAuth, requireSuperAdmin, adminMutationLimiter, (req, res) => {
+    const id = paramUuid(req, res);
+    if (!id) return;
     const validated = validateEventPayload(req.body || {}, { partial: true });
     if (!validated.ok) return res.status(400).json({ error: "Validation failed", details: validated.errors });
-    const existing = adminGetEvent(db, req.params.id);
+    const existing = adminGetEvent(db, id);
     if (!existing) return res.status(404).json({ error: "Not found" });
-    const merged = { ...existing, ...validated.data, id: req.params.id };
+    const merged = { ...existing, ...validated.data, id };
     try {
       adminUpsertEvent(db, merged);
-      res.json({ event: adminGetEvent(db, req.params.id) });
+      res.json({ event: adminGetEvent(db, id) });
     } catch (err) {
       sendContentError(err, res);
     }
   });
 
   app.delete("/api/admin/events/:id", requireAuth, requireSuperAdmin, adminMutationLimiter, (req, res) => {
-    if (!adminDeleteEvent(db, req.params.id)) return res.status(404).json({ error: "Not found" });
+    const id = paramUuid(req, res);
+    if (!id) return;
+    if (!adminDeleteEvent(db, id)) return res.status(404).json({ error: "Not found" });
     res.json({ ok: true });
   });
 
@@ -128,7 +161,9 @@ export function registerAdminContentRoutes(app, db, { requireAuth, requireSuperA
   });
 
   app.get("/api/admin/documents/:id", requireAuth, requireSuperAdmin, (req, res) => {
-    const doc = adminGetDocument(db, req.params.id);
+    const id = paramDocumentId(req, res);
+    if (!id) return;
+    const doc = adminGetDocument(db, id);
     if (!doc) return res.status(404).json({ error: "Not found" });
     res.json({ document: doc });
   });
@@ -149,12 +184,14 @@ export function registerAdminContentRoutes(app, db, { requireAuth, requireSuperA
   });
 
   app.patch("/api/admin/documents/:id", requireAuth, requireSuperAdmin, adminMutationLimiter, (req, res) => {
+    const id = paramDocumentId(req, res);
+    if (!id) return;
     const validated = validateDocumentPayload(req.body || {}, { partial: true });
     if (!validated.ok) return res.status(400).json({ error: "Validation failed", details: validated.errors });
-    const existing = adminGetDocument(db, req.params.id);
+    const existing = adminGetDocument(db, id);
     if (!existing) return res.status(404).json({ error: "Not found" });
     const merged = {
-      id: req.params.id,
+      id,
       category: validated.data.category ?? existing.category,
       titleFr: validated.data.titleFr ?? existing.titleFr,
       titleAr: validated.data.titleAr ?? existing.titleAr,
@@ -166,7 +203,7 @@ export function registerAdminContentRoutes(app, db, { requireAuth, requireSuperA
     };
     try {
       adminUpsertDocument(db, merged);
-      res.json({ document: adminGetDocument(db, req.params.id) });
+      res.json({ document: adminGetDocument(db, id) });
     } catch (err) {
       sendContentError(err, res);
     }
@@ -178,18 +215,20 @@ export function registerAdminContentRoutes(app, db, { requireAuth, requireSuperA
     requireSuperAdmin,
     uploadLimiter,
     (req, res) => {
+      const id = paramDocumentId(req, res);
+      if (!id) return;
       documentUploadMiddleware(req, res, (err) => {
         if (err) {
           const status = err.code === "LIMIT_FILE_SIZE" ? 413 : 400;
           return res.status(status).json({ error: err.message || "Upload failed" });
         }
         if (!req.file) return res.status(400).json({ error: "File is required" });
-        const doc = adminGetDocument(db, req.params.id);
+        const doc = adminGetDocument(db, id);
         if (!doc) return res.status(404).json({ error: "Not found" });
         try {
           const stored = persistValidatedUpload(req.file.buffer, req.file.mimetype);
-          adminSetDocumentFile(db, req.params.id, stored);
-          res.json({ document: adminGetDocument(db, req.params.id) });
+          adminSetDocumentFile(db, id, stored);
+          res.json({ document: adminGetDocument(db, id) });
         } catch (e) {
           sendContentError(e, res);
         }
@@ -198,7 +237,9 @@ export function registerAdminContentRoutes(app, db, { requireAuth, requireSuperA
   );
 
   app.delete("/api/admin/documents/:id", requireAuth, requireSuperAdmin, adminMutationLimiter, (req, res) => {
-    if (!adminDeleteDocument(db, req.params.id)) return res.status(404).json({ error: "Not found" });
+    const id = paramDocumentId(req, res);
+    if (!id) return;
+    if (!adminDeleteDocument(db, id)) return res.status(404).json({ error: "Not found" });
     res.json({ ok: true });
   });
 }
