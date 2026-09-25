@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocale } from "../lib/useLocale";
 import { INSTITUTION } from "../config/institution";
+import { CANONICAL_ORIGIN } from "../config/site";
 
 interface Props {
   title: string;
@@ -35,8 +36,11 @@ export default function PageMeta({ title, description, path = "" }: Props) {
     setMeta("og:description", desc, true);
     setMeta("og:type", "website", true);
     if (typeof window !== "undefined") {
-      const base = window.location.origin + (import.meta.env.BASE_URL || "/");
-      const canonical = new URL(path.replace(/^\//, ""), base).href.replace(/\/$/, "") || base;
+      const base = CANONICAL_ORIGIN || window.location.origin + (import.meta.env.BASE_URL || "/");
+      const canonicalPath = path.startsWith("/") ? path : `/${path}`;
+      const canonical = CANONICAL_ORIGIN
+        ? `${CANONICAL_ORIGIN}${canonicalPath}`.replace(/([^:]\/)\/+/g, "$1")
+        : new URL(path.replace(/^\//, ""), base).href.replace(/\/$/, "") || base;
       setMeta("og:url", canonical, true);
       let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
       if (!link) {

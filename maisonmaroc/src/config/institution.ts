@@ -24,4 +24,10 @@ export const INSTITUTION = {
   registrationId: "[Immatriculation / RC / ICE — à compléter si applicable]",
   cndpDeclaration: "[Déclaration CNDP — à compléter si applicable]",
   jurisdiction: { fr: "Maroc", ar: "المغرب" },
+  /** @placeholder Official social profile URLs (leave empty until verified) */
+  social: {
+    facebook: "",
+    linkedin: "",
+    youtube: "",
+  },
 } as const;

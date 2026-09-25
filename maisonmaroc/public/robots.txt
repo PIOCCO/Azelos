@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: /sitemap.xml
+# Set VITE_CANONICAL_ORIGIN at build to emit absolute Sitemap URL
