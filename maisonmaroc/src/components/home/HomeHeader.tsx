@@ -23,7 +23,7 @@ export default function HomeHeader() {
 
   return (
     <header className="home-header sticky top-0 z-50 border-b border-ink-200/80 bg-white/95 backdrop-blur-sm">
-      <div className="border-b border-brand-800/30 bg-brand-700">
+      <div className="border-b border-navy-900/40 bg-navy">
         <div className="home-container flex h-9 items-center justify-end">
           <LanguageSwitcher variant="dark" />
         </div>
@@ -73,7 +73,7 @@ export default function HomeHeader() {
                 end={l.end}
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
-                  `py-2.5 text-sm font-semibold ${isActive ? "text-brand-700" : "text-ink-700"}`
+                  `py-2.5 text-sm font-semibold ${isActive ? "text-navy" : "text-ink-700"}`
                 }
               >
                 {l.label}

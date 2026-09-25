@@ -36,6 +36,17 @@ const MOSAIC = [
   cities[0]?.image,
   cities[2]?.image || cities[1]?.image,
 ];
+const REGION_LEFT = [
+  cities[1]?.image || MOSAIC[0],
+  cities[0]?.image || MOSAIC[1],
+];
+const REGION_RIGHT = {
+  tall: "https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=800&q=80",
+  small: [
+    cities[3]?.image || MOSAIC[2],
+    cities[4]?.image || MOSAIC[0],
+  ],
+};
 const CTA_BG =
   "https://images.unsplash.com/photo-1518548419970-58e985b0a4a2?auto=format&fit=crop&w=1920&q=80";
 
@@ -131,17 +142,17 @@ export default function HomePage() {
       </section>
 
       {/* Mission */}
-      <section className="home-section">
+      <section className="home-section home-mission-section">
         <div className="home-container">
-          <h2 className="home-section-title text-center">{t("homePage.mission.title")}</h2>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+          <h2 className="home-section-title">{t("homePage.mission.title")}</h2>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-5">
             {missionItems.map((item, i) => {
               const Icon = MISSION_ICONS[i] || Building2;
               return (
                 <article key={item.title.fr} className="home-mission-card">
-                  <Icon className="mx-auto h-8 w-8 text-navy/80" strokeWidth={1.25} />
-                  <h3 className="mt-4 text-center text-sm font-bold text-ink-900">{L(item.title)}</h3>
-                  <p className="mt-2 text-center text-xs leading-relaxed text-ink-500">{L(item.body)}</p>
+                  <Icon className="h-7 w-7 text-navy" strokeWidth={1.25} />
+                  <h3 className="mt-4 text-sm font-bold leading-snug text-navy">{L(item.title)}</h3>
+                  <p className="mt-2 text-xs leading-relaxed text-ink-500 line-clamp-3">{L(item.body)}</p>
                 </article>
               );
             })}
@@ -151,28 +162,58 @@ export default function HomePage() {
 
       {/* Region */}
       <section className="home-section bg-white">
-        <div className="home-container grid gap-10 lg:grid-cols-[1fr_1.2fr_1fr] lg:items-center">
-          <div className="hidden lg:block">
-            <SmartImage src={cities[1]?.image || MOSAIC[0]} alt="" className="h-64 w-full object-cover" fallbackSeed="reg-l" />
-          </div>
-          <div>
-            <h2 className="home-section-title text-center">{L(regionIntro.title)}</h2>
-            <p className="mx-auto mt-4 max-w-md text-center text-sm leading-relaxed text-ink-600">{L(regionIntro.body)}</p>
-            <div className="mt-6 overflow-hidden border border-ink-200 shadow-sm">
-              <OrientalMap className="px-4 py-6 sm:px-8 sm:py-8" />
+        <div className="home-container">
+          <div className="grid gap-10 lg:grid-cols-12 lg:items-start lg:gap-8">
+            <div className="lg:col-span-4 xl:col-span-3">
+              <h2 className="home-section-title max-w-sm">{t("homePage.region.immobilierTitle")}</h2>
+              <p className="mt-5 text-sm leading-relaxed text-ink-600">{L(regionIntro.body)}</p>
+              <div className="mt-8 hidden flex-col gap-4 lg:flex">
+                {REGION_LEFT.map((src, idx) => (
+                  <div key={idx} className="home-region-photo aspect-[4/5] max-h-[220px]">
+                    <SmartImage src={src} alt="" className="h-full w-full object-cover" fallbackSeed={`reg-l-${idx}`} />
+                  </div>
+                ))}
+              </div>
             </div>
-            <ul className="mt-6 flex flex-wrap justify-center gap-2">
-              {cities.slice(0, 6).map((c) => (
-                <li key={c.id}>
-                  <Link to={`/projets?city=${c.id}`} className="home-chip">
-                    {L(c.name)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+
+            <div className="lg:col-span-4 xl:col-span-5 lg:pt-6">
+              <OrientalMap className="py-2" />
+              <ul className="mt-6 flex flex-wrap gap-2 lg:justify-center">
+                {cities.map((c) => (
+                  <li key={c.id}>
+                    <Link to={`/projets?city=${c.id}`} className="home-chip">
+                      {L(c.name)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="hidden flex-col gap-4 lg:col-span-4 lg:flex xl:col-span-4">
+              <div className="home-region-photo aspect-[3/5] min-h-[280px] flex-1">
+                <SmartImage
+                  src={REGION_RIGHT.tall}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  fallbackSeed="reg-r-tall"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {REGION_RIGHT.small.map((src, idx) => (
+                  <div key={idx} className="home-region-photo aspect-[3/4]">
+                    <SmartImage src={src} alt="" className="h-full w-full object-cover" fallbackSeed={`reg-r-${idx}`} />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="hidden lg:block">
-            <SmartImage src={cities[3]?.image || MOSAIC[2]} alt="" className="h-64 w-full object-cover" fallbackSeed="reg-r" />
+
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:hidden">
+            {[REGION_LEFT[0], REGION_LEFT[1], REGION_RIGHT.tall, REGION_RIGHT.small[0]].map((src, idx) => (
+              <div key={idx} className="home-region-photo aspect-[3/4]">
+                <SmartImage src={src} alt="" className="h-full w-full object-cover" fallbackSeed={`reg-m-${idx}`} />
+              </div>
+            ))}
           </div>
         </div>
       </section>

@@ -347,7 +347,10 @@ export const fr: Dict = {
       readMore: "En savoir plus",
     },
     mission: { title: "Notre mission" },
-    region: { mapTitle: "Carte — région de l'Oriental" },
+    region: {
+      mapTitle: "Carte — région de l'Oriental",
+      immobilierTitle: "L'immobilier dans l'Oriental",
+    },
     members: {
       title: "Nos promoteurs",
       sub: "Annuaire des professionnels membres de l'association.",

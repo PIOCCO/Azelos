@@ -150,13 +150,13 @@ html[dir="rtl"] .home-section-title {
   @apply px-3 py-2 text-[13px] font-semibold text-ink-700 transition hover:text-navy;
 }
 .home-nav-link-active {
-  @apply text-brand-700;
+  @apply text-navy;
 }
 .home-btn {
   @apply inline-flex min-h-[44px] items-center justify-center px-6 py-2.5 text-xs font-bold uppercase tracking-wide transition;
 }
 .home-btn-primary {
-  @apply bg-brand-700 text-white hover:bg-brand-800;
+  @apply bg-navy text-white hover:bg-navy-800;
 }
 .home-btn-outline {
   @apply border border-ink-300 bg-white text-ink-800 hover:border-navy hover:text-navy;
@@ -168,7 +168,13 @@ html[dir="rtl"] .home-section-title {
   @apply font-semibold text-white underline-offset-4 hover:underline;
 }
 .home-mission-card {
-  @apply border border-ink-200/80 bg-white px-4 py-8;
+  @apply rounded-md border border-ink-200/60 bg-white px-5 py-7 shadow-sm;
+}
+.home-mission-section {
+  @apply bg-[#f5f2ed];
+}
+.home-region-photo {
+  @apply overflow-hidden rounded-2xl bg-ink-100;
 }
 .home-member-card {
   @apply border border-ink-200 bg-white px-5 py-8 text-center;

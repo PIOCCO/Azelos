@@ -340,7 +340,10 @@ export const ar = {
       readMore: "المزيد",
     },
     mission: { title: "مهمتنا" },
-    region: { mapTitle: "خريطة — جهة الشرقية" },
+    region: {
+      mapTitle: "خريطة — جهة الشرقية",
+      immobilierTitle: "العقار في الجهة الشرقية",
+    },
     members: {
       title: "مقاولونا",
       sub: "دليل المهنيين الأعضاء في الجمعية.",
