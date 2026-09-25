@@ -27,7 +27,7 @@ import {
 import { cities, cityById } from "../data/cities";
 import { fetchDocuments, fetchEvents, fetchNews, type AssociationEvent, type NewsArticle, type PublicDocument } from "../lib/contentApi";
 import { formatDate } from "../lib/format";
-import { mapEmbedBbox } from "../lib/cityCoords";
+import OrientalMap from "../components/home/OrientalMap";
 
 const HERO_IMG =
   "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=85";
@@ -68,8 +68,6 @@ export default function HomePage() {
       cancelled = true;
     };
   }, []);
-
-  const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${mapEmbedBbox()}&layer=mapnik`;
 
   return (
     <div className="home-page bg-[#faf9f7]">
@@ -160,8 +158,8 @@ export default function HomePage() {
           <div>
             <h2 className="home-section-title text-center">{L(regionIntro.title)}</h2>
             <p className="mx-auto mt-4 max-w-md text-center text-sm leading-relaxed text-ink-600">{L(regionIntro.body)}</p>
-            <div className="mt-6 overflow-hidden border border-ink-200 bg-ink-50">
-              <iframe title={t("homePage.region.mapTitle")} src={mapSrc} className="h-52 w-full border-0 sm:h-64" loading="lazy" />
+            <div className="mt-6 overflow-hidden border border-ink-200 shadow-sm">
+              <OrientalMap className="px-4 py-6 sm:px-8 sm:py-8" />
             </div>
             <ul className="mt-6 flex flex-wrap justify-center gap-2">
               {cities.slice(0, 6).map((c) => (

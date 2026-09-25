@@ -150,13 +150,13 @@ html[dir="rtl"] .home-section-title {
   @apply px-3 py-2 text-[13px] font-semibold text-ink-700 transition hover:text-navy;
 }
 .home-nav-link-active {
-  @apply text-navy;
+  @apply text-brand-700;
 }
 .home-btn {
   @apply inline-flex min-h-[44px] items-center justify-center px-6 py-2.5 text-xs font-bold uppercase tracking-wide transition;
 }
 .home-btn-primary {
-  @apply bg-navy text-white hover:bg-navy-800;
+  @apply bg-brand-700 text-white hover:bg-brand-800;
 }
 .home-btn-outline {
   @apply border border-ink-300 bg-white text-ink-800 hover:border-navy hover:text-navy;

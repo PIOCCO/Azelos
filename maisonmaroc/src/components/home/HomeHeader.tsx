@@ -23,6 +23,12 @@ export default function HomeHeader() {
 
   return (
     <header className="home-header sticky top-0 z-50 border-b border-ink-200/80 bg-white/95 backdrop-blur-sm">
+      <div className="border-b border-brand-800/30 bg-brand-700">
+        <div className="home-container flex h-9 items-center justify-end">
+          <LanguageSwitcher variant="dark" />
+        </div>
+      </div>
+
       <div className="home-container flex h-[72px] items-center justify-between gap-4 lg:h-[80px]">
         <BrandLogo variant="header" />
 
@@ -41,7 +47,6 @@ export default function HomeHeader() {
           <NavLink to="/documents" className="home-nav-link text-xs">
             {t("homePage.nav.documents")}
           </NavLink>
-          <LanguageSwitcher variant="light" />
           <Link to="/owner/login" className="home-btn home-btn-primary">
             {t("homePage.nav.promoter")}
           </Link>
@@ -68,7 +73,7 @@ export default function HomeHeader() {
                 end={l.end}
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
-                  `py-2.5 text-sm font-semibold ${isActive ? "text-navy" : "text-ink-700"}`
+                  `py-2.5 text-sm font-semibold ${isActive ? "text-brand-700" : "text-ink-700"}`
                 }
               >
                 {l.label}
@@ -80,12 +85,13 @@ export default function HomeHeader() {
             <NavLink to="/documents" onClick={() => setOpen(false)} className="py-2.5 text-sm text-ink-700">
               {t("homePage.nav.documents")}
             </NavLink>
-            <div className="mt-2 flex items-center gap-3">
-              <LanguageSwitcher variant="light" />
-              <Link to="/owner/login" className="home-btn home-btn-primary flex-1 text-center">
-                {t("homePage.nav.promoter")}
-              </Link>
-            </div>
+            <Link
+              to="/owner/login"
+              onClick={() => setOpen(false)}
+              className="home-btn home-btn-primary mt-2 text-center"
+            >
+              {t("homePage.nav.promoter")}
+            </Link>
           </nav>
         </div>
       )}
