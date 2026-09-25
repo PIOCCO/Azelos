@@ -46,7 +46,7 @@ export default function DocumentsPage() {
                   </time>
                   {doc.fileUrl ? (
                     <a
-                      href={doc.fileUrl}
+                      href={doc.fileUrl.startsWith("http") ? doc.fileUrl : `${import.meta.env.VITE_API_URL ?? ""}${doc.fileUrl}`}
                       className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand-700"
                       download
                       rel="noopener noreferrer"

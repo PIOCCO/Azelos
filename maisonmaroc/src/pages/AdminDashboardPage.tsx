@@ -5,6 +5,7 @@ import { useLocale } from "../lib/useLocale";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../lib/api";
 import { owners as seedOwners } from "../data/owners";
+import AdminContentPanels from "../components/admin/AdminContentPanels";
 
 interface OwnerRow {
   id: string;
@@ -155,6 +156,8 @@ export default function AdminDashboardPage() {
           </tbody>
         </table>
       </section>
+
+      <AdminContentPanels />
     </div>
   );
 }

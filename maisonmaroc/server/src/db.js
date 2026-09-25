@@ -124,4 +124,19 @@ export function migrate(db) {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
+
+  ensureColumns(db);
+}
+
+function ensureColumns(db) {
+  const addCol = (table, col, ddl) => {
+    const names = db.prepare(`PRAGMA table_info(${table})`).all().map((r) => r.name);
+    if (!names.includes(col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${ddl}`);
+  };
+  addCol("news_posts", "archived", "INTEGER NOT NULL DEFAULT 0");
+  addCol("events", "contact_info", "TEXT");
+  addCol("events", "image_url", "TEXT");
+  addCol("documents", "file_storage", "TEXT");
+  addCol("documents", "file_mime", "TEXT");
+  addCol("documents", "file_size", "INTEGER");
 }

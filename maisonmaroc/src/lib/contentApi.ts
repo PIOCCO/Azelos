@@ -21,6 +21,8 @@ export interface AssociationEvent {
   startsAt: string;
   endsAt: string | null;
   organizer: string | null;
+  contactInfo?: string | null;
+  imageUrl?: string | null;
 }
 
 export interface PublicDocument {

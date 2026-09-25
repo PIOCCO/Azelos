@@ -6,7 +6,9 @@ export function validateContactBody(body) {
   const lastName = String(body?.lastName ?? "").trim();
   const email = String(body?.email ?? "").trim().toLowerCase();
   const phone = body?.phone ? String(body.phone).trim() : "";
-  const subject = String(body?.subject ?? "").trim();
+  const subject = String(body?.subject ?? "")
+    .replace(/[\r\n]+/g, " ")
+    .trim();
   const message = String(body?.message ?? "").trim();
 
   if (firstName.length < 2 || firstName.length > 80) errors.push("Invalid first name");

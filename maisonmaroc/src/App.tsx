@@ -25,6 +25,7 @@ import EventsPage from "./pages/EventsPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import FaqPage from "./pages/FaqPage";
 import ForbiddenPage from "./pages/ForbiddenPage";
+import TooManyRequestsPage from "./pages/TooManyRequestsPage";
 import MentionsLegalesPage from "./pages/legal/MentionsLegalesPage";
 import PrivacyPage from "./pages/legal/PrivacyPage";
 import CookiesPage from "./pages/legal/CookiesPage";
@@ -53,6 +54,7 @@ export default function App() {
         <Route path="/legal/cookies" element={<CookiesPage />} />
         <Route path="/legal/cgu" element={<TermsPage />} />
         <Route path="/403" element={<ForbiddenPage />} />
+        <Route path="/429" element={<TooManyRequestsPage />} />
 
         <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/publish" element={<PublishPage />} />

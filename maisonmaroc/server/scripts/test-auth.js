@@ -60,6 +60,15 @@ async function main() {
   const adminOwners = await req("/api/admin/owners");
   assert("PUBLIC GET /api/admin/owners denied", adminOwners.status === 401);
 
+  const adminNews = await req("/api/admin/news");
+  assert("PUBLIC GET /api/admin/news denied", adminNews.status === 401);
+
+  const adminEvents = await req("/api/admin/events");
+  assert("PUBLIC GET /api/admin/events denied", adminEvents.status === 401);
+
+  const adminDocs = await req("/api/admin/documents");
+  assert("PUBLIC GET /api/admin/documents denied", adminDocs.status === 401);
+
   const ownerReg = await req("/api/auth/owner/register", {
     method: "POST",
     body: JSON.stringify({ email: "x@y.com", password: "password1", name: "X" }),
@@ -101,6 +110,13 @@ async function main() {
   });
   assert("CLIENT admin API denied", clientAdmin.status === 403);
 
+  const clientAdminNews = await req("/api/admin/news", {
+    method: "POST",
+    headers: { Cookie: clientLogin.cookie },
+    body: JSON.stringify({ slug: "x", titleFr: "a", titleAr: "b", bodyFr: "c", bodyAr: "d" }),
+  });
+  assert("CLIENT admin news POST denied", clientAdminNews.status === 403);
+
   const adminEmail = process.env.SUPER_ADMIN_EMAIL || "admin@apio.ma";
   const adminPass = process.env.SUPER_ADMIN_PASSWORD || "change-me-on-first-login";
   const adminLogin = await login("/api/auth/admin/login", adminEmail, adminPass);
@@ -139,6 +155,63 @@ async function main() {
     if (create2.status === 201) {
       assert("Created owner role", create2.body?.owner?.role === "REAL_ESTATE_OWNER");
     }
+
+    const newsList = await req("/api/admin/news", { headers: { Cookie: adminLogin.cookie } });
+    assert("SUPER_ADMIN list news", newsList.status === 200);
+
+    const slug = `test-${Date.now()}`;
+    const newsCreate = await req("/api/admin/news", {
+      method: "POST",
+      headers: { Cookie: adminLogin.cookie },
+      body: JSON.stringify({
+        slug,
+        titleFr: "Test",
+        titleAr: "اختبار",
+        bodyFr: "Contenu test suffisamment long.",
+        bodyAr: "محتوى اختبار.",
+        published: false,
+      }),
+    });
+    assert("SUPER_ADMIN create news", newsCreate.status === 201);
+
+    const badNews = await req("/api/admin/news", {
+      method: "POST",
+      headers: { Cookie: adminLogin.cookie },
+      body: JSON.stringify({ slug: "INVALID SLUG", titleFr: "x", titleAr: "y", bodyFr: "a", bodyAr: "b" }),
+    });
+    assert("Admin news rejects invalid slug", badNews.status === 400);
+
+    const eventCreate = await req("/api/admin/events", {
+      method: "POST",
+      headers: { Cookie: adminLogin.cookie },
+      body: JSON.stringify({
+        titleFr: "Réunion test",
+        titleAr: "اجتماع",
+        startsAt: new Date(Date.now() + 86400000).toISOString(),
+        published: false,
+      }),
+    });
+    assert("SUPER_ADMIN create event", eventCreate.status === 201);
+
+    const docCreate = await req("/api/admin/documents", {
+      method: "POST",
+      headers: { Cookie: adminLogin.cookie },
+      body: JSON.stringify({
+        category: "publication",
+        titleFr: "Doc test",
+        titleAr: "وثيقة",
+        visibility: "admin",
+        published: false,
+      }),
+    });
+    assert("SUPER_ADMIN create document", docCreate.status === 201);
+
+    const publicDocs = await req("/api/content/documents");
+    assert("Public documents API", publicDocs.status === 200);
+    if (docCreate.status === 201 && publicDocs.status === 200) {
+      const hidden = (publicDocs.body?.documents || []).some((d) => d.title?.fr === "Doc test");
+      assert("Non-public document hidden from public API", !hidden);
+    }
   }
 
   const demoEmail = process.env.DEMO_OWNER_EMAIL || "owner.demo@apio.ma";
@@ -155,7 +228,21 @@ async function main() {
       headers: { Cookie: ownerLogin.cookie },
     });
     assert("OWNER admin denied", adminAsOwner.status === 403);
+
+    const ownerNews = await req("/api/admin/events", {
+      method: "POST",
+      headers: { Cookie: ownerLogin.cookie },
+      body: JSON.stringify({
+        titleFr: "Hack",
+        titleAr: "x",
+        startsAt: new Date().toISOString(),
+      }),
+    });
+    assert("OWNER admin events denied", ownerNews.status === 403);
   }
+
+  const health = await req("/api/health");
+  assert("GET /api/health minimal", health.status === 200 && health.body?.ok === true && !health.body?.env);
 
   console.log(`\n${passed} passed, ${failed} failed`);
   process.exit(failed ? 1 : 0);

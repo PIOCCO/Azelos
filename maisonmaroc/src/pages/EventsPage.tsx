@@ -32,10 +32,9 @@ function EventCard({ event }: { event: AssociationEvent }) {
         )}
       </ul>
       {L(event.description) && <p className="mt-3 text-sm leading-relaxed text-ink-700">{L(event.description)}</p>}
-      {event.organizer && (
-        <p className="mt-2 text-xs text-ink-500">
-          {event.organizer}
-        </p>
+      {event.organizer && <p className="mt-2 text-xs text-ink-500">{event.organizer}</p>}
+      {event.contactInfo && (
+        <p className="mt-2 text-xs text-ink-600 whitespace-pre-wrap">{event.contactInfo}</p>
       )}
     </article>
   );

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import helmet from "helmet";
+import fs from "node:fs";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import { openDb, migrate } from "./db.js";
@@ -44,16 +44,19 @@ import {
   listPublicProperties,
 } from "./catalog.js";
 import {
-  adminListNews,
-  adminUpsertNews,
   createContactSubmission,
   getNewsBySlug,
+  getPublicDocumentFile,
   listPublicDocuments,
   listPublishedEvents,
   listPublishedNews,
   seedDemoContent,
 } from "./content.js";
 import { validateContactBody } from "./contact.js";
+import { registerAdminContentRoutes } from "./adminContentRoutes.js";
+import { applySecurityMiddleware } from "./security.js";
+import { clampPagination } from "./validateContent.js";
+import { ensureUploadDir, resolveStoredFile } from "./uploads.js";
 import {
   addMessage,
   archiveConversation,
@@ -69,35 +72,75 @@ import {
 const db = openDb();
 migrate(db);
 seedDemoContent(db);
+ensureUploadDir();
 
 const app = express();
 const port = Number(process.env.PORT) || 3001;
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 
 app.set("trust proxy", 1);
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+applySecurityMiddleware(app);
 app.use(express.json({ limit: "32kb" }));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: parseOrigins(),
+    origin(origin, callback) {
+      const allowed = parseOrigins();
+      if (!origin || allowed.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 );
 
-const authLimiter = rateLimit({
+const rateLimitJson = (message) => ({
   windowMs: 15 * 60 * 1000,
-  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
+  handler(_req, res) {
+    res.status(429).json({ error: message, code: "RATE_LIMIT" });
+  },
 });
+
+const authLimiter = rateLimit({ ...rateLimitJson("Too many authentication attempts"), max: 30 });
 
 const contactLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Too many contact requests" },
+  handler(_req, res) {
+    res.status(429).json({ error: "Too many contact requests", code: "RATE_LIMIT" });
+  },
+});
+
+const publicContentLimiter = rateLimit({
+  ...rateLimitJson("Too many requests"),
+  windowMs: 60 * 1000,
+  max: 120,
+});
+
+const adminMutationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler(_req, res) {
+    res.status(429).json({ error: "Too many admin operations", code: "RATE_LIMIT" });
+  },
+});
+
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler(_req, res) {
+    res.status(429).json({ error: "Too many uploads", code: "RATE_LIMIT" });
+  },
 });
 
 app.use(attachUser(db));
@@ -117,8 +160,9 @@ app.get("/api/properties/:slugOrId", (req, res) => {
   res.json({ property: p });
 });
 
-app.get("/api/content/news", (_req, res) => {
-  res.json({ articles: listPublishedNews(db) });
+app.get("/api/content/news", publicContentLimiter, (req, res) => {
+  const { limit, offset } = clampPagination(req.query);
+  res.json({ articles: listPublishedNews(db, { limit, offset }) });
 });
 
 app.get("/api/content/news/:slug", (req, res) => {
@@ -127,13 +171,24 @@ app.get("/api/content/news/:slug", (req, res) => {
   res.json({ article });
 });
 
-app.get("/api/content/events", (req, res) => {
+app.get("/api/content/events", publicContentLimiter, (req, res) => {
   const upcoming = req.query.upcoming === "1";
   res.json({ events: listPublishedEvents(db, { upcomingOnly: upcoming }) });
 });
 
-app.get("/api/content/documents", (_req, res) => {
+app.get("/api/content/documents", publicContentLimiter, (_req, res) => {
   res.json({ documents: listPublicDocuments(db) });
+});
+
+app.get("/api/content/documents/:id/file", publicContentLimiter, (req, res) => {
+  const doc = getPublicDocumentFile(db, req.params.id);
+  if (!doc || !doc.file_storage) return res.status(404).json({ error: "Not found" });
+  const abs = resolveStoredFile(doc.file_storage);
+  if (!abs) return res.status(404).json({ error: "Not found" });
+  res.setHeader("Content-Type", doc.file_mime || "application/octet-stream");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Content-Disposition", "attachment");
+  fs.createReadStream(abs).pipe(res);
 });
 
 app.post("/api/contact", contactLimiter, (req, res) => {
@@ -421,33 +476,11 @@ app.patch("/api/admin/owners/:id", requireAuth, requireSuperAdmin, async (req, r
   }
 });
 
-app.get("/api/admin/news", requireAuth, requireSuperAdmin, (_req, res) => {
-  res.json({ articles: adminListNews(db) });
-});
-
-app.post("/api/admin/news", requireAuth, requireSuperAdmin, (req, res) => {
-  const body = req.body || {};
-  const required = ["slug", "titleFr", "titleAr", "bodyFr", "bodyAr"];
-  for (const k of required) {
-    if (!body[k] || !String(body[k]).trim()) {
-      return res.status(400).json({ error: `Missing ${k}` });
-    }
-  }
-  const id = adminUpsertNews(db, {
-    id: body.id || null,
-    slug: String(body.slug).trim().slice(0, 120),
-    titleFr: String(body.titleFr).slice(0, 500),
-    titleAr: String(body.titleAr).slice(0, 500),
-    summaryFr: body.summaryFr ? String(body.summaryFr).slice(0, 1000) : "",
-    summaryAr: body.summaryAr ? String(body.summaryAr).slice(0, 1000) : "",
-    bodyFr: String(body.bodyFr).slice(0, 50000),
-    bodyAr: String(body.bodyAr).slice(0, 50000),
-    imageUrl: body.imageUrl ? String(body.imageUrl).slice(0, 2000) : null,
-    author: body.author ? String(body.author).slice(0, 200) : null,
-    published: Boolean(body.published),
-    publishedAt: body.publishedAt || null,
-  });
-  res.status(body.id ? 200 : 201).json({ id });
+registerAdminContentRoutes(app, db, {
+  requireAuth,
+  requireSuperAdmin,
+  adminMutationLimiter,
+  uploadLimiter,
 });
 
 app.delete("/api/admin/owners/:id", requireAuth, requireSuperAdmin, (req, res) => {
@@ -595,6 +628,9 @@ app.post("/api/auth/register", (req, res, next) => {
 });
 
 app.use((err, _req, res, _next) => {
+  if (err?.message === "Not allowed by CORS") {
+    return res.status(403).json({ error: "Forbidden" });
+  }
   console.error(err);
   res.status(500).json({ error: "Internal server error" });
 });

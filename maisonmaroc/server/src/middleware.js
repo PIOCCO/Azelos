@@ -12,12 +12,21 @@ const COOKIE_NAME = "apio_token";
 export { COOKIE_NAME };
 
 export function parseOrigins() {
-  const raw = process.env.CLIENT_ORIGIN || "http://localhost:5173";
+  const raw =
+    process.env.ALLOWED_ORIGINS ||
+    process.env.CLIENT_ORIGIN ||
+    "http://localhost:5173";
   return raw.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
+function cookieSecureDefault() {
+  if (process.env.COOKIE_SECURE === "true") return true;
+  if (process.env.COOKIE_SECURE === "false") return false;
+  return process.env.NODE_ENV === "production";
+}
+
 export function setAuthCookie(res, token) {
-  const secure = process.env.COOKIE_SECURE === "true";
+  const secure = cookieSecureDefault();
   const sameSite = process.env.COOKIE_SAME_SITE || "lax";
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
@@ -29,7 +38,12 @@ export function setAuthCookie(res, token) {
 }
 
 export function clearAuthCookie(res) {
-  res.clearCookie(COOKIE_NAME, { path: "/" });
+  res.clearCookie(COOKIE_NAME, {
+    path: "/",
+    httpOnly: true,
+    secure: cookieSecureDefault(),
+    sameSite: process.env.COOKIE_SAME_SITE || "lax",
+  });
 }
 
 export function attachUser(db) {
