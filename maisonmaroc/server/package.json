@@ -4,7 +4,9 @@
   "type": "module",
   "version": "1.0.0",
   "scripts": {
+    "predev": "node scripts/ensure-deps.mjs",
     "dev": "node --watch src/index.js",
+    "prestart": "node scripts/ensure-deps.mjs",
     "start": "node src/index.js",
     "migrate": "node src/migrate.js",
     "test:auth": "node scripts/test-auth.js"
