@@ -636,6 +636,19 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`APIO API listening on http://localhost:${port}`);
+});
+
+server.on("error", (err) => {
+  if (err?.code === "EADDRINUSE") {
+    console.error(
+      `\n[apio-server] Port ${port} is already in use.\n` +
+        `  • Stop the other API process, or\n` +
+        `  • Linux: ss -ltnp 'sport = :${port}'  then  kill <pid>\n` +
+        `  • Or run with another port: PORT=3002 npm run dev\n`,
+    );
+    process.exit(1);
+  }
+  throw err;
 });
