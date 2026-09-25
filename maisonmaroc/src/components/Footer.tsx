@@ -1,35 +1,16 @@
 import { Link } from "react-router-dom";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 import { useLocale } from "../lib/useLocale";
 import BrandLogo from "./BrandLogo";
-import { INSTITUTION } from "../config/institution";
 
 export default function Footer() {
-  const { t, L } = useLocale();
-  const navLinks = [
-    { to: "/", label: t("inst.nav.home") },
-    { to: "/a-propos", label: t("inst.nav.about") },
-    { to: "/membres", label: t("inst.nav.members") },
-    { to: "/projets", label: t("inst.nav.projects") },
-    { to: "/actualites", label: t("inst.nav.news") },
-    { to: "/evenements", label: t("inst.nav.events") },
-    { to: "/documents", label: t("inst.nav.documents") },
-    { to: "/contact", label: t("inst.nav.contact") },
-  ];
-  const legalLinks = [
-    { to: "/legal/mentions-legales", label: t("inst.legal.mentions") },
-    { to: "/legal/confidentialite", label: t("inst.legal.privacy") },
-    { to: "/legal/cookies", label: t("inst.legal.cookies") },
-    { to: "/legal/cgu", label: t("inst.legal.terms") },
-  ];
-
+  const { t } = useLocale();
   return (
     <footer className="mt-auto border-t border-ink-100 bg-navy text-ink-200">
-      <div className="container-page grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="sm:col-span-2 lg:col-span-1">
+      <div className="container-page flex flex-col gap-8 py-10 sm:flex-row sm:items-start sm:justify-between">
+        <div className="max-w-sm">
           <BrandLogo variant="footer" linkToHome={false} />
-          <p className="mt-3 text-sm font-semibold text-white">{L(INSTITUTION.name)}</p>
-          <p className="mt-2 text-sm leading-relaxed text-ink-400">{L(INSTITUTION.tagline)}</p>
+          <p className="mt-4 text-sm leading-relaxed text-ink-400">{t("footer.about")}</p>
         </div>
 
         <div>
@@ -37,28 +18,26 @@ export default function Footer() {
             {t("footer.quickLinks")}
           </h4>
           <ul className="mt-3 flex flex-col gap-2 text-sm text-ink-400">
-            {navLinks.map((l) => (
-              <li key={l.to}>
-                <Link to={l.to} className="hover:text-white">
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="text-sm font-bold uppercase tracking-wide text-white/90">
-            {t("inst.footer.legal")}
-          </h4>
-          <ul className="mt-3 flex flex-col gap-2 text-sm text-ink-400">
-            {legalLinks.map((l) => (
-              <li key={l.to}>
-                <Link to={l.to} className="hover:text-white">
-                  {l.label}
-                </Link>
-              </li>
-            ))}
+            <li>
+              <Link to="/search" className="hover:text-white">
+                {t("nav.properties")}
+              </Link>
+            </li>
+            <li>
+              <Link to="/agents" className="hover:text-white">
+                {t("nav.agents")}
+              </Link>
+            </li>
+            <li>
+              <Link to="/favorites" className="hover:text-white">
+                {t("nav.favorites")}
+              </Link>
+            </li>
+            <li>
+              <Link to="/client/login" className="hover:text-white">
+                {t("nav.login")}
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -67,20 +46,17 @@ export default function Footer() {
             {t("footer.contactUs")}
           </h4>
           <ul className="mt-3 space-y-2 text-sm text-ink-400">
-            <li className="flex items-start gap-2">
-              <MapPin size={16} className="mt-0.5 shrink-0" /> {L(INSTITUTION.address)}
+            <li className="flex items-center gap-2">
+              <MapPin size={16} /> {t("footer.location")}
             </li>
             <li className="flex items-center gap-2" dir="ltr">
-              <Mail size={16} /> {INSTITUTION.email}
-            </li>
-            <li className="flex items-center gap-2">
-              <Phone size={16} /> {INSTITUTION.phone}
+              <Mail size={16} /> contact@apio.ma
             </li>
           </ul>
         </div>
       </div>
       <div className="border-t border-white/10 py-4 text-center text-xs text-ink-500">
-        © {new Date().getFullYear()} {INSTITUTION.shortName.fr} — {t("footer.rights")}
+        © {new Date().getFullYear()} APIO — {t("footer.rights")}
       </div>
     </footer>
   );

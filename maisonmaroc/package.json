@@ -11,7 +11,7 @@
     "dev:all": "node scripts/dev-all.mjs",
     "migrate": "npm run migrate --prefix server",
     "postinstall": "npm install --prefix server",
-    "build": "node scripts/write-sitemap.mjs && tsc -b && vite build",
+    "build": "tsc -b && vite build",
     "build:dribex": "tsc -b && VITE_BASE_PATH=/apio/ vite build",
     "build:aipo": "tsc -b && VITE_BASE_PATH=/AIPO/ vite build",
     "preview": "vite preview --host",

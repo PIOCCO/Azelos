@@ -10,8 +10,7 @@ const STORAGE_KEY = "mm.lang";
 export const getInitialLang = (): Lang => {
   const saved = (typeof localStorage !== "undefined" &&
     localStorage.getItem(STORAGE_KEY)) as Lang | null;
-  if (saved === "ar" || saved === "fr") return saved;
-  return "fr";
+  return saved === "fr" ? "fr" : "ar";
 };
 
 export const applyLangToDocument = (lang: Lang) => {

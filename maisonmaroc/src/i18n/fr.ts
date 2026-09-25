@@ -3,7 +3,7 @@ import type { Dict } from "./ar";
 export const fr: Dict = {
   brand: {
     name: "APIO",
-    tagline: "Association des Promoteurs Immobiliers de l'Oriental",
+    tagline: "Votre agence immobilière à Oujda et dans l'Oriental",
   },
   nav: {
     home: "Accueil",
@@ -277,7 +277,7 @@ export const fr: Dict = {
   },
   adminDash: {
     title: "Tableau de bord super-admin",
-    createOwner: "Créer un compte promoteur",
+    createOwner: "Créer un compte propriétaire",
     profile: "Profil agent",
     status: "Statut",
     actions: "Actions",
@@ -314,6 +314,13 @@ export const fr: Dict = {
     archive: "Archiver",
     fileAttached: "Fichier joint",
   },
+  inst: {
+    news: { author: "Source" },
+    errors: {
+      rateLimit: "Limite de requêtes atteinte",
+      rateLimitHint: "Veuillez patienter quelques minutes avant de réessayer.",
+    },
+  },
   account: {
     title: "Mon compte",
     myFavorites: "Mes favoris",
@@ -325,7 +332,7 @@ export const fr: Dict = {
   },
   footer: {
     about:
-      "APIO — Association des Promoteurs Immobiliers de l'Oriental. Plateforme institutionnelle et annuaire des promoteurs et projets de la région.",
+      "APIO est votre agence immobilière à Oujda et dans l'Oriental, reliant les chercheurs de biens aux meilleurs agents et propriétaires de confiance.",
     quickLinks: "Liens rapides",
     cities: "Villes",
     contactUs: "Contactez-nous",
@@ -351,123 +358,6 @@ export const fr: Dict = {
     rent: "À louer",
     buy: "Acheter",
     rentAction: "Louer",
-  },
-  inst: {
-    nav: {
-      home: "Accueil",
-      about: "À propos",
-      members: "Membres",
-      projects: "Projets",
-      news: "Actualités",
-      events: "Événements",
-      documents: "Documents",
-      contact: "Contact",
-      promoterLogin: "Espace promoteur",
-    },
-    hero: {
-      ctaAbout: "Découvrir l'association",
-      ctaMembers: "Découvrir les promoteurs",
-      ctaProjects: "Voir les projets",
-      ctaContact: "Nous contacter",
-    },
-    about: {
-      title: "À propos d'APIO",
-      metaTitle: "À propos",
-    },
-    mission: {
-      title: "Mission et objectifs",
-      subtitle: "Cadre associatif au service du secteur immobilier régional",
-    },
-    region: {
-      subtitle: "Périmètre géographique de l'association",
-    },
-    services: {
-      title: "Activités & services",
-      subtitle: "Ce que le site met à disposition des visiteurs et membres",
-    },
-    members: {
-      title: "Annuaire des promoteurs",
-      metaTitle: "Membres",
-      description:
-        "Consultation des promoteurs immobiliers membres d'APIO et de leurs profils publics autorisés.",
-      searchPlaceholder: "Rechercher un promoteur…",
-    },
-    projects: {
-      title: "Projets immobiliers",
-      metaTitle: "Projets",
-      description: "Projets publiés par les membres selon les informations mises à disposition.",
-      featuredTitle: "Projets en vedette",
-      featuredSub: "Sélection de projets publiés sur la plateforme",
-    },
-    news: {
-      metaTitle: "Actualités",
-      description: "Communiqués, annonces et informations publiées par APIO.",
-      empty: "Aucun article publié pour le moment.",
-      notFound: "Article introuvable.",
-      author: "Source",
-    },
-    events: {
-      metaTitle: "Événements",
-      description: "Rencontres et activités professionnelles lorsqu'elles sont programmées.",
-      empty: "Aucun événement publié pour le moment.",
-      upcoming: "À venir",
-      past: "Passés",
-    },
-    documents: {
-      metaTitle: "Documents",
-      description: "Publications et documents rendus publics par l'association.",
-      empty: "Aucun document public pour le moment.",
-      download: "Télécharger",
-      noFile: "Fichier à publier par l'administration.",
-    },
-    faq: {
-      title: "Questions fréquentes",
-      metaTitle: "FAQ",
-      description: "Réponses aux questions courantes sur APIO et ce site.",
-    },
-    contact: {
-      metaTitle: "Contact",
-      intro:
-        "Adressez votre message à l'association via le formulaire ci-dessous. Les champs marqués * sont obligatoires.",
-      firstName: "Prénom",
-      lastName: "Nom",
-      email: "E-mail",
-      phone: "Téléphone",
-      subject: "Sujet",
-      message: "Message",
-      emailLabel: "E-mail",
-      addressLabel: "Adresse",
-      success: "Votre message a été enregistré. L'association vous répondra dès que possible.",
-      rateLimit: "Trop de messages envoyés. Veuillez réessayer plus tard.",
-      ctaTitle: "Contacter APIO",
-      ctaSub: "Une question sur l'association, l'adhésion ou le site ? Écrivez-nous.",
-    },
-    legal: {
-      mentions: "Mentions légales",
-      mentionsMeta: "Informations légales du site APIO.",
-      privacy: "Politique de confidentialité",
-      privacyMeta: "Traitement des données personnelles sur le site APIO.",
-      cookies: "Politique de cookies",
-      cookiesMeta: "Utilisation des cookies sur le site APIO.",
-      terms: "Conditions générales d'utilisation",
-      termsMeta: "Conditions d'utilisation du site APIO.",
-    },
-    footer: {
-      legal: "Informations légales",
-    },
-    cookies: {
-      bannerTitle: "Cookies",
-      bannerBody:
-        "Ce site utilise des cookies essentiels (session, langue). Aucun cookie analytique ou marketing n'est chargé sans votre consentement.",
-      acceptEssential: "J'ai compris",
-      learnMore: "En savoir plus",
-    },
-    errors: {
-      forbidden: "Vous n'avez pas accès à cette ressource.",
-      notFound: "Page introuvable.",
-      rateLimit: "Limite de requêtes atteinte",
-      rateLimitHint: "Veuillez patienter quelques minutes avant de réessayer.",
-    },
   },
   amenities: {
     parking: "Parking",

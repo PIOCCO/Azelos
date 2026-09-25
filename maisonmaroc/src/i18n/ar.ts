@@ -1,5 +1,5 @@
 export const ar = {
-  brand: { name: "APIO", tagline: "جمعية مقاولات التعمير بالجهة الشرقية" },
+  brand: { name: "APIO", tagline: "عقاراتك في وجدة والمنطقة الشرقية" },
   nav: {
     home: "الرئيسية",
     properties: "العقارات",
@@ -270,7 +270,7 @@ export const ar = {
   },
   adminDash: {
     title: "لوحة المشرف",
-    createOwner: "إنشاء حساب مقاول",
+    createOwner: "إنشاء حساب مالك",
     profile: "ملف الوكيل",
     status: "الحالة",
     actions: "إجراءات",
@@ -307,6 +307,13 @@ export const ar = {
     archive: "أرشفة",
     fileAttached: "ملف مرفق",
   },
+  inst: {
+    news: { author: "المصدر" },
+    errors: {
+      rateLimit: "تم تجاوز حد الطلبات",
+      rateLimitHint: "يرجى الانتظار بضع دقائق قبل المحاولة مجددًا.",
+    },
+  },
   account: {
     title: "حسابي",
     myFavorites: "مفضلتي",
@@ -318,7 +325,7 @@ export const ar = {
   },
   footer: {
     about:
-      "APIO — جمعية مقاولات التعمير بالجهة الشرقية. منصة مؤسساتية ودليل للمقاولين والمشاريع بالجهة.",
+      "APIO هي وكالتك العقارية في وجدة والمنطقة الشرقية، تربط الباحثين عن عقار بأفضل الوكلاء والملاك الموثوقين.",
     quickLinks: "روابط سريعة",
     cities: "المدن",
     contactUs: "اتصل بنا",
@@ -344,121 +351,6 @@ export const ar = {
     rent: "للكراء",
     buy: "شراء",
     rentAction: "كراء",
-  },
-  inst: {
-    nav: {
-      home: "الرئيسية",
-      about: "من نحن",
-      members: "الأعضاء",
-      projects: "المشاريع",
-      news: "الأخبار",
-      events: "الفعاليات",
-      documents: "الوثائق",
-      contact: "اتصل بنا",
-      promoterLogin: "فضاء المقاول",
-    },
-    hero: {
-      ctaAbout: "اكتشف الجمعية",
-      ctaMembers: "اكتشف المقاولين",
-      ctaProjects: "عرض المشاريع",
-      ctaContact: "اتصل بنا",
-    },
-    about: {
-      title: "حول APIO",
-      metaTitle: "من نحن",
-    },
-    mission: {
-      title: "المهمة والأهداف",
-      subtitle: "إطار جمعوي لخدمة القطاع العقاري بالجهة",
-    },
-    region: {
-      subtitle: "النطاق الجغرافي للجمعية",
-    },
-    services: {
-      title: "الأنشطة والخدمات",
-      subtitle: "ما يوفره الموقع للزوار والأعضاء",
-    },
-    members: {
-      title: "دليل المقاولين",
-      metaTitle: "الأعضاء",
-      description: "الاطلاع على مقاولات التعمير الأعضاء في APIO وملفاتها العامة المعتمدة.",
-      searchPlaceholder: "البحث عن مقاول…",
-    },
-    projects: {
-      title: "المشاريع العقارية",
-      metaTitle: "المشاريع",
-      description: "مشاريع ينشرها الأعضاء وفق المعلومات المتاحة.",
-      featuredTitle: "مشاريع مميزة",
-      featuredSub: "اختيار من المشاريع المنشورة على المنصة",
-    },
-    news: {
-      metaTitle: "الأخبار",
-      description: "بلاغات وإعلانات ومعلومات تنشرها APIO.",
-      empty: "لا توجد مقالات منشورة حاليًا.",
-      notFound: "المقال غير موجود.",
-      author: "المصدر",
-    },
-    events: {
-      metaTitle: "الفعاليات",
-      description: "لقاءات وأنشطة مهنية عند برمجتها.",
-      empty: "لا توجد فعاليات منشورة حاليًا.",
-      upcoming: "القادمة",
-      past: "السابقة",
-    },
-    documents: {
-      metaTitle: "الوثائق",
-      description: "منشورات ووثائق تنشرها الجمعية للعموم.",
-      empty: "لا توجد وثائق عمومية حاليًا.",
-      download: "تحميل",
-      noFile: "ملف يُنشر من طرف الإدارة.",
-    },
-    faq: {
-      title: "أسئلة شائعة",
-      metaTitle: "FAQ",
-      description: "إجابات عن أسئلة شائعة حول APIO وهذا الموقع.",
-    },
-    contact: {
-      metaTitle: "اتصل بنا",
-      intro: "أرسل رسالتك إلى الجمعية عبر النموذج أدناه. الحقول المعلمة بـ * إلزامية.",
-      firstName: "الاسم الشخصي",
-      lastName: "اسم العائلة",
-      email: "البريد الإلكتروني",
-      phone: "الهاتف",
-      subject: "الموضوع",
-      message: "الرسالة",
-      emailLabel: "البريد",
-      addressLabel: "العنوان",
-      success: "تم تسجيل رسالتك. ستجيب الجمعية في أقرب وقت ممكن.",
-      rateLimit: "تم إرسال عدد كبير من الرسائل. يرجى المحاولة لاحقًا.",
-      ctaTitle: "تواصل مع APIO",
-      ctaSub: "سؤال حول الجمعية أو العضوية أو الموقع؟ راسلنا.",
-    },
-    legal: {
-      mentions: "الإشعارات القانونية",
-      mentionsMeta: "المعلومات القانونية لموقع APIO.",
-      privacy: "سياسة الخصوصية",
-      privacyMeta: "معالجة المعطيات الشخصية على موقع APIO.",
-      cookies: "سياسة cookies",
-      cookiesMeta: "استخدام cookies على موقع APIO.",
-      terms: "الشروط العامة للاستخدام",
-      termsMeta: "شروط استخدام موقع APIO.",
-    },
-    footer: {
-      legal: "معلومات قانونية",
-    },
-    cookies: {
-      bannerTitle: "Cookies",
-      bannerBody:
-        "يستخدم هذا الموقع cookies ضرورية (الجلسة، اللغة). لا تُحمّل cookies تحليلية أو تسويقية دون موافقتكم.",
-      acceptEssential: "فهمت",
-      learnMore: "المزيد",
-    },
-    errors: {
-      forbidden: "ليس لديكم حق الوصول إلى هذا المورد.",
-      notFound: "الصفحة غير موجودة.",
-      rateLimit: "تم تجاوز حد الطلبات",
-      rateLimitHint: "يرجى الانتظار بضع دقائق قبل المحاولة مجددًا.",
-    },
   },
   amenities: {
     parking: "موقف سيارات",
