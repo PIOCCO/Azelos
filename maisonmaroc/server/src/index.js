@@ -55,7 +55,7 @@ import {
 import { validateContactBody } from "./contact.js";
 import { registerAdminContentRoutes } from "./adminContentRoutes.js";
 import { applySecurityMiddleware } from "./security.js";
-import { clampPagination } from "./validateContent.js";
+import { clampPagination, validateSlug } from "./validateContent.js";
 import { ensureUploadDir, resolveStoredFile } from "./uploads.js";
 import {
   addMessage,
@@ -165,8 +165,10 @@ app.get("/api/content/news", publicContentLimiter, (req, res) => {
   res.json({ articles: listPublishedNews(db, { limit, offset }) });
 });
 
-app.get("/api/content/news/:slug", (req, res) => {
-  const article = getNewsBySlug(db, req.params.slug);
+app.get("/api/content/news/:slug", publicContentLimiter, (req, res) => {
+  const slugCheck = validateSlug(req.params.slug);
+  if (!slugCheck.ok) return res.status(404).json({ error: "Not found" });
+  const article = getNewsBySlug(db, slugCheck.value);
   if (!article) return res.status(404).json({ error: "Not found" });
   res.json({ article });
 });

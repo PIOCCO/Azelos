@@ -7,10 +7,12 @@ interface Props {
   title: string;
   description?: string;
   path?: string;
+  imageUrl?: string | null;
+  ogType?: "website" | "article";
 }
 
 /** Updates document title and core meta tags for the active route. */
-export default function PageMeta({ title, description, path = "" }: Props) {
+export default function PageMeta({ title, description, path = "", imageUrl, ogType = "website" }: Props) {
   const { lang } = useLocale();
   const fullTitle = title.includes("APIO") ? title : `${title} | APIO`;
   const desc =
@@ -34,7 +36,10 @@ export default function PageMeta({ title, description, path = "" }: Props) {
     setMeta("description", desc);
     setMeta("og:title", fullTitle, true);
     setMeta("og:description", desc, true);
-    setMeta("og:type", "website", true);
+    setMeta("og:type", ogType, true);
+    if (imageUrl) {
+      setMeta("og:image", imageUrl, true);
+    }
     if (typeof window !== "undefined") {
       const base = CANONICAL_ORIGIN || window.location.origin + (import.meta.env.BASE_URL || "/");
       const canonicalPath = path.startsWith("/") ? path : `/${path}`;
@@ -50,7 +55,7 @@ export default function PageMeta({ title, description, path = "" }: Props) {
       }
       link.href = path ? canonical : window.location.href;
     }
-  }, [fullTitle, desc, path]);
+  }, [fullTitle, desc, path, imageUrl, ogType]);
 
   return null;
 }

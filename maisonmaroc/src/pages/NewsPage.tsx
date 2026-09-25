@@ -1,28 +1,30 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { useLocale } from "../lib/useLocale";
 import PageHeader from "../components/PageHeader";
 import PageMeta from "../components/PageMeta";
+import NewsArticleCard from "../components/news/NewsArticleCard";
+import NewsFeaturedArticle from "../components/news/NewsFeaturedArticle";
 import { fetchNews, type NewsArticle } from "../lib/contentApi";
-import { formatDate } from "../lib/format";
+import { NEWS_FR } from "../data/newsCopy.fr";
+
+function frenchFields(article: NewsArticle) {
+  return {
+    title: article.title.fr,
+    excerpt: article.summary.fr || article.body.fr.slice(0, 180).trim() + (article.body.fr.length > 180 ? "…" : ""),
+  };
+}
 
 export default function NewsPage() {
-  const { t, L, lang } = useLocale();
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const res = await fetchNews();
       if (cancelled) return;
-      if (res.error) {
-        setError(res.error);
-        setLoading(false);
-        return;
-      }
-      setArticles(res.data?.articles ?? []);
+      if (res.error || !res.data) setError(true);
+      else setArticles(res.data.articles);
       setLoading(false);
     })();
     return () => {
@@ -30,36 +32,46 @@ export default function NewsPage() {
     };
   }, []);
 
+  const [featured, ...rest] = articles;
+
   return (
-    <div className="page-shell">
-      <PageMeta title={t("inst.news.metaTitle")} description={t("inst.news.description")} path="/actualites" />
-      <div className="container-page pb-16">
-        <PageHeader title={t("inst.nav.news")} description={t("inst.news.description")} />
-        {loading && <p className="text-ink-600">{t("common.loading")}</p>}
-        {error && <p className="text-red-700">{error}</p>}
+    <div className="page-shell bg-[#faf9f7] pb-16">
+      <PageMeta
+        title={NEWS_FR.metaListTitle}
+        description={NEWS_FR.metaListDescription}
+        path="/actualites"
+      />
+      <div className="home-container max-w-6xl">
+        <PageHeader title={NEWS_FR.title} description={NEWS_FR.intro} />
+
+        {loading && <p className="mt-10 text-ink-600">{NEWS_FR.loading}</p>}
+        {error && !loading && <p className="mt-10 text-red-800">{NEWS_FR.error}</p>}
         {!loading && !error && articles.length === 0 && (
-          <p className="text-ink-600">{t("inst.news.empty")}</p>
+          <p className="mt-10 rounded-xl border border-ink-200 bg-white px-6 py-10 text-center text-ink-600">
+            {NEWS_FR.empty}
+          </p>
         )}
-        <ul className="divide-y divide-ink-100">
-          {articles.map((a) => (
-            <li key={a.id} className="py-6">
-              <article>
-                <time className="text-xs font-semibold uppercase tracking-wide text-ink-500" dateTime={a.publishedAt}>
-                  {formatDate(a.publishedAt, lang)}
-                </time>
-                <h2 className="mt-1 font-display text-xl font-bold text-navy-800">
-                  <Link to={`/actualites/${a.slug}`} className="hover:text-brand-700">
-                    {L(a.title)}
-                  </Link>
-                </h2>
-                {L(a.summary) && <p className="mt-2 max-w-3xl text-sm text-ink-600">{L(a.summary)}</p>}
-                <Link to={`/actualites/${a.slug}`} className="mt-2 inline-block text-sm font-semibold text-brand-700">
-                  {t("common.viewMore")}
-                </Link>
-              </article>
-            </li>
-          ))}
-        </ul>
+
+        {!loading && !error && featured && (
+          <div className="mt-10">
+            <NewsFeaturedArticle article={featured} {...frenchFields(featured)} />
+          </div>
+        )}
+
+        {!loading && !error && rest.length > 0 && (
+          <section className="mt-14" aria-labelledby="news-grid-heading">
+            <h2 id="news-grid-heading" className="home-section-title text-xl sm:text-2xl">
+              {NEWS_FR.recentArticles}
+            </h2>
+            <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {rest.map((article) => (
+                <li key={article.id}>
+                  <NewsArticleCard article={article} {...frenchFields(article)} compact />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
     </div>
   );

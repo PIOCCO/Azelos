@@ -235,6 +235,14 @@ html[dir="rtl"] .home-section-title {
   @apply overflow-hidden rounded-2xl bg-ink-100;
 }
 
+.inst-news-card-title {
+  font-family: "Playfair Display", Georgia, serif;
+  @apply font-semibold leading-snug;
+}
+.inst-news-body {
+  @apply border-t border-ink-200/80 pt-8;
+}
+
 .oriental-map-shell {
   @apply bg-transparent px-0 py-2;
 }
