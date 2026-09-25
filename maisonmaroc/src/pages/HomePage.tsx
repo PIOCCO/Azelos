@@ -28,9 +28,8 @@ import { cities, cityById } from "../data/cities";
 import { fetchDocuments, fetchEvents, fetchNews, type AssociationEvent, type NewsArticle, type PublicDocument } from "../lib/contentApi";
 import { formatDate } from "../lib/format";
 import OrientalMap from "../components/home/OrientalMap";
-
-const HERO_IMG =
-  "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=85";
+import HomeHeroMedia from "../components/home/HomeHeroMedia";
+import { HOME_HERO_IMAGES } from "../components/home/homeHeroImages";
 const MOSAIC = [
   "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80",
   cities[0]?.image,
@@ -86,29 +85,26 @@ export default function HomePage() {
       <HomeHeader />
 
       {/* Hero */}
-      <section className="home-section home-hero">
-        <div className="home-container grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
-          <div>
-            <p className="home-kicker">{INSTITUTION.shortName.fr}</p>
-            <h1 className="home-display-title mt-3">{L(INSTITUTION.name)}</h1>
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-ink-600">{L(INSTITUTION.tagline)}</p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/a-propos" className="home-btn home-btn-primary">
-                {t("homePage.hero.ctaAbout")}
-              </Link>
-              <Link to="/membres" className="home-btn home-btn-outline">
-                {t("homePage.hero.ctaMembers")}
-              </Link>
-              <Link to="/projets" className="home-btn home-btn-outline">
-                {t("homePage.hero.ctaProjects")}
-              </Link>
-              <Link to="/contact" className="home-btn home-btn-outline">
-                {t("homePage.hero.ctaContact")}
-              </Link>
-            </div>
-          </div>
-          <div className="relative aspect-[4/5] max-h-[560px] w-full overflow-hidden lg:aspect-auto lg:h-[520px]">
-            <SmartImage src={HERO_IMG} alt="" className="h-full w-full object-cover" fallbackSeed="home-hero" />
+      <section className="home-hero" aria-label={t("homePage.nav.home")}>
+        <HomeHeroMedia images={[...HOME_HERO_IMAGES]} alt={L(INSTITUTION.name)} />
+        <div className="home-hero-overlay" aria-hidden />
+        <div className="home-container home-hero-content">
+          <p className="home-hero-kicker">{INSTITUTION.shortName.fr}</p>
+          <h1 className="home-display-title home-hero-title mt-3">{L(INSTITUTION.name)}</h1>
+          <p className="home-hero-lead mt-5 max-w-lg text-base leading-relaxed">{L(INSTITUTION.tagline)}</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link to="/a-propos" className="home-btn home-btn-primary">
+              {t("homePage.hero.ctaAbout")}
+            </Link>
+            <Link to="/membres" className="home-btn home-btn-hero-outline">
+              {t("homePage.hero.ctaMembers")}
+            </Link>
+            <Link to="/projets" className="home-btn home-btn-hero-outline">
+              {t("homePage.hero.ctaProjects")}
+            </Link>
+            <Link to="/contact" className="home-btn home-btn-hero-outline">
+              {t("homePage.hero.ctaContact")}
+            </Link>
           </div>
         </div>
       </section>

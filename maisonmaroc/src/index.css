@@ -127,7 +127,61 @@ h4 {
   @apply py-16 sm:py-20 lg:py-24;
 }
 .home-hero {
-  @apply bg-[#faf9f7] pt-8 sm:pt-12;
+  @apply relative isolate min-h-[min(72vh,640px)] w-full overflow-hidden bg-navy sm:min-h-[min(78vh,680px)];
+}
+.home-hero-media {
+  @apply absolute inset-0 z-0;
+}
+.home-hero-media--empty {
+  @apply bg-ink-200;
+}
+.home-hero-media__slide {
+  @apply absolute inset-0 opacity-0 transition-opacity duration-700 ease-out;
+}
+.home-hero-media__slide--active {
+  @apply opacity-100;
+}
+.home-hero-media__img {
+  @apply block h-full w-full object-cover object-center;
+}
+.home-hero-overlay {
+  @apply pointer-events-none absolute inset-0 z-[1];
+  background: linear-gradient(
+    to right,
+    rgba(26, 35, 50, 0.88) 0%,
+    rgba(26, 35, 50, 0.62) 45%,
+    rgba(26, 35, 50, 0.35) 100%
+  );
+}
+html[dir="rtl"] .home-hero-overlay {
+  background: linear-gradient(
+    to left,
+    rgba(26, 35, 50, 0.88) 0%,
+    rgba(26, 35, 50, 0.62) 45%,
+    rgba(26, 35, 50, 0.35) 100%
+  );
+}
+.home-hero-content {
+  @apply relative z-[2] flex min-h-[min(72vh,640px)] flex-col justify-center py-14 sm:min-h-[min(78vh,680px)] sm:py-16 lg:py-20;
+}
+.home-hero-kicker {
+  @apply text-xs font-bold uppercase tracking-[0.2em];
+  color: rgba(255, 255, 255, 0.65);
+}
+.home-hero .home-hero-title {
+  color: #ffffff;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+}
+.home-hero-lead {
+  color: rgba(255, 255, 255, 0.88);
+}
+.home-btn-hero-outline {
+  @apply border text-white backdrop-blur-[2px] hover:border-white;
+  border-color: rgba(255, 255, 255, 0.75);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+.home-btn-hero-outline:hover {
+  background-color: rgba(255, 255, 255, 0.15);
 }
 .home-display-title {
   font-family: "Playfair Display", Georgia, serif;
