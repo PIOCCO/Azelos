@@ -116,6 +116,100 @@ h4 {
 .fade-in {
   animation: fadeIn 0.35s ease both;
 }
+/* ——— Homepage (reference editorial layout) ——— */
+.home-page {
+  @apply text-ink-800;
+}
+.home-container {
+  @apply mx-auto w-full max-w-[1180px] px-5 sm:px-8;
+}
+.home-section {
+  @apply py-16 sm:py-20 lg:py-24;
+}
+.home-hero {
+  @apply bg-[#faf9f7] pt-8 sm:pt-12;
+}
+.home-display-title {
+  font-family: "Playfair Display", Georgia, serif;
+  @apply text-3xl font-semibold leading-[1.15] text-navy sm:text-4xl lg:text-[2.65rem];
+}
+html[dir="rtl"] .home-display-title {
+  font-family: Cairo, Tajawal, serif;
+}
+.home-section-title {
+  font-family: "Playfair Display", Georgia, serif;
+  @apply text-2xl font-semibold text-navy sm:text-[1.75rem];
+}
+html[dir="rtl"] .home-section-title {
+  font-family: Cairo, Tajawal, serif;
+}
+.home-kicker {
+  @apply text-xs font-bold uppercase tracking-[0.2em] text-ink-400;
+}
+.home-nav-link {
+  @apply px-3 py-2 text-[13px] font-semibold text-ink-700 transition hover:text-navy;
+}
+.home-nav-link-active {
+  @apply text-navy;
+}
+.home-btn {
+  @apply inline-flex min-h-[44px] items-center justify-center px-6 py-2.5 text-xs font-bold uppercase tracking-wide transition;
+}
+.home-btn-primary {
+  @apply bg-navy text-white hover:bg-navy-800;
+}
+.home-btn-outline {
+  @apply border border-ink-300 bg-white text-ink-800 hover:border-navy hover:text-navy;
+}
+.home-text-link {
+  @apply text-sm font-semibold text-navy underline-offset-4 hover:underline;
+}
+.home-text-link-light {
+  @apply font-semibold text-white underline-offset-4 hover:underline;
+}
+.home-mission-card {
+  @apply border border-ink-200/80 bg-white px-4 py-8;
+}
+.home-member-card {
+  @apply border border-ink-200 bg-white px-5 py-8 text-center;
+}
+.home-project-card {
+  @apply relative block aspect-[3/4] overflow-hidden bg-ink-200;
+}
+.home-project-overlay {
+  @apply absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5 pt-16;
+}
+.home-news-row {
+  @apply flex gap-4 border border-ink-100 bg-white p-3 transition hover:border-ink-300;
+}
+.home-event-card {
+  @apply flex gap-4 border border-ink-200 bg-white p-4;
+}
+.home-event-date {
+  @apply flex h-16 w-16 shrink-0 flex-col items-center justify-center border border-ink-200 bg-ink-50;
+}
+.home-doc-card {
+  @apply border border-ink-200 bg-white p-6;
+}
+.home-faq {
+  @apply border border-ink-200 bg-white px-4 py-3;
+}
+.home-faq summary {
+  @apply cursor-pointer list-none text-sm font-semibold text-ink-900 marker:content-none [&::-webkit-details-marker]:hidden;
+}
+.home-faq p {
+  @apply mt-3 text-sm leading-relaxed text-ink-600;
+}
+.home-chip {
+  @apply border border-ink-200 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 hover:border-navy hover:text-navy;
+}
+.home-footer {
+  @apply bg-navy text-white;
+}
+.home-mosaic img {
+  @apply grayscale-[15%];
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

@@ -14,6 +14,7 @@ const MINIMAL_FOOTER_PATHS = [
 
 export default function Layout() {
   const { pathname } = useLocation();
+  const isHome = pathname === "/";
   const minimalFooter = MINIMAL_FOOTER_PATHS.some((p) => pathname.startsWith(p));
 
   useEffect(() => {
@@ -22,13 +23,13 @@ export default function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <Header />
-      <main className="fade-in flex-1 pb-20 lg:pb-0">
+      {!isHome && <Header />}
+      <main className={`flex-1 ${isHome ? "" : "fade-in pb-20 lg:pb-0"}`}>
         <Outlet />
       </main>
-      {!minimalFooter && <Footer />}
+      {!isHome && !minimalFooter && <Footer />}
       {!minimalFooter && <CookieConsent />}
-      <MobileNav />
+      {!isHome && <MobileNav />}
     </div>
   );
 }

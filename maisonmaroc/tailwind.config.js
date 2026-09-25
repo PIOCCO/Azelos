@@ -7,6 +7,7 @@ export default {
         sans: ["Tajawal", "Cairo", "system-ui", "sans-serif"],
         arabic: ["Tajawal", "Cairo", "system-ui", "sans-serif"],
         display: ["Cairo", "Tajawal", "sans-serif"],
+        serif: ['"Playfair Display"', "Georgia", "serif"],
         latin: ["Inter", "system-ui", "sans-serif"],
       },
       colors: {

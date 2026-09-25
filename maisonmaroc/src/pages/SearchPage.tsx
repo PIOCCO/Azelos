@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, X, SearchX } from "lucide-react";
 import { useLocale } from "../lib/useLocale";
 import { useListings } from "../context/ListingsContext";
@@ -20,6 +20,8 @@ import { formatNumber } from "../lib/format";
 const PAGE_SIZE = 9;
 
 export default function SearchPage() {
+  const { pathname } = useLocation();
+  const isProjects = pathname === "/projets";
   const { t, lang, isRTL } = useLocale();
   const { properties } = useListings();
   const [params, setParams] = useSearchParams();
