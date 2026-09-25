@@ -37,8 +37,13 @@ export default function PageMeta({ title, description, path = "", imageUrl, ogTy
     setMeta("og:title", fullTitle, true);
     setMeta("og:description", desc, true);
     setMeta("og:type", ogType, true);
+    setMeta("og:locale", lang === "ar" ? "ar_MA" : "fr_MA", true);
+    setMeta("twitter:card", imageUrl ? "summary_large_image" : "summary");
+    setMeta("twitter:title", fullTitle);
+    setMeta("twitter:description", desc);
     if (imageUrl) {
       setMeta("og:image", imageUrl, true);
+      setMeta("twitter:image", imageUrl);
     }
     if (typeof window !== "undefined") {
       const base = CANONICAL_ORIGIN || window.location.origin + (import.meta.env.BASE_URL || "/");
@@ -55,7 +60,7 @@ export default function PageMeta({ title, description, path = "", imageUrl, ogTy
       }
       link.href = path ? canonical : window.location.href;
     }
-  }, [fullTitle, desc, path, imageUrl, ogType]);
+  }, [fullTitle, desc, path, imageUrl, ogType, lang]);
 
   return null;
 }

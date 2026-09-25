@@ -44,13 +44,17 @@ export default function EventsPage() {
   const { t } = useLocale();
   const [events, setEvents] = useState<AssociationEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const res = await fetchEvents(false);
-      if (!cancelled && res.data) setEvents(res.data.events);
-      if (!cancelled) setLoading(false);
+      if (!cancelled) {
+        if (res.data) setEvents(res.data.events);
+        else setLoadError(true);
+        setLoading(false);
+      }
     })();
     return () => {
       cancelled = true;
@@ -75,8 +79,15 @@ export default function EventsPage() {
       <PageMeta title={t("inst.events.metaTitle")} description={t("inst.events.description")} path="/evenements" />
       <div className="container-page">
         <PageHeader title={t("inst.nav.events")} description={t("inst.events.description")} />
-        {loading && <p>{t("common.loading")}</p>}
-        {!loading && events.length === 0 && <p className="text-ink-600">{t("inst.events.empty")}</p>}
+        {loading && <p role="status">{t("common.loading")}</p>}
+        {loadError && (
+          <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+            {t("inst.events.loadError")}
+          </p>
+        )}
+        {!loading && !loadError && events.length === 0 && (
+          <p className="text-ink-600">{t("inst.events.empty")}</p>
+        )}
 
         {upcoming.length > 0 && (
           <section className="mb-10" aria-labelledby="upcoming-events">

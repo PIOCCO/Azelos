@@ -4,6 +4,7 @@ import PageHeader from "../components/PageHeader";
 import PageMeta from "../components/PageMeta";
 import { submitContact } from "../lib/contentApi";
 import { INSTITUTION } from "../config/institution";
+import { userFacingApiError } from "../lib/userFacingError";
 
 export default function ContactPage() {
   const { t, L } = useLocale();
@@ -23,10 +24,21 @@ export default function ContactPage() {
       subject: String(fd.get("subject") || "").trim(),
       message: String(fd.get("message") || "").trim(),
     };
+    if (!payload.firstName || !payload.lastName || !payload.subject || !payload.message) {
+      setStatus("error");
+      setError(t("inst.contact.validationRequired"));
+      return;
+    }
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email);
+    if (!emailOk) {
+      setStatus("error");
+      setError(t("inst.contact.validationEmail"));
+      return;
+    }
     const res = await submitContact(payload);
     if (res.error) {
       setStatus("error");
-      setError(res.status === 429 ? t("inst.contact.rateLimit") : res.error);
+      setError(userFacingApiError(t, { status: res.status, raw: res.error }));
       return;
     }
     setStatus("ok");

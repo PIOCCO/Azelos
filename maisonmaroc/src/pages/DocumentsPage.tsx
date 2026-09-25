@@ -10,6 +10,7 @@ import {
   DOCUMENT_CATEGORY_ORDER,
   type DocumentCategoryId,
 } from "../data/documentCategories.fr";
+import { safeExternalHref } from "../lib/safeUrl";
 
 const FR = {
   metaTitle: "Centre de documentation — APIO",
@@ -181,14 +182,33 @@ export default function DocumentsPage() {
                           )}
                         </dl>
                         <div className="mt-4 flex flex-wrap gap-2">
-                          {canViewOnline && (
-                            <Link
-                              to={doc.viewUrl!}
-                              className="home-btn home-btn-primary inline-flex min-h-[40px] px-4 py-2 text-[11px]"
-                            >
-                              <Eye size={14} className="me-1.5" /> {FR.view}
-                            </Link>
-                          )}
+                          {canViewOnline && (() => {
+                            const external = safeExternalHref(doc.viewUrl);
+                            const internal = doc.viewUrl?.startsWith("/") ? doc.viewUrl : null;
+                            if (external) {
+                              return (
+                                <a
+                                  href={external}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="home-btn home-btn-primary inline-flex min-h-[40px] px-4 py-2 text-[11px]"
+                                >
+                                  <Eye size={14} className="me-1.5" /> {FR.view}
+                                </a>
+                              );
+                            }
+                            if (internal) {
+                              return (
+                                <Link
+                                  to={internal}
+                                  className="home-btn home-btn-primary inline-flex min-h-[40px] px-4 py-2 text-[11px]"
+                                >
+                                  <Eye size={14} className="me-1.5" /> {FR.view}
+                                </Link>
+                              );
+                            }
+                            return null;
+                          })()}
                           {canViewFile && (
                             <a
                               href={apiFileUrl(doc.fileUrl!, true)}

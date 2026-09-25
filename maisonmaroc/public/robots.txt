@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
 
-# Set VITE_CANONICAL_ORIGIN at build to emit absolute Sitemap URL
+# After VITE_CANONICAL_ORIGIN is set at build, point Sitemap to the absolute URL, e.g.:
+# Sitemap: https://www.example.ma/sitemap.xml
+Sitemap: /sitemap.xml

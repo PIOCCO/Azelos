@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import "./i18n";
 import "./index.css";
 import App from "./App";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { appBasename } from "./lib/appBase";
 import { FavoritesProvider } from "./context/FavoritesContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -17,7 +18,9 @@ createRoot(document.getElementById("root")!).render(
         <MessagingProvider>
           <ListingsProvider>
             <FavoritesProvider>
-              <App />
+              <ErrorBoundary>
+                <App />
+              </ErrorBoundary>
             </FavoritesProvider>
           </ListingsProvider>
         </MessagingProvider>

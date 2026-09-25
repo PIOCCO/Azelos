@@ -10,6 +10,10 @@ html {
   scroll-behavior: smooth;
 }
 
+.skip-link {
+  @apply sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-navy-800 focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-400;
+}
+
 body {
   @apply bg-white text-ink-800 antialiased;
   font-family: "Tajawal", "Cairo", system-ui, sans-serif;

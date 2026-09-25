@@ -65,7 +65,7 @@ export default function SearchPage() {
     <div className="page-shell">
       <div className="container-page fade-in">
         <PageHeader
-          title={t("search.title")}
+          title={isProjects ? t("homePage.projects.title") : t("search.title")}
           description={
             <>
               <span className="font-bold text-brand-600">

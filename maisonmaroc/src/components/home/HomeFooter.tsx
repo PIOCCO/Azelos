@@ -3,6 +3,7 @@ import { useLocale } from "../../lib/useLocale";
 import { INSTITUTION } from "../../config/institution";
 import BrandLogo from "../BrandLogo";
 import LanguageSwitcher from "../LanguageSwitcher";
+import { safeExternalHref } from "../../lib/safeUrl";
 
 export default function HomeFooter() {
   const { t, L } = useLocale();
@@ -80,17 +81,21 @@ export default function HomeFooter() {
           <div className="flex items-center gap-4">
             {socials.length > 0 && (
               <div className="flex gap-3">
-                {socials.map((s) => (
-                  <a
-                    key={s.key}
-                    href={INSTITUTION.social[s.key]}
-                    className="text-xs text-white/70 hover:text-white"
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    {s.label}
-                  </a>
-                ))}
+                {socials.map((s) => {
+                  const href = safeExternalHref(INSTITUTION.social[s.key]);
+                  if (!href) return null;
+                  return (
+                    <a
+                      key={s.key}
+                      href={href}
+                      className="text-xs text-white/70 hover:text-white"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      {s.label}
+                    </a>
+                  );
+                })}
               </div>
             )}
             <LanguageSwitcher variant="dark" />
