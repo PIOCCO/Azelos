@@ -139,4 +139,8 @@ function ensureColumns(db) {
   addCol("documents", "file_storage", "TEXT");
   addCol("documents", "file_mime", "TEXT");
   addCol("documents", "file_size", "INTEGER");
+  addCol("documents", "doc_availability", "TEXT NOT NULL DEFAULT 'coming_soon'");
+  addCol("documents", "file_format", "TEXT");
+  addCol("documents", "sort_order", "INTEGER NOT NULL DEFAULT 0");
+  addCol("documents", "view_url", "TEXT");
 }

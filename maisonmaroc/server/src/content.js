@@ -1,6 +1,13 @@
+import fs from "node:fs";
+import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { createHash } from "node:crypto";
-import { deleteStoredFile } from "./uploads.js";
+import {
+  APIO_DOCUMENT_CATALOG,
+  APIO_DOCUMENT_TEMPLATES,
+  DOCUMENT_CATEGORY_ORDER,
+} from "./apioDocumentCatalog.js";
+import { deleteStoredFile, UPLOAD_DIR } from "./uploads.js";
 
 function rowToNews(r) {
   return {
@@ -38,6 +45,10 @@ function rowToDocument(r, { includeInternal = false } = {}) {
     description: { fr: r.description_fr || "", ar: r.description_ar || "" },
     fileUrl: r.file_storage ? `/api/content/documents/${r.id}/file` : r.file_url || null,
     publishedAt: r.published_at,
+    availability: r.doc_availability || "coming_soon",
+    fileFormat: r.file_format || "PDF",
+    viewUrl: r.view_url || null,
+    fileMime: r.file_mime || null,
   };
   if (includeInternal) {
     return {
@@ -124,10 +135,17 @@ export function listPublishedEvents(db, { upcomingOnly = false } = {}) {
 
 export function listPublicDocuments(db) {
   const rows = db
-    .prepare(
-      `SELECT * FROM documents WHERE published = 1 AND visibility = 'public' ORDER BY published_at DESC`,
-    )
+    .prepare(`SELECT * FROM documents WHERE published = 1 AND visibility = 'public'`)
     .all();
+  const orderIdx = (cat) => {
+    const i = DOCUMENT_CATEGORY_ORDER.indexOf(cat);
+    return i === -1 ? 999 : i;
+  };
+  rows.sort((a, b) => {
+    const c = orderIdx(a.category) - orderIdx(b.category);
+    if (c !== 0) return c;
+    return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+  });
   return rows.map((r) => rowToDocument(r));
 }
 
@@ -403,7 +421,68 @@ export function adminDeleteDocument(db, id) {
   return true;
 }
 
+function writeTemplateFile(docId, html) {
+  const storageName = `apio-${docId}.html`;
+  const abs = path.join(UPLOAD_DIR, storageName);
+  if (!abs.startsWith(UPLOAD_DIR)) throw new Error("Invalid template path");
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  fs.writeFileSync(abs, html, { encoding: "utf8", mode: 0o640 });
+  return {
+    storageName,
+    mime: "text/html; charset=utf-8",
+    size: Buffer.byteLength(html, "utf8"),
+  };
+}
+
+export function seedApioDocuments(db) {
+  const now = new Date().toISOString();
+  const insert = db.prepare(
+    `INSERT INTO documents (
+      id, category, title_fr, title_ar, description_fr, description_ar,
+      visibility, published, published_at, created_at, updated_at,
+      doc_availability, file_format, sort_order, view_url,
+      file_storage, file_mime, file_size
+    ) VALUES (?, ?, ?, ?, ?, ?, 'public', 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  );
+
+  for (const entry of APIO_DOCUMENT_CATALOG) {
+    const exists = db.prepare(`SELECT id FROM documents WHERE id = ?`).get(entry.id);
+    if (exists) continue;
+
+    let file_storage = null;
+    let file_mime = null;
+    let file_size = null;
+    if (entry.templateKey && APIO_DOCUMENT_TEMPLATES[entry.templateKey]) {
+      const file = writeTemplateFile(entry.id, APIO_DOCUMENT_TEMPLATES[entry.templateKey]);
+      file_storage = file.storageName;
+      file_mime = file.mime;
+      file_size = file.size;
+    }
+
+    const titleAr = entry.titleFr;
+    insert.run(
+      entry.id,
+      entry.category,
+      entry.titleFr,
+      titleAr,
+      entry.descriptionFr,
+      entry.descriptionFr,
+      now,
+      now,
+      now,
+      entry.availability,
+      entry.fileFormat,
+      entry.sortOrder,
+      entry.viewUrl || null,
+      file_storage,
+      file_mime,
+      file_size,
+    );
+  }
+}
+
 export function seedDemoContent(db) {
+  seedApioDocuments(db);
   const count = db.prepare(`SELECT COUNT(*) AS c FROM news_posts`).get().c;
   if (count > 0) return;
   const now = new Date().toISOString();

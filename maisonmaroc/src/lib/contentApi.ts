@@ -25,6 +25,8 @@ export interface AssociationEvent {
   imageUrl?: string | null;
 }
 
+export type DocumentAvailability = "coming_soon" | "template" | "online" | "available";
+
 export interface PublicDocument {
   id: string;
   category: string;
@@ -32,6 +34,10 @@ export interface PublicDocument {
   description: Bilingual;
   fileUrl: string | null;
   publishedAt: string;
+  availability: DocumentAvailability;
+  fileFormat: string;
+  viewUrl: string | null;
+  fileMime: string | null;
 }
 
 export async function fetchNews() {

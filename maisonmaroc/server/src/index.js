@@ -187,7 +187,8 @@ app.get("/api/content/documents/:id/file", publicContentLimiter, (req, res) => {
   if (!abs) return res.status(404).json({ error: "Not found" });
   res.setHeader("Content-Type", doc.file_mime || "application/octet-stream");
   res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("Content-Disposition", "attachment");
+  const inline = req.query.inline === "1";
+  res.setHeader("Content-Disposition", inline ? "inline" : "attachment");
   fs.createReadStream(abs).pipe(res);
 });
 
