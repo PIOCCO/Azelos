@@ -31,17 +31,17 @@ export const ORIENTAL_MAP_CITIES: {
   { id: "guercif", lon: -3.353611, lat: 34.225 },
 ];
 
-export function projectOnMap(
-  lon: number,
-  lat: number,
-  width: number,
-  height: number,
-  padding = 10,
-): { x: number; y: number } {
+function clamp01(v: number) {
+  return Math.min(1, Math.max(0, v));
+}
+
+/** Project WGS84 coordinates onto the simplified Morocco SVG (monotonic, not cadastral). */
+export function projectOnMap(lon: number, lat: number): { x: number; y: number } {
   const { minLon, maxLon, minLat, maxLat } = MOROCCO_MAP_BOUNDS;
-  const innerW = width - padding * 2;
-  const innerH = height - padding * 2;
-  const x = padding + ((lon - minLon) / (maxLon - minLon)) * innerW;
-  const y = padding + ((maxLat - lat) / (maxLat - minLat)) * innerH;
-  return { x, y };
+  const nx = clamp01((lon - minLon) / (maxLon - minLon));
+  const ny = clamp01((maxLat - lat) / (maxLat - minLat));
+  return {
+    x: 20 + nx * 0.76 * 206,
+    y: 34 + Math.pow(ny, 0.86) * 248,
+  };
 }

@@ -5,21 +5,72 @@ import { cities } from "../../data/cities";
 import { ORIENTAL_MAP_CITIES, projectOnMap } from "../../data/orientalMapGeo";
 
 const NAVY = "#1a2332";
-const NAVY_SOFT = "#243044";
-const MAP_BEIGE = "#e8e2d9";
-const MAP_BEIGE_DEEP = "#ddd6cc";
-const MAP_STROKE = "#bfb5a8";
-const LABEL_BG = "#faf8f5";
+const MAP_CREAM = "#efe9e0";
+const MAP_BORDER = "#d8cfc4";
+const DIVIDER = "#ddd4c9";
+const LABEL_DARK = "#1a2332";
+const LABEL_LIGHT = "#ffffff";
 
-const MAP_W = 280;
-const MAP_H = 340;
-
-/** Simplified Morocco outline (north-up), tuned to `MOROCCO_MAP_BOUNDS`. */
+/** Morocco silhouette tuned to `projectOnMap` bounds. */
 const MOROCCO_OUTLINE =
-  "M18 92 L34 58 L52 42 L78 32 L104 30 L128 34 L152 36 L172 34 L192 40 L210 58 L218 88 L220 118 L216 152 L206 188 L190 222 L168 252 L142 272 L112 280 L82 276 L56 260 L36 236 L24 206 L16 172 L14 138 L16 108 Z";
+  "M16 98 L30 62 L48 44 L74 32 L102 28 L128 32 L154 34 L176 32 L196 38 L214 56 L222 86 L224 118 L220 154 L210 192 L192 228 L168 258 L140 276 L110 282 L80 278 L54 262 L34 238 L22 208 L14 172 L12 136 L14 108 Z";
 
+/** Oriental region (north-east), aligned with projected WGS84 cluster. */
 const ORIENTAL_REGION =
-  "M112 36 L158 34 L188 42 L208 62 L214 96 L208 132 L196 168 L178 204 L158 236 L132 252 L112 238 L102 198 L98 158 L100 118 L106 78 Z";
+  "M118 38 L172 34 L208 52 L220 88 L216 128 L204 168 L182 208 L152 248 L122 258 L104 210 L98 168 L96 128 L102 88 Z";
+
+const ORIENTAL_POLY: [number, number][] = [
+  [118, 38], [172, 34], [208, 52], [220, 88], [216, 128], [204, 168], [182, 208], [152, 248],
+  [122, 258], [104, 210], [98, 168], [96, 128], [102, 88],
+];
+
+/** Stylized internal borders (decorative, not survey lines). */
+const REGION_DIVIDERS = [
+  "M52 118 L118 108 L200 98",
+  "M44 158 L128 148 L208 138",
+  "M38 198 L112 188 L188 178",
+  "M72 248 L148 238 L196 228",
+  "M128 108 L142 198 L156 268",
+  "M168 52 L158 142 L148 232",
+];
+
+/** Other Moroccan cities — pin only (WGS84), no extra labels. */
+const OTHER_CITY_PINS: { lon: number; lat: number }[] = [
+  { lon: -6.849813, lat: 34.020882 },
+  { lon: -7.589843, lat: 33.573109 },
+  { lon: -5.007845, lat: 34.261997 },
+  { lon: -7.981084, lat: 31.629472 },
+  { lon: -9.598107, lat: 30.427755 },
+  { lon: -4.999892, lat: 35.759465 },
+];
+
+type LabelPlacement = {
+  dx: number;
+  dy: number;
+  anchor: "start" | "end" | "middle";
+};
+
+const LABEL_PLACEMENT: Record<string, LabelPlacement> = {
+  oujda: { dx: -52, dy: -6, anchor: "end" },
+  nador: { dx: 14, dy: -14, anchor: "start" },
+  berkane: { dx: -48, dy: 4, anchor: "end" },
+  taourirt: { dx: -54, dy: 8, anchor: "end" },
+  jerada: { dx: -58, dy: 0, anchor: "end" },
+  figuig: { dx: -50, dy: 10, anchor: "end" },
+  driouch: { dx: 16, dy: -8, anchor: "start" },
+  guercif: { dx: -56, dy: 6, anchor: "end" },
+};
+
+function pointInPolygon(x: number, y: number, poly: [number, number][]): boolean {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    const intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
 
 type PlacedCity = {
   id: string;
@@ -27,16 +78,21 @@ type PlacedCity = {
   y: number;
   label: string;
   href: string | null;
+  inOriental: boolean;
+  placement: LabelPlacement;
 };
 
-function PinIcon({ active }: { active: boolean }) {
+function MapPin({ light }: { light: boolean }) {
   return (
-    <path
-      d="M0 -10 C-5 -10 -8.5 -6 -8.5 -1.5 C-8.5 2.5 0 12 0 12 C0 12 8.5 2.5 8.5 -1.5 C8.5 -6 5 -10 0 -10 Z"
-      fill={active ? NAVY : "#fff"}
-      stroke={NAVY}
-      strokeWidth="1.2"
-    />
+    <g>
+      <path
+        d="M0 -8.5 C-4.2 -8.5 -7.5 -5.2 -7.5 -1.2 C-7.5 2.5 0 10.5 0 10.5 C0 10.5 7.5 2.5 7.5 -1.2 C7.5 -5.2 4.2 -8.5 0 -8.5 Z"
+        fill={light ? "#ffffff" : NAVY}
+        stroke={light ? "#ffffff" : NAVY}
+        strokeWidth="0.9"
+      />
+      <circle cy="-2" r="2" fill={light ? NAVY : "#ffffff"} />
+    </g>
   );
 }
 
@@ -52,73 +108,59 @@ export default function OrientalMap({ className = "" }: Props) {
 
   const placed = useMemo((): PlacedCity[] => {
     return ORIENTAL_MAP_CITIES.map((c) => {
-      const { x, y } = projectOnMap(c.lon, c.lat, MAP_W, MAP_H, 14);
+      const { x, y } = projectOnMap(c.lon, c.lat);
       const fromData = cities.find((city) => city.id === c.id);
       const label = c.name ? L(c.name) : fromData ? L(fromData.name) : c.id;
       const href = fromData ? `/projets?city=${c.id}` : null;
-      return { id: c.id, x, y, label, href };
+      const inOriental = pointInPolygon(x, y, ORIENTAL_POLY);
+      const placement = LABEL_PLACEMENT[c.id] ?? { dx: rtl ? 48 : -48, dy: -4, anchor: rtl ? "start" : "end" };
+      return { id: c.id, x, y, label, href, inOriental, placement };
     });
-  }, [L]);
+  }, [L, rtl]);
+
+  const otherPins = useMemo(() => OTHER_CITY_PINS.map((p) => projectOnMap(p.lon, p.lat)), []);
+
+  const mapOffsetX = 24;
 
   return (
     <div className={`oriental-map-shell ${className}`}>
-      <div className="oriental-map-head">
-        <p className="oriental-map-kicker">
-          {L({ fr: "Région administrative", ar: "الجهة الإدارية" })}
-        </p>
-        <p className="oriental-map-title">{L({ fr: "L'Oriental", ar: "الجهة الشرقية" })}</p>
-      </div>
+      <svg
+        viewBox="0 0 360 392"
+        className="oriental-map-svg"
+        role="img"
+        aria-label={L({ fr: "Carte du Maroc — région de l'Oriental", ar: "خريطة المغرب — جهة الشرقية" })}
+      >
+        <g transform={`translate(${mapOffsetX}, 12)`}>
+          <path d={MOROCCO_OUTLINE} fill={MAP_CREAM} stroke={MAP_BORDER} strokeWidth="0.9" strokeLinejoin="round" />
 
-      <div className="oriental-map-canvas">
-        <svg
-          viewBox={`${rtl ? -70 : -70} 0 ${MAP_W + 70} ${MAP_H + 24}`}
-          className="oriental-map-svg"
-          role="img"
-          aria-label={L({ fr: "Carte du Maroc — région de l'Oriental", ar: "خريطة المغرب — جهة الشرقية" })}
-        >
-          <defs>
-            <filter id="map-soft-shadow" x="-8%" y="-8%" width="116%" height="116%">
-              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#1a2332" floodOpacity="0.08" />
-            </filter>
-            <linearGradient id="morocco-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={MAP_BEIGE} />
-              <stop offset="100%" stopColor={MAP_BEIGE_DEEP} />
-            </linearGradient>
-          </defs>
+          {REGION_DIVIDERS.map((d, i) => (
+            <path
+              key={i}
+              d={d}
+              fill="none"
+              stroke={DIVIDER}
+              strokeWidth="0.55"
+              strokeLinecap="round"
+              opacity="0.85"
+            />
+          ))}
 
-          <g transform="translate(0, 8)" filter="url(#map-soft-shadow)">
-            <path
-              d={MOROCCO_OUTLINE}
-              fill="url(#morocco-fill)"
-              stroke={MAP_STROKE}
-              strokeWidth="1"
-              strokeLinejoin="round"
-            />
-            <path
-              d={ORIENTAL_REGION}
-              fill={NAVY}
-              fillOpacity="0.96"
-              stroke={NAVY_SOFT}
-              strokeWidth="0.8"
-              strokeLinejoin="round"
-            />
-            <text
-              x="158"
-              y="168"
-              textAnchor="middle"
-              fill="#ffffff"
-              opacity="0.92"
-              className="oriental-map-region-watermark"
-            >
-              Oriental
-            </text>
-          </g>
+          <path d={ORIENTAL_REGION} fill={NAVY} stroke={NAVY} strokeWidth="0.5" strokeLinejoin="round" />
+
+          {otherPins.map((p, i) => (
+            <g key={`pin-${i}`} transform={`translate(${p.x}, ${p.y})`} opacity="0.55">
+              <MapPin light={false} />
+            </g>
+          ))}
 
           {placed.map((city) => {
             const active = activeId === city.id;
-            const labelX = rtl ? city.x + 58 : city.x - 58;
-            const lineEndX = rtl ? city.x + 10 : city.x - 10;
-            const labelAnchor = rtl ? "start" : "end";
+            const pinLight = city.inOriental;
+            const { dx, dy, anchor } = city.placement;
+            const labelX = rtl ? -dx : dx;
+            const labelAnchor = rtl ? (anchor === "end" ? "start" : anchor === "start" ? "end" : anchor) : anchor;
+            const labelFill = city.inOriental ? LABEL_LIGHT : LABEL_DARK;
+            const lineOpacity = active ? 0.55 : 0.35;
 
             const go = () => {
               if (city.href) navigate(city.href);
@@ -128,11 +170,11 @@ export default function OrientalMap({ className = "" }: Props) {
               <g
                 key={city.id}
                 className={`oriental-map-marker ${city.href ? "oriental-map-marker--link" : ""}`}
+                transform={`translate(${city.x}, ${city.y})`}
                 onMouseEnter={() => setActiveId(city.id)}
                 onMouseLeave={() => setActiveId(null)}
                 onFocus={() => setActiveId(city.id)}
                 onBlur={() => setActiveId(null)}
-                transform={`translate(${city.x}, ${city.y})`}
                 role={city.href ? "link" : "presentation"}
                 tabIndex={city.href ? 0 : undefined}
                 onClick={go}
@@ -143,52 +185,31 @@ export default function OrientalMap({ className = "" }: Props) {
                   }
                 }}
               >
-                <circle r={active ? 14 : 10} fill={NAVY} opacity={active ? 0.08 : 0} className="transition-all duration-200" />
                 <line
-                  x1={lineEndX - city.x}
+                  x1={0}
                   y1={0}
-                  x2={labelX - city.x}
-                  y2={0}
-                  stroke={NAVY}
-                  strokeWidth="0.7"
-                  opacity={active ? 0.55 : 0.32}
+                  x2={labelX}
+                  y2={dy}
+                  stroke={city.inOriental ? "#ffffff" : NAVY}
+                  strokeWidth="0.6"
+                  opacity={lineOpacity}
                 />
-                <g transform="translate(0, 0)">
-                  <PinIcon active={active} />
-                  <circle cy="-2.5" r="2.3" fill={active ? "#fff" : NAVY} />
-                </g>
-                <g transform={`translate(${labelX - city.x}, ${-4})`}>
-                  <rect
-                    x={rtl ? 0 : -92}
-                    y={-11}
-                    width={92}
-                    height={18}
-                    rx={4}
-                    fill={LABEL_BG}
-                    stroke={active ? NAVY : "#e7e0d6"}
-                    strokeWidth="0.8"
-                  />
-                  <text
-                    x={rtl ? 8 : -8}
-                    y={2}
-                    textAnchor={labelAnchor}
-                    className={`oriental-map-label ${active ? "oriental-map-label--active" : ""}`}
-                  >
-                    {city.label}
-                  </text>
-                </g>
+                <MapPin light={pinLight} />
+                <text
+                  x={labelX}
+                  y={dy + 3}
+                  textAnchor={labelAnchor}
+                  fill={labelFill}
+                  className={`oriental-map-label ${active ? "oriental-map-label--active" : ""}`}
+                  style={{ fontWeight: active ? 700 : 600 }}
+                >
+                  {city.label}
+                </text>
               </g>
             );
           })}
-        </svg>
-      </div>
-
-      <p className="oriental-map-caption">
-        {L({
-          fr: "Principales villes de la région — positions approximatives (WGS84).",
-          ar: "أهم مدن الجهة — مواقع تقريبية (WGS84).",
-        })}
-      </p>
+        </g>
+      </svg>
     </div>
   );
 }

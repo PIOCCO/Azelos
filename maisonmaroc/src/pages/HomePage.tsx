@@ -401,7 +401,7 @@ export default function HomePage() {
         <SmartImage src={CTA_BG} alt="" className="absolute inset-0 h-full w-full object-cover" fallbackSeed="cta" />
         <div className="absolute inset-0 bg-navy/85" />
         <div className="home-container relative py-20 text-center">
-          <h2 className="home-display-title mx-auto max-w-2xl text-white">{t("homePage.cta.title")}</h2>
+          <h2 className="home-display-title home-cta-headline mx-auto max-w-2xl">{t("homePage.cta.title")}</h2>
           <p className="mx-auto mt-4 max-w-lg text-sm text-white/75">{t("homePage.cta.sub")}</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link to="/contact" className="home-btn border border-white bg-transparent text-white hover:bg-white/10">
