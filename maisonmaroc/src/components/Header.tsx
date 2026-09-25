@@ -14,9 +14,11 @@ export default function Header() {
   const [open, setOpen] = useState(false);
 
   const links = [
-    { to: "/search", label: t("nav.properties") },
-    { to: "/favorites", label: t("nav.favorites") },
-    { to: "/agents", label: t("nav.agents") },
+    { to: "/a-propos", label: t("inst.nav.about") },
+    { to: "/membres", label: t("inst.nav.members") },
+    { to: "/projets", label: t("inst.nav.projects") },
+    { to: "/actualites", label: t("inst.nav.news") },
+    { to: "/contact", label: t("inst.nav.contact") },
   ];
 
   const navClass = ({ isActive }: { isActive: boolean }) =>
@@ -33,7 +35,7 @@ export default function Header() {
       <div className="container-page flex min-h-[100px] items-center justify-between gap-4 py-2 sm:min-h-[116px] sm:py-3">
         <BrandLogo variant="header" />
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label={t("nav.home")}>
+        <nav className="hidden items-center gap-1 xl:flex" aria-label={t("nav.home")}>
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} className={navClass}>
               {l.label}
@@ -42,9 +44,6 @@ export default function Header() {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <NavLink to="/search" className="btn-primary btn-sm">
-            {t("common.search")}
-          </NavLink>
           {user ? (
             <>
               <NavLink to={dashboardPathForRole(user.role)} className="nav-link">
@@ -63,15 +62,15 @@ export default function Header() {
               </button>
             </>
           ) : (
-            <NavLink to="/client/login" className="btn-outline btn-sm">
-              {t("nav.login")}
+            <NavLink to="/owner/login" className="btn-outline btn-sm">
+              {t("inst.nav.promoterLogin")}
             </NavLink>
           )}
         </div>
 
         <button
           type="button"
-          className="grid h-11 w-11 place-items-center rounded-xl text-ink-700 hover:bg-ink-50 lg:hidden"
+          className="grid h-11 w-11 place-items-center rounded-xl text-ink-700 hover:bg-ink-50 xl:hidden"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
           aria-label="menu"
@@ -81,8 +80,19 @@ export default function Header() {
       </div>
 
       {open && (
-        <div className="border-t border-ink-100 bg-white lg:hidden">
+        <div className="border-t border-ink-100 bg-white xl:hidden">
           <nav className="container-page space-y-1 py-3">
+            <NavLink
+              to="/"
+              onClick={() => setOpen(false)}
+              className={({ isActive }) =>
+                `block rounded-xl px-3 py-3 text-sm font-bold ${
+                  isActive ? "bg-brand-50 text-brand-700" : "text-ink-700 hover:bg-ink-50"
+                }`
+              }
+            >
+              {t("inst.nav.home")}
+            </NavLink>
             {links.map((l) => (
               <NavLink
                 key={l.to}
@@ -98,11 +108,25 @@ export default function Header() {
               </NavLink>
             ))}
             <NavLink
-              to={user ? dashboardPathForRole(user.role) : "/client/login"}
+              to="/evenements"
+              onClick={() => setOpen(false)}
+              className="block rounded-xl px-3 py-3 text-sm font-bold text-ink-700 hover:bg-ink-50"
+            >
+              {t("inst.nav.events")}
+            </NavLink>
+            <NavLink
+              to="/documents"
+              onClick={() => setOpen(false)}
+              className="block rounded-xl px-3 py-3 text-sm font-bold text-ink-700 hover:bg-ink-50"
+            >
+              {t("inst.nav.documents")}
+            </NavLink>
+            <NavLink
+              to={user ? dashboardPathForRole(user.role) : "/owner/login"}
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 rounded-xl px-3 py-3 text-sm font-bold text-ink-700 hover:bg-ink-50"
             >
-              <User2 size={16} /> {user ? t("nav.account") : t("nav.login")}
+              <User2 size={16} /> {user ? t("nav.account") : t("inst.nav.promoterLogin")}
             </NavLink>
           </nav>
         </div>

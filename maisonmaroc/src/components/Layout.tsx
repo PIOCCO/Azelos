@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 import MobileNav from "./MobileNav";
+import CookieConsent from "./CookieConsent";
 
 const MINIMAL_FOOTER_PATHS = [
   "/client/login",
@@ -26,6 +27,7 @@ export default function Layout() {
         <Outlet />
       </main>
       {!minimalFooter && <Footer />}
+      {!minimalFooter && <CookieConsent />}
       <MobileNav />
     </div>
   );

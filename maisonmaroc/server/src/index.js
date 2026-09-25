@@ -44,6 +44,17 @@ import {
   listPublicProperties,
 } from "./catalog.js";
 import {
+  adminListNews,
+  adminUpsertNews,
+  createContactSubmission,
+  getNewsBySlug,
+  listPublicDocuments,
+  listPublishedEvents,
+  listPublishedNews,
+  seedDemoContent,
+} from "./content.js";
+import { validateContactBody } from "./contact.js";
+import {
   addMessage,
   archiveConversation,
   canAccessConversation,
@@ -57,6 +68,7 @@ import {
 
 const db = openDb();
 migrate(db);
+seedDemoContent(db);
 
 const app = express();
 const port = Number(process.env.PORT) || 3001;
@@ -80,6 +92,14 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const contactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many contact requests" },
+});
+
 app.use(attachUser(db));
 
 app.get("/api/health", (_req, res) => {
@@ -95,6 +115,34 @@ app.get("/api/properties/:slugOrId", (req, res) => {
   const p = getPropertyBySlugOrId(req.params.slugOrId);
   if (!p) return res.status(404).json({ error: "Not found" });
   res.json({ property: p });
+});
+
+app.get("/api/content/news", (_req, res) => {
+  res.json({ articles: listPublishedNews(db) });
+});
+
+app.get("/api/content/news/:slug", (req, res) => {
+  const article = getNewsBySlug(db, req.params.slug);
+  if (!article) return res.status(404).json({ error: "Not found" });
+  res.json({ article });
+});
+
+app.get("/api/content/events", (req, res) => {
+  const upcoming = req.query.upcoming === "1";
+  res.json({ events: listPublishedEvents(db, { upcomingOnly: upcoming }) });
+});
+
+app.get("/api/content/documents", (_req, res) => {
+  res.json({ documents: listPublicDocuments(db) });
+});
+
+app.post("/api/contact", contactLimiter, (req, res) => {
+  const result = validateContactBody(req.body);
+  if (!result.ok) {
+    return res.status(400).json({ error: "Validation failed", details: result.errors });
+  }
+  createContactSubmission(db, result.data, req.ip);
+  res.status(201).json({ ok: true });
 });
 
 // ——— Client registration / login ———
@@ -371,6 +419,35 @@ app.patch("/api/admin/owners/:id", requireAuth, requireSuperAdmin, async (req, r
   } catch (err) {
     handleAuthError(err, res);
   }
+});
+
+app.get("/api/admin/news", requireAuth, requireSuperAdmin, (_req, res) => {
+  res.json({ articles: adminListNews(db) });
+});
+
+app.post("/api/admin/news", requireAuth, requireSuperAdmin, (req, res) => {
+  const body = req.body || {};
+  const required = ["slug", "titleFr", "titleAr", "bodyFr", "bodyAr"];
+  for (const k of required) {
+    if (!body[k] || !String(body[k]).trim()) {
+      return res.status(400).json({ error: `Missing ${k}` });
+    }
+  }
+  const id = adminUpsertNews(db, {
+    id: body.id || null,
+    slug: String(body.slug).trim().slice(0, 120),
+    titleFr: String(body.titleFr).slice(0, 500),
+    titleAr: String(body.titleAr).slice(0, 500),
+    summaryFr: body.summaryFr ? String(body.summaryFr).slice(0, 1000) : "",
+    summaryAr: body.summaryAr ? String(body.summaryAr).slice(0, 1000) : "",
+    bodyFr: String(body.bodyFr).slice(0, 50000),
+    bodyAr: String(body.bodyAr).slice(0, 50000),
+    imageUrl: body.imageUrl ? String(body.imageUrl).slice(0, 2000) : null,
+    author: body.author ? String(body.author).slice(0, 200) : null,
+    published: Boolean(body.published),
+    publishedAt: body.publishedAt || null,
+  });
+  res.status(body.id ? 200 : 201).json({ id });
 });
 
 app.delete("/api/admin/owners/:id", requireAuth, requireSuperAdmin, (req, res) => {

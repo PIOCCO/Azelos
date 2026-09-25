@@ -5,7 +5,7 @@ import HomePage from "./pages/HomePage";
 import SearchPage from "./pages/SearchPage";
 import PropertyDetailsPage from "./pages/PropertyDetailsPage";
 import OwnerProfilePage from "./pages/OwnerProfilePage";
-import AgentsPage from "./pages/AgentsPage";
+import MembersPage from "./pages/MembersPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import PublishPage from "./pages/PublishPage";
 import AuthPage from "./pages/AuthPage";
@@ -17,16 +17,43 @@ import OwnerDashboardPage from "./pages/OwnerDashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import MessagesPage from "./pages/MessagesPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
+import NewsPage from "./pages/NewsPage";
+import NewsArticlePage from "./pages/NewsArticlePage";
+import EventsPage from "./pages/EventsPage";
+import DocumentsPage from "./pages/DocumentsPage";
+import FaqPage from "./pages/FaqPage";
+import ForbiddenPage from "./pages/ForbiddenPage";
+import MentionsLegalesPage from "./pages/legal/MentionsLegalesPage";
+import PrivacyPage from "./pages/legal/PrivacyPage";
+import CookiesPage from "./pages/legal/CookiesPage";
+import TermsPage from "./pages/legal/TermsPage";
 
 export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/a-propos" element={<AboutPage />} />
+        <Route path="/membres" element={<MembersPage />} />
+        <Route path="/projets" element={<SearchPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/property/:slug" element={<PropertyDetailsPage />} />
         <Route path="/agent/:id" element={<OwnerProfilePage />} />
-        <Route path="/agents" element={<AgentsPage />} />
+        <Route path="/agents" element={<Navigate to="/membres" replace />} />
+        <Route path="/actualites" element={<NewsPage />} />
+        <Route path="/actualites/:slug" element={<NewsArticlePage />} />
+        <Route path="/evenements" element={<EventsPage />} />
+        <Route path="/documents" element={<DocumentsPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/faq" element={<FaqPage />} />
+        <Route path="/legal/mentions-legales" element={<MentionsLegalesPage />} />
+        <Route path="/legal/confidentialite" element={<PrivacyPage />} />
+        <Route path="/legal/cookies" element={<CookiesPage />} />
+        <Route path="/legal/cgu" element={<TermsPage />} />
+        <Route path="/403" element={<ForbiddenPage />} />
+
         <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/publish" element={<PublishPage />} />
 

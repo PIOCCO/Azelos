@@ -62,5 +62,66 @@ export function migrate(db) {
     );
 
     CREATE INDEX IF NOT EXISTS idx_messages_conv ON messages(conversation_id);
+
+    CREATE TABLE IF NOT EXISTS news_posts (
+      id TEXT PRIMARY KEY,
+      slug TEXT NOT NULL UNIQUE,
+      title_fr TEXT NOT NULL,
+      title_ar TEXT NOT NULL,
+      summary_fr TEXT,
+      summary_ar TEXT,
+      body_fr TEXT NOT NULL,
+      body_ar TEXT NOT NULL,
+      image_url TEXT,
+      author TEXT,
+      published INTEGER NOT NULL DEFAULT 0,
+      published_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS events (
+      id TEXT PRIMARY KEY,
+      slug TEXT UNIQUE,
+      title_fr TEXT NOT NULL,
+      title_ar TEXT NOT NULL,
+      description_fr TEXT,
+      description_ar TEXT,
+      location_fr TEXT,
+      location_ar TEXT,
+      starts_at TEXT NOT NULL,
+      ends_at TEXT,
+      organizer TEXT,
+      published INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS documents (
+      id TEXT PRIMARY KEY,
+      category TEXT NOT NULL,
+      title_fr TEXT NOT NULL,
+      title_ar TEXT NOT NULL,
+      description_fr TEXT,
+      description_ar TEXT,
+      file_url TEXT,
+      visibility TEXT NOT NULL DEFAULT 'public' CHECK (visibility IN ('public', 'members', 'admin')),
+      published INTEGER NOT NULL DEFAULT 0,
+      published_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS contact_submissions (
+      id TEXT PRIMARY KEY,
+      first_name TEXT NOT NULL,
+      last_name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT,
+      subject TEXT NOT NULL,
+      message TEXT NOT NULL,
+      ip_hash TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 }

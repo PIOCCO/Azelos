@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, X, SearchX } from "lucide-react";
 import { useLocale } from "../lib/useLocale";
 import { useListings } from "../context/ListingsContext";
@@ -14,12 +14,15 @@ import PropertyCard from "../components/PropertyCard";
 import FilterSidebar from "../components/FilterSidebar";
 import Pagination from "../components/Pagination";
 import PageHeader from "../components/PageHeader";
+import PageMeta from "../components/PageMeta";
 import EmptyState from "../components/EmptyState";
 import { formatNumber } from "../lib/format";
 
 const PAGE_SIZE = 9;
 
 export default function SearchPage() {
+  const { pathname } = useLocation();
+  const isProjectsCatalog = pathname === "/projets" || pathname.startsWith("/projets/");
   const { t, lang, isRTL } = useLocale();
   const { properties } = useListings();
   const [params, setParams] = useSearchParams();
@@ -59,11 +62,17 @@ export default function SearchPage() {
     </div>
   );
 
+  const pageTitle = isProjectsCatalog ? t("inst.projects.title") : t("search.title");
+  const pageDesc = isProjectsCatalog ? t("inst.projects.description") : undefined;
+
   return (
     <div className="page-shell">
+      {isProjectsCatalog && (
+        <PageMeta title={t("inst.projects.metaTitle")} description={pageDesc} path="/projets" />
+      )}
       <div className="container-page fade-in">
         <PageHeader
-          title={t("search.title")}
+          title={pageTitle}
           description={
             <>
               <span className="font-bold text-brand-600">
