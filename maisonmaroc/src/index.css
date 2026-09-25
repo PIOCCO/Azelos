@@ -176,6 +176,59 @@ html[dir="rtl"] .home-section-title {
 .home-region-photo {
   @apply overflow-hidden rounded-2xl bg-ink-100;
 }
+
+.oriental-map-shell {
+  @apply rounded-2xl border border-ink-200/70 bg-[#f7f4ef] px-3 py-5 sm:px-5 sm:py-6;
+  box-shadow: 0 1px 0 rgba(26, 35, 50, 0.04), 0 8px 24px rgba(26, 35, 50, 0.06);
+}
+.oriental-map-head {
+  @apply mb-4 border-b border-ink-200/60 pb-3 text-center sm:text-start;
+}
+.oriental-map-kicker {
+  @apply text-[10px] font-bold uppercase tracking-[0.18em] text-ink-400;
+}
+.oriental-map-title {
+  font-family: "Playfair Display", Georgia, serif;
+  @apply mt-1 text-lg font-semibold text-navy sm:text-xl;
+}
+html[dir="rtl"] .oriental-map-title {
+  font-family: Cairo, Tajawal, serif;
+}
+.oriental-map-canvas {
+  @apply overflow-x-auto;
+}
+.oriental-map-svg {
+  @apply mx-auto h-auto w-full min-w-[280px] max-w-xl;
+}
+.oriental-map-region-watermark {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.oriental-map-label {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  fill: #334155;
+}
+.oriental-map-label--active {
+  fill: #1a2332;
+  font-weight: 700;
+}
+.oriental-map-marker--link {
+  @apply cursor-pointer outline-none;
+}
+.oriental-map-marker--link:focus-visible rect {
+  stroke: #1a2332;
+  stroke-width: 1.2;
+}
+.oriental-map-caption {
+  @apply mt-3 text-center text-[10px] leading-relaxed text-ink-400 sm:text-start;
+}
+.oriental-map-marker {
+  @apply cursor-default transition-opacity duration-200;
+}
 .home-member-card {
   @apply border border-ink-200 bg-white px-5 py-8 text-center;
 }

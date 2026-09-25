@@ -176,8 +176,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="lg:col-span-4 xl:col-span-5 lg:pt-6">
-              <OrientalMap className="py-2" />
+            <div className="lg:col-span-4 xl:col-span-5 lg:pt-2">
+              <OrientalMap />
               <ul className="mt-6 flex flex-wrap gap-2 lg:justify-center">
                 {cities.map((c) => (
                   <li key={c.id}>
