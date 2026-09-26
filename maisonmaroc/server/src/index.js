@@ -65,6 +65,7 @@ import {
   listPublishedMemberProperties,
 } from "./memberListings.js";
 import { getMemberProfileById, profileToPublicOwner } from "./memberProfiles.js";
+import { getPublicMemberAvatarFile, getPublicMemberProfile } from "./ownerPortal.js";
 import { applySecurityMiddleware } from "./security.js";
 import { clampPagination, validateSlug, EMAIL_RE } from "./validateContent.js";
 import { ensureUploadDir, resolveStoredFile } from "./uploads.js";
@@ -216,6 +217,25 @@ app.get("/api/listings/member-properties/:slugOrId", publicContentLimiter, (req,
   if (!property) return res.status(404).json({ error: "Not found" });
   const owner = profileToPublicOwner(getMemberProfileById(db, property.ownerId));
   res.json({ property, owner: owner || null });
+});
+
+app.get("/api/public/member-profiles/:ownerProfileId", publicContentLimiter, (req, res) => {
+  const id = String(req.params.ownerProfileId || "").slice(0, 128);
+  const profile = getPublicMemberProfile(db, id);
+  if (!profile) return res.status(404).json({ error: "Not found" });
+  res.json({ profile });
+});
+
+app.get("/api/public/member-avatars/:ownerProfileId/file", publicContentLimiter, (req, res) => {
+  const id = String(req.params.ownerProfileId || "").slice(0, 128);
+  const file = getPublicMemberAvatarFile(db, id);
+  if (!file) return res.status(404).json({ error: "Not found" });
+  const abs = resolveStoredFile(file.storageName);
+  if (!abs) return res.status(404).json({ error: "Not found" });
+  res.setHeader("Content-Type", file.mime);
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  fs.createReadStream(abs).pipe(res);
 });
 
 app.get("/api/listings/project-images/:imageId/file", publicContentLimiter, (req, res) => {

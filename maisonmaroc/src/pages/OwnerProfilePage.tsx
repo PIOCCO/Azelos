@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { apiFetch } from "../lib/api";
 import { BadgeCheck, MapPin, CalendarDays, Building2, Languages } from "lucide-react";
 import { useListings } from "../context/ListingsContext";
 import { cityById } from "../data/cities";
@@ -19,7 +20,22 @@ export default function OwnerProfilePage() {
 
   const { ownerById, propertiesByOwner } = useListings();
   const owner = id ? ownerById(id) : undefined;
+  const [publicProfile, setPublicProfile] = useState<{ avatar?: string; bio?: { fr: string; ar: string } } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!id) return;
+    apiFetch<{ profile: { avatar?: string; bio?: { fr: string; ar: string } } }>(
+      `/api/public/member-profiles/${id}`,
+    ).then(({ data }) => {
+      if (data?.profile) setPublicProfile(data.profile);
+    });
+  }, [id]);
+
   if (!owner) return <NotFoundPage />;
+
+  const displayAvatar = publicProfile?.avatar || owner.avatar;
 
   const listings = propertiesByOwner(owner.id);
   const city = cityById(owner.cityId);
@@ -34,7 +50,7 @@ export default function OwnerProfilePage() {
       <div className="border-b border-ink-200 bg-white">
         <div className="container-page py-8">
           <div className="flex flex-col gap-6 md:flex-row md:items-center">
-            <Avatar src={owner.avatar} name={L(owner.name)} className="h-24 w-24 rounded-md" />
+            <Avatar src={displayAvatar} name={L(owner.name)} className="h-24 w-24 rounded-md" />
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-bold text-ink-900">{L(owner.name)}</h1>

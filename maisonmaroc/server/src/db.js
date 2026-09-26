@@ -244,4 +244,6 @@ function ensureColumns(db) {
   addCol("owner_project_drafts", "lng", "REAL");
   addCol("owner_project_drafts", "hidden", "INTEGER NOT NULL DEFAULT 0");
   addCol("owner_project_drafts", "published_at", "TEXT");
+  addCol("owner_profile_overrides", "avatar_storage", "TEXT");
+  addCol("owner_profile_overrides", "avatar_mime", "TEXT");
 }

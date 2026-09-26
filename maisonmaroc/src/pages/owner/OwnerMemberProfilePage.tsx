@@ -1,5 +1,6 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { Trash2, Upload, User } from "lucide-react";
 import { apiFetch } from "../../lib/api";
 import type { OwnerProfileBundle } from "../../lib/ownerPortalTypes";
 import { useLocale } from "../../lib/useLocale";
@@ -7,11 +8,20 @@ import { cityById } from "../../data/cities";
 import ProfileCompletionBar from "../../components/owner/ProfileCompletionBar";
 import { PortalError, PortalLoading, PortalSuccessBanner } from "../../components/owner/PortalStates";
 
+const API_BASE = import.meta.env.VITE_API_URL ?? "";
+
+function avatarSrc(url: string | undefined) {
+  if (!url) return "";
+  if (url.startsWith("http") || url.startsWith("//")) return url;
+  return `${API_BASE}${url}`;
+}
+
 export default function OwnerMemberProfilePage() {
   const { t, L } = useLocale();
   const [bundle, setBundle] = useState<OwnerProfileBundle | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [form, setForm] = useState({
     bioFr: "",
     bioAr: "",
@@ -45,6 +55,11 @@ export default function OwnerMemberProfilePage() {
     load();
   }, [load]);
 
+  const previewAvatar = useMemo(
+    () => avatarSrc(bundle?.publicProfile.avatar || form.avatarUrl),
+    [bundle?.publicProfile.avatar, form.avatarUrl],
+  );
+
   const savePublic = async (e: FormEvent) => {
     e.preventDefault();
     setSuccess(null);
@@ -65,6 +80,47 @@ export default function OwnerMemberProfilePage() {
       setError(null);
       setBundle(data ?? null);
       setSuccess(t("ownerPortal.saved"));
+    }
+  };
+
+  const onAvatarUpload = async (file: File) => {
+    setAvatarUploading(true);
+    setError(null);
+    setSuccess(null);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch(`${API_BASE}/api/owner/profile/avatar`, {
+        method: "POST",
+        credentials: "include",
+        body: fd,
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(typeof body.error === "string" ? body.error : t("ownerPortal.uploadFailed"));
+      } else {
+        setBundle(body as OwnerProfileBundle);
+        setForm((f) => ({ ...f, avatarUrl: (body as OwnerProfileBundle).publicProfile.avatar || "" }));
+        setSuccess(t("ownerPortal.avatarUpdated"));
+      }
+    } catch {
+      setError(t("ownerPortal.uploadFailed"));
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const removeAvatar = async () => {
+    if (!confirm(t("ownerPortal.confirmRemoveAvatar"))) return;
+    setError(null);
+    const { data, error: err } = await apiFetch<OwnerProfileBundle>("/api/owner/profile/avatar", {
+      method: "DELETE",
+    });
+    if (err) setError(err);
+    else {
+      setBundle(data ?? null);
+      setForm((f) => ({ ...f, avatarUrl: "" }));
+      setSuccess(t("ownerPortal.avatarRemoved"));
     }
   };
 
@@ -125,11 +181,56 @@ export default function OwnerMemberProfilePage() {
       <section id="public" className="rounded-2xl border border-ink-100 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-bold text-navy">{t("ownerPortal.publicInfoSection")}</h2>
         <p className="mt-1 text-xs text-ink-500">{t("ownerPortal.publicInfoHint")}</p>
-        <form onSubmit={savePublic} className="mt-4 grid gap-4">
-          <label className="block text-sm">
-            <span className="font-semibold text-ink-700">{t("ownerPortal.logoUrl")}</span>
-            <input dir="ltr" className="input mt-1" value={form.avatarUrl} onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })} />
-          </label>
+
+        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl border border-ink-200 bg-stone-100">
+            {previewAvatar ? (
+              <img src={previewAvatar} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-ink-400" aria-hidden>
+                <User size={40} />
+              </div>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <label className="btn-primary inline-flex cursor-pointer items-center gap-2">
+              <Upload size={16} aria-hidden />
+              {avatarUploading ? t("common.loading") : t("ownerPortal.uploadAvatar")}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="sr-only"
+                disabled={avatarUploading}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) onAvatarUpload(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+            {previewAvatar && (
+              <button type="button" className="btn-secondary inline-flex items-center gap-2 text-red-700" onClick={removeAvatar}>
+                <Trash2 size={16} aria-hidden />
+                {t("ownerPortal.removeAvatar")}
+              </button>
+            )}
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-ink-500">{t("ownerPortal.avatarHint")}</p>
+
+        <form onSubmit={savePublic} className="mt-6 grid gap-4">
+          <details className="text-sm">
+            <summary className="cursor-pointer font-semibold text-ink-600">{t("ownerPortal.avatarUrlOptional")}</summary>
+            <label className="mt-2 block">
+              <input
+                dir="ltr"
+                className="input mt-1"
+                value={form.avatarUrl.startsWith("/api/") ? "" : form.avatarUrl}
+                placeholder="https://…"
+                onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })}
+              />
+            </label>
+          </details>
           <label className="block text-sm">
             <span className="font-semibold text-ink-700">{t("ownerPortal.descriptionFr")}</span>
             <textarea className="input mt-1 min-h-[100px]" value={form.bioFr} onChange={(e) => setForm({ ...form, bioFr: e.target.value })} />

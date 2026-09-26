@@ -13,8 +13,10 @@ import {
   listOwnerProjects,
   patchOwnerMe,
   patchOwnerProfile,
+  removeOwnerProfileAvatar,
   reorderProjectImages,
   updateOwnerProject,
+  uploadOwnerProfileAvatar,
 } from "./ownerPortal.js";
 import { sanitizeUser } from "./auth.js";
 import { listMemberDocuments, getMemberDocumentForDownload, publicDownloadFilename, contentDispositionAttachment } from "./content.js";
@@ -49,6 +51,39 @@ export function registerOwnerRoutes(app, db, { requireAuth, requireOwner, upload
   app.patch("/api/owner/profile", requireAuth, requireOwner, ownerMutationLimiter, (req, res) => {
     try {
       const bundle = patchOwnerProfile(db, req.user, req.body || {});
+      res.json(bundle);
+    } catch (err) {
+      handleAuthError(err, res);
+    }
+  });
+
+  app.post(
+    "/api/owner/profile/avatar",
+    requireAuth,
+    requireOwner,
+    uploadLimiter,
+    (req, res) => {
+      projectImageUploadMiddleware(req, res, (err) => {
+        if (err) {
+          return res.status(err.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({ error: err.message || "Upload failed" });
+        }
+        if (!req.file) return res.status(400).json({ error: "File is required" });
+        try {
+          const stored = persistValidatedProjectImage(req.file.buffer);
+          const { oldStorage, bundle } = uploadOwnerProfileAvatar(db, req.user, stored);
+          if (oldStorage) deleteStoredFile(oldStorage);
+          res.status(201).json(bundle);
+        } catch (e) {
+          handleAuthError(e, res);
+        }
+      });
+    },
+  );
+
+  app.delete("/api/owner/profile/avatar", requireAuth, requireOwner, ownerMutationLimiter, (req, res) => {
+    try {
+      const { oldStorage, bundle } = removeOwnerProfileAvatar(db, req.user);
+      if (oldStorage) deleteStoredFile(oldStorage);
       res.json(bundle);
     } catch (err) {
       handleAuthError(err, res);

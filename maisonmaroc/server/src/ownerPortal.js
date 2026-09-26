@@ -6,6 +6,7 @@ import { listPropertiesForOwnerProfile } from "./catalog.js";
 import { listMemberDocuments, getMemberDocumentForDownload } from "./content.js";
 import { unreadCountForUser } from "./messages.js";
 import { validateExternalMediaUrl } from "./validateUrls.js";
+import { deleteStoredFile } from "./uploads.js";
 
 const PROFILE_PATCH_KEYS = [
   "bioFr",
@@ -39,9 +40,20 @@ function getOverrides(db, ownerProfileId) {
   return db.prepare(`SELECT * FROM owner_profile_overrides WHERE owner_profile_id = ?`).get(ownerProfileId);
 }
 
+export function memberAvatarPublicUrl(ownerProfileId) {
+  return `/api/public/member-avatars/${ownerProfileId}/file`;
+}
+
+function resolveAvatar(seed, overrides, ownerProfileId) {
+  if (overrides?.avatar_storage) return memberAvatarPublicUrl(ownerProfileId);
+  if (overrides?.avatar_url) return overrides.avatar_url;
+  return seed?.avatar || "";
+}
+
 function mergePublicProfile(seed, overrides) {
   if (!seed) return null;
   const o = overrides || {};
+  const ownerProfileId = seed.id;
   return {
     id: seed.id,
     name: seed.name,
@@ -50,7 +62,7 @@ function mergePublicProfile(seed, overrides) {
     cityId: seed.cityId,
     memberSince: seed.memberSince,
     verified: seed.verified,
-    avatar: o.avatar_url || seed.avatar,
+    avatar: resolveAvatar(seed, o, ownerProfileId),
     phone: o.phone || seed.phone,
     whatsapp: o.whatsapp || seed.whatsapp,
     email: o.email_public || seed.email,
@@ -188,12 +200,18 @@ export function patchOwnerProfile(db, user, body) {
       }
       data.avatar_url = check.value;
     } else data.avatar_url = null;
+    data.avatar_storage = null;
+    data.avatar_mime = null;
   }
 
   const keys = Object.keys(data);
   if (!keys.length) return getOwnerProfileBundle(db, user);
 
   const existing = getOverrides(db, ownerProfileId);
+  let removeStorage = null;
+  if (data.avatar_storage === null && existing?.avatar_storage) {
+    removeStorage = existing.avatar_storage;
+  }
   const now = new Date().toISOString();
   if (!existing) {
     db.prepare(
@@ -216,8 +234,66 @@ export function patchOwnerProfile(db, user, body) {
       `UPDATE owner_profile_overrides SET ${sets}, updated_at = ? WHERE owner_profile_id = ?`,
     ).run(...keys.map((k) => data[k]), now, ownerProfileId);
   }
+  if (removeStorage) deleteStoredFile(removeStorage);
   logOwnerActivity(db, { ownerProfileId, userId: user.id, action: "profile_updated" });
   return getOwnerProfileBundle(db, user);
+}
+
+function deleteStoredAvatar(db, ownerProfileId) {
+  const o = getOverrides(db, ownerProfileId);
+  if (!o?.avatar_storage) return null;
+  const name = o.avatar_storage;
+  db.prepare(
+    `UPDATE owner_profile_overrides SET avatar_storage = NULL, avatar_mime = NULL, avatar_url = NULL, updated_at = ? WHERE owner_profile_id = ?`,
+  ).run(new Date().toISOString(), ownerProfileId);
+  return name;
+}
+
+export function uploadOwnerProfileAvatar(db, user, stored) {
+  const ownerProfileId = requireOwnerProfile(user);
+  if (!getMemberProfileById(db, ownerProfileId)) {
+    const err = new Error("Unknown member profile id");
+    err.status = 404;
+    throw err;
+  }
+  const existing = getOverrides(db, ownerProfileId);
+  const oldStorage = existing?.avatar_storage;
+  const now = new Date().toISOString();
+  const publicUrl = memberAvatarPublicUrl(ownerProfileId);
+  if (!existing) {
+    db.prepare(
+      `INSERT INTO owner_profile_overrides (owner_profile_id, avatar_url, avatar_storage, avatar_mime, updated_at)
+       VALUES (?, ?, ?, ?, ?)`,
+    ).run(ownerProfileId, publicUrl, stored.storageName, stored.mime, now);
+  } else {
+    db.prepare(
+      `UPDATE owner_profile_overrides SET avatar_url = ?, avatar_storage = ?, avatar_mime = ?, updated_at = ? WHERE owner_profile_id = ?`,
+    ).run(publicUrl, stored.storageName, stored.mime, now, ownerProfileId);
+  }
+  logOwnerActivity(db, { ownerProfileId, userId: user.id, action: "profile_avatar_uploaded" });
+  return { oldStorage, bundle: getOwnerProfileBundle(db, user) };
+}
+
+export function removeOwnerProfileAvatar(db, user) {
+  const ownerProfileId = requireOwnerProfile(user);
+  const oldStorage = deleteStoredAvatar(db, ownerProfileId);
+  if (oldStorage) {
+    logOwnerActivity(db, { ownerProfileId, userId: user.id, action: "profile_avatar_removed" });
+  }
+  return { oldStorage, bundle: getOwnerProfileBundle(db, user) };
+}
+
+export function getPublicMemberProfile(db, ownerProfileId) {
+  const seed = getMemberProfileById(db, ownerProfileId);
+  if (!seed) return null;
+  const overrides = getOverrides(db, ownerProfileId);
+  return mergePublicProfile(seed, overrides);
+}
+
+export function getPublicMemberAvatarFile(db, ownerProfileId) {
+  const o = getOverrides(db, ownerProfileId);
+  if (!o?.avatar_storage) return null;
+  return { storageName: o.avatar_storage, mime: o.avatar_mime || "image/jpeg" };
 }
 
 export function patchOwnerMe(db, user, body) {
