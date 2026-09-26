@@ -1,15 +1,13 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Trash2, Upload, User } from "lucide-react";
-import { apiFetch, apiMediaUrl } from "../../lib/api";
+import { apiFetch, apiMediaUrl, apiRoot } from "../../lib/api";
 import { useListings } from "../../context/ListingsContext";
 import type { OwnerProfileBundle } from "../../lib/ownerPortalTypes";
 import { useLocale } from "../../lib/useLocale";
 import { cityById } from "../../data/cities";
 import ProfileCompletionBar from "../../components/owner/ProfileCompletionBar";
 import { PortalError, PortalLoading, PortalSuccessBanner } from "../../components/owner/PortalStates";
-
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 export default function OwnerMemberProfilePage() {
   const { t, L } = useLocale();
@@ -83,7 +81,7 @@ export default function OwnerMemberProfilePage() {
     const fd = new FormData();
     fd.append("file", file);
     try {
-      const res = await fetch(`${API_BASE}/api/owner/profile/avatar`, {
+      const res = await fetch(`${apiRoot()}/api/owner/profile/avatar`, {
         method: "POST",
         credentials: "include",
         body: fd,

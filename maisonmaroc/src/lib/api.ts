@@ -1,6 +1,16 @@
 import { appBasename } from "./appBase";
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
+/**
+ * Production under https://dribex.ma/APIO: returns `/APIO` so requests hit `/APIO/api/…`
+ * (proxied to the APIO backend without conflicting with Dribex `/api`).
+ * Override with VITE_API_URL when the API is on another origin.
+ */
+export function apiRoot(): string {
+  const explicit = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+  if (explicit) return explicit.replace(/\/+$/, "");
+  const base = appBasename();
+  return base || "";
+}
 
 /** Resolve API-hosted media paths (e.g. member avatars) for use in img src. */
 export function apiMediaUrl(url: string | undefined | null): string {
@@ -8,7 +18,7 @@ export function apiMediaUrl(url: string | undefined | null): string {
   if (url.startsWith("http") || url.startsWith("//") || url.startsWith("data:") || url.startsWith("blob:")) {
     return url;
   }
-  return `${API_BASE}${url}`;
+  return `${apiRoot()}${url}`;
 }
 
 /** Set when fetch fails (API not running or wrong VITE_API_URL). */
@@ -50,12 +60,13 @@ export async function apiFetch<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<{ data?: T; error?: string; status: number }> {
-  if (apiUnreachable && !API_BASE) {
+  const root = apiRoot();
+  if (apiUnreachable && !root && typeof window === "undefined") {
     return { error: "Network error", status: 0 };
   }
   try {
     const isFormData = typeof FormData !== "undefined" && init.body instanceof FormData;
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetch(`${root}${path}`, {
       ...init,
       credentials: "include",
       headers: {
@@ -87,9 +98,11 @@ export async function apiFetch<T>(
 
 export function googleOAuthStartUrl() {
   const path = "/api/auth/google";
-  if (API_BASE) return `${API_BASE.replace(/\/+$/, "")}${path}`;
+  const root = apiRoot();
+  if (root) return `${root}${path}`;
   if (typeof window !== "undefined") {
-    return `${window.location.origin}${path}`;
+    const base = appBasename() || "";
+    return `${window.location.origin}${base}${path}`;
   }
   return path;
 }

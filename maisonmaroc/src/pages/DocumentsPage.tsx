@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Download, FileText, Search } from "lucide-react";
 import PageHeader from "../components/PageHeader";
 import PageMeta from "../components/PageMeta";
+import { apiRoot } from "../lib/api";
 import { fetchDocuments, type PublicDocument } from "../lib/contentApi";
 import { formatDate } from "../lib/format";
 import {
@@ -31,8 +32,7 @@ const FR = {
 };
 
 function documentDownloadHref(fileUrl: string) {
-  const base = import.meta.env.VITE_API_URL ?? "";
-  return fileUrl.startsWith("http") ? fileUrl : `${base}${fileUrl}`;
+  return fileUrl.startsWith("http") ? fileUrl : `${apiRoot()}${fileUrl}`;
 }
 
 function suggestedPdfFilename(titleFr: string, docId: string) {

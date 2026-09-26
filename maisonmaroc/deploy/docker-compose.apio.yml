@@ -1,0 +1,26 @@
+# Optional APIO backend only — does NOT replace Dribex stack.
+# Nginx on the host proxies https://dribex.ma/APIO/api/ → apio-server:3001
+services:
+  apio-server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.apio-server
+    restart: unless-stopped
+    env_file:
+      - ../server/.env
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+    volumes:
+      - apio-data:/data
+    ports:
+      - "127.0.0.1:3001:3001"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  apio-data:

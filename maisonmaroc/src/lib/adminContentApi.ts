@@ -1,6 +1,4 @@
-import { apiFetch } from "./api";
-
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
+import { apiFetch, apiRoot } from "./api";
 
 export interface AdminNewsRow {
   id: string;
@@ -121,7 +119,7 @@ export async function uploadAdminDocumentFile(id: string, file: File) {
   const fd = new FormData();
   fd.append("file", file);
   try {
-    const res = await fetch(`${API_BASE}/api/admin/documents/${id}/upload`, {
+    const res = await fetch(`${apiRoot()}/api/admin/documents/${id}/upload`, {
       method: "POST",
       credentials: "include",
       body: fd,

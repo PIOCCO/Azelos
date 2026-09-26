@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Download, Search } from "lucide-react";
-import { apiFetch } from "../../lib/api";
+import { apiFetch, apiRoot } from "../../lib/api";
 import type { OwnerDocument } from "../../lib/ownerPortalTypes";
 import { useLocale } from "../../lib/useLocale";
 import { PortalEmpty, PortalError, PortalLoading } from "../../components/owner/PortalStates";
-
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 export default function OwnerDocumentsPage() {
   const { t, L } = useLocale();
@@ -36,7 +34,7 @@ export default function OwnerDocumentsPage() {
 
   const download = (doc: OwnerDocument) => {
     if (!doc.fileUrl) return;
-    const url = doc.fileUrl.startsWith("http") ? doc.fileUrl : `${API_BASE}${doc.fileUrl}`;
+    const url = doc.fileUrl.startsWith("http") ? doc.fileUrl : `${apiRoot()}${doc.fileUrl}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 

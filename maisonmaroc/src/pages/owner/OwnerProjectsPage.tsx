@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Plus, Search } from "lucide-react";
 import { apiFetch } from "../../lib/api";
 import type { OwnerProjectListItem } from "../../lib/ownerPortalTypes";
@@ -9,6 +9,7 @@ import { PortalEmpty, PortalError, PortalLoading } from "../../components/owner/
 
 export default function OwnerProjectsPage() {
   const { t, L } = useLocale();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [catalog, setCatalog] = useState<OwnerProjectListItem[]>([]);
   const [drafts, setDrafts] = useState<OwnerProjectListItem[]>([]);
@@ -90,7 +91,7 @@ export default function OwnerProjectsPage() {
           <section>
             <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink-500">{t("ownerPortal.myDrafts")}</h2>
             {allDrafts.length === 0 ? (
-              <PortalEmpty message={t("ownerPortal.noDraftProjects")} actionLabel={t("ownerPortal.addProject")} onAction={() => window.location.assign("/owner/projects/new")} />
+              <PortalEmpty message={t("ownerPortal.noDraftProjects")} actionLabel={t("ownerPortal.addProject")} onAction={() => navigate("/owner/projects/new")} />
             ) : (
               <div className="overflow-x-auto rounded-xl border border-ink-100 bg-white">
                 <table className="min-w-full text-sm">

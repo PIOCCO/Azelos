@@ -1,14 +1,12 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Star, Trash2, Upload } from "lucide-react";
-import { apiFetch } from "../../lib/api";
+import { apiFetch, apiRoot } from "../../lib/api";
 import type { OwnerProjectImage, OwnerProjectListItem } from "../../lib/ownerPortalTypes";
 import { useLocale } from "../../lib/useLocale";
 import { cityById, cities } from "../../data/cities";
 import ProjectStatusBadge from "../../components/owner/ProjectStatusBadge";
 import { PortalError, PortalLoading, PortalSuccessBanner } from "../../components/owner/PortalStates";
-
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 export default function OwnerProjectEditPage() {
   const { id } = useParams();
@@ -122,7 +120,7 @@ export default function OwnerProjectEditPage() {
     const fd = new FormData();
     fd.append("file", file);
     try {
-      const res = await fetch(`${API_BASE}/api/owner/projects/${id}/images`, {
+      const res = await fetch(`${apiRoot()}/api/owner/projects/${id}/images`, {
         method: "POST",
         credentials: "include",
         body: fd,

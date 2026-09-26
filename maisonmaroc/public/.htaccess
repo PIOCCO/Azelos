@@ -1,4 +1,5 @@
-# SPA fallback when the app is deployed in a subdirectory (e.g. /AIPO/).
+# SPA fallback when the app is deployed in a subdirectory (e.g. /APIO/ on dribex.ma).
+# Set RewriteBase in the server/vhost if Apache serves this folder as /APIO/.
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteCond %{REQUEST_FILENAME} !-f
