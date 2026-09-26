@@ -69,7 +69,7 @@ export default function SiteHeader() {
           className="grid h-10 w-10 place-items-center text-ink-800 lg:hidden"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          aria-label="Menu"
+          aria-label={open ? t("common.close") : t("homePage.footer.navigation")}
         >
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>

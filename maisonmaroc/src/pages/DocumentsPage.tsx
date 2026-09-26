@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { Download, ExternalLink, Eye, FileText, Search } from "lucide-react";
 import PageHeader from "../components/PageHeader";
@@ -57,12 +58,29 @@ function availabilityBadge(doc: PublicDocument) {
   return null;
 }
 
+const CATEGORY_PARAM = new Set<string>(DOCUMENT_CATEGORY_ORDER);
+
 export default function DocumentsPage() {
+  const [searchParams] = useSearchParams();
   const [docs, setDocs] = useState<PublicDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<DocumentCategoryId | "all">("all");
+  const initialCategory = searchParams.get("category");
+  const [category, setCategory] = useState<DocumentCategoryId | "all">(() =>
+    initialCategory && CATEGORY_PARAM.has(initialCategory)
+      ? (initialCategory as DocumentCategoryId)
+      : "all",
+  );
+
+  useEffect(() => {
+    const param = searchParams.get("category");
+    if (param && CATEGORY_PARAM.has(param)) {
+      setCategory(param as DocumentCategoryId);
+    } else if (!param) {
+      setCategory("all");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     let cancelled = false;

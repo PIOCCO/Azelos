@@ -53,6 +53,7 @@ export default function App() {
         <Route path="/legal/confidentialite" element={<PrivacyPage />} />
         <Route path="/legal/cookies" element={<CookiesPage />} />
         <Route path="/legal/cgu" element={<TermsPage />} />
+        <Route path="/legal/conditions-utilisation" element={<TermsPage />} />
         <Route path="/403" element={<ForbiddenPage />} />
         <Route path="/429" element={<TooManyRequestsPage />} />
 

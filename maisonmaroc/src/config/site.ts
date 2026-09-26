@@ -22,4 +22,5 @@ export const PUBLIC_ROUTES = [
   "/legal/confidentialite",
   "/legal/cookies",
   "/legal/cgu",
+  "/legal/conditions-utilisation",
 ] as const;
