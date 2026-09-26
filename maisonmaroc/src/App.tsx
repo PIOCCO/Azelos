@@ -24,7 +24,9 @@ import OwnerMembershipPage from "./pages/owner/OwnerMembershipPage";
 import OwnerRequestsPage from "./pages/owner/OwnerRequestsPage";
 import OwnerNotificationsPage from "./pages/owner/OwnerNotificationsPage";
 import OwnerSettingsPage from "./pages/owner/OwnerSettingsPage";
-import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminMembersPage from "./pages/admin/AdminMembersPage";
+import AdminMemberDetailPage from "./pages/admin/AdminMemberDetailPage";
+import AdminProjectsPage from "./pages/admin/AdminProjectsPage";
 import MessagesPage from "./pages/MessagesPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import TooManyRequestsPage from "./pages/TooManyRequestsPage";
@@ -104,7 +106,9 @@ export default function App() {
         </Route>
 
         <Route element={<ProtectedRoute roles={["SUPER_ADMIN"]} loginPath="/admin/login" />}>
-          <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin" element={<AdminMembersPage />} />
+          <Route path="/admin/members/:id" element={<AdminMemberDetailPage />} />
+          <Route path="/admin/projects" element={<AdminProjectsPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

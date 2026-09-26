@@ -2,10 +2,12 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+import { apiFetch } from "../lib/api";
 import { properties as seedProperties } from "../data/properties";
 import { owners as seedOwners } from "../data/owners";
 import type { Owner, Property } from "../data/types";
@@ -66,6 +68,23 @@ const ListingsContext = createContext<ListingsContextValue | undefined>(
 
 export function ListingsProvider({ children }: { children: ReactNode }) {
   const [published, setPublished] = useState<PublishedBundle[]>(loadPublished);
+  const [memberPublished, setMemberPublished] = useState<PublishedBundle[]>([]);
+
+  useEffect(() => {
+    apiFetch<{ properties: Property[]; owners: Owner[] }>("/api/listings/member-properties").then(
+      ({ data }) => {
+        if (!data?.properties?.length) return;
+        const bundles: PublishedBundle[] = data.properties
+          .map((property) => {
+            const owner = data.owners?.find((o) => o.id === property.ownerId);
+            if (!owner) return null;
+            return { property, owner };
+          })
+          .filter((b): b is PublishedBundle => b !== null);
+        setMemberPublished(bundles);
+      },
+    );
+  }, []);
 
   const publishedProperties = useMemo(
     () => published.map((b) => b.property),
@@ -76,15 +95,27 @@ export function ListingsProvider({ children }: { children: ReactNode }) {
     [published],
   );
 
-  const properties = useMemo(
-    () => [...seedProperties, ...publishedProperties],
-    [publishedProperties],
+  const memberProperties = useMemo(
+    () => memberPublished.map((b) => b.property),
+    [memberPublished],
+  );
+  const memberOwners = useMemo(
+    () => memberPublished.map((b) => b.owner),
+    [memberPublished],
   );
 
-  const owners = useMemo(
-    () => [...seedOwners, ...publishedOwners],
-    [publishedOwners],
+  const properties = useMemo(
+    () => [...seedProperties, ...publishedProperties, ...memberProperties],
+    [publishedProperties, memberProperties],
   );
+
+  const owners = useMemo(() => {
+    const byId = new Map<string, Owner>();
+    for (const o of [...seedOwners, ...publishedOwners, ...memberOwners]) {
+      if (!byId.has(o.id)) byId.set(o.id, o);
+    }
+    return [...byId.values()];
+  }, [publishedOwners, memberOwners]);
 
   const propertyById = useCallback(
     (id: string) => properties.find((p) => p.id === id),

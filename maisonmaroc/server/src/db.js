@@ -191,5 +191,57 @@ function ensureColumns(db) {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS idx_owner_activity_profile ON owner_activity_log(owner_profile_id);
+
+    CREATE TABLE IF NOT EXISTS apio_member_profiles (
+      id TEXT PRIMARY KEY,
+      name_fr TEXT NOT NULL DEFAULT '',
+      name_ar TEXT NOT NULL DEFAULT '',
+      agency_fr TEXT,
+      agency_ar TEXT,
+      profile_type TEXT NOT NULL DEFAULT 'agency',
+      city_id TEXT,
+      phone TEXT,
+      whatsapp TEXT,
+      email TEXT,
+      avatar_url TEXT,
+      bio_fr TEXT,
+      bio_ar TEXT,
+      website TEXT,
+      verified INTEGER NOT NULL DEFAULT 0,
+      member_since TEXT,
+      contact_name TEXT,
+      contact_position TEXT,
+      contact_phone TEXT,
+      contact_email TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS admin_audit_log (
+      id TEXT PRIMARY KEY,
+      admin_user_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      target_type TEXT,
+      target_id TEXT,
+      detail TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_admin_audit_created ON admin_audit_log(created_at DESC);
   `);
+
+  addCol("owner_project_drafts", "slug", "TEXT");
+  addCol("owner_project_drafts", "listing_transaction", "TEXT NOT NULL DEFAULT 'sale'");
+  addCol("owner_project_drafts", "property_type", "TEXT NOT NULL DEFAULT 'apartment'");
+  addCol("owner_project_drafts", "price", "INTEGER NOT NULL DEFAULT 0");
+  addCol("owner_project_drafts", "surface", "REAL NOT NULL DEFAULT 0");
+  addCol("owner_project_drafts", "bedrooms", "INTEGER NOT NULL DEFAULT 0");
+  addCol("owner_project_drafts", "bathrooms", "INTEGER NOT NULL DEFAULT 1");
+  addCol("owner_project_drafts", "furnished", "INTEGER NOT NULL DEFAULT 0");
+  addCol("owner_project_drafts", "amenities_json", "TEXT NOT NULL DEFAULT '[]'");
+  addCol("owner_project_drafts", "neighborhood_fr", "TEXT NOT NULL DEFAULT ''");
+  addCol("owner_project_drafts", "neighborhood_ar", "TEXT NOT NULL DEFAULT ''");
+  addCol("owner_project_drafts", "lat", "REAL");
+  addCol("owner_project_drafts", "lng", "REAL");
+  addCol("owner_project_drafts", "hidden", "INTEGER NOT NULL DEFAULT 0");
+  addCol("owner_project_drafts", "published_at", "TEXT");
 }

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { hashPassword, verifyPassword } from "./auth.js";
-import { getOwnerProfileById } from "./ownersCatalog.js";
+import { getMemberProfileById } from "./memberProfiles.js";
+import { generateSlugForPublish } from "./memberListings.js";
 import { listPropertiesForOwnerProfile } from "./catalog.js";
 import { listMemberDocuments, getMemberDocumentForDownload } from "./content.js";
 import { unreadCountForUser } from "./messages.js";
@@ -76,7 +77,7 @@ export function computeProfileCompletion(publicProfile, user) {
 
 export function getOwnerDashboard(db, user) {
   const ownerProfileId = requireOwnerProfile(user);
-  const seed = getOwnerProfileById(ownerProfileId);
+  const seed = getMemberProfileById(db, ownerProfileId);
   const overrides = getOverrides(db, ownerProfileId);
   const publicProfile = mergePublicProfile(seed, overrides);
   const completion = computeProfileCompletion(publicProfile, user);
@@ -108,7 +109,7 @@ export function getOwnerDashboard(db, user) {
 
 export function getOwnerProfileBundle(db, user) {
   const ownerProfileId = requireOwnerProfile(user);
-  const seed = getOwnerProfileById(ownerProfileId);
+  const seed = getMemberProfileById(db, ownerProfileId);
   if (!seed) {
     const err = new Error("Unknown member profile id");
     err.status = 404;
@@ -153,7 +154,7 @@ export function getOwnerProfileBundle(db, user) {
 
 export function patchOwnerProfile(db, user, body) {
   const ownerProfileId = requireOwnerProfile(user);
-  if (!getOwnerProfileById(ownerProfileId)) {
+  if (!getMemberProfileById(db, ownerProfileId)) {
     const err = new Error("Unknown member profile id");
     err.status = 404;
     throw err;
@@ -295,14 +296,53 @@ export function listOwnerProjects(db, user, { q = "", status = "" } = {}) {
 function rowToDraft(r) {
   return {
     id: r.id,
+    slug: r.slug || null,
     title: { fr: r.title_fr, ar: r.title_ar },
     description: { fr: r.description_fr, ar: r.description_ar },
     cityId: r.city_id,
     status: r.status,
     source: "draft",
+    transaction: r.listing_transaction || "sale",
+    propertyType: r.property_type || "apartment",
+    price: Number(r.price) || 0,
+    surface: Number(r.surface) || 0,
+    bedrooms: Number(r.bedrooms) || 0,
+    bathrooms: Number(r.bathrooms) || 1,
+    furnished: Boolean(r.furnished),
+    neighborhood: { fr: r.neighborhood_fr || "", ar: r.neighborhood_ar || "" },
     updatedAt: r.updated_at,
     createdAt: r.created_at,
+    publishedAt: r.published_at,
   };
+}
+
+function pickListingFields(body, row) {
+  const amenities =
+    body.amenities !== undefined
+      ? JSON.stringify(Array.isArray(body.amenities) ? body.amenities.slice(0, 20) : [])
+      : row?.amenities_json;
+  return {
+    listing_transaction:
+      body.transaction !== undefined ? String(body.transaction).slice(0, 16) : row?.listing_transaction,
+    property_type: body.propertyType !== undefined ? String(body.propertyType).slice(0, 32) : row?.property_type,
+    price: body.price !== undefined ? Math.max(0, Number(body.price) || 0) : row?.price,
+    surface: body.surface !== undefined ? Math.max(0, Number(body.surface) || 0) : row?.surface,
+    bedrooms: body.bedrooms !== undefined ? Math.max(0, Number(body.bedrooms) || 0) : row?.bedrooms,
+    bathrooms: body.bathrooms !== undefined ? Math.max(1, Number(body.bathrooms) || 1) : row?.bathrooms,
+    furnished: body.furnished !== undefined ? (body.furnished ? 1 : 0) : row?.furnished,
+    neighborhood_fr:
+      body.neighborhoodFr !== undefined ? String(body.neighborhoodFr).slice(0, 200) : row?.neighborhood_fr,
+    neighborhood_ar:
+      body.neighborhoodAr !== undefined ? String(body.neighborhoodAr).slice(0, 200) : row?.neighborhood_ar,
+    amenities_json: amenities,
+  };
+}
+
+function applyPublish(db, row, nextStatus) {
+  if (nextStatus !== "published") return { published_at: row.published_at || null, slug: row.slug || null };
+  const slug = generateSlugForPublish(db, row);
+  const published_at = row.published_at || new Date().toISOString();
+  return { published_at, slug };
 }
 
 export function getOwnerProject(db, user, projectId) {
@@ -317,7 +357,28 @@ export function getOwnerProject(db, user, projectId) {
   return { project: rowToDraft(row), images };
 }
 
+function rejectPrivilegedProjectFields(body) {
+  const forbidden = [
+    "role",
+    "ownerProfileId",
+    "owner_profile_id",
+    "isAdmin",
+    "approved",
+    "hidden",
+    "ownerId",
+    "owner_id",
+  ];
+  for (const k of forbidden) {
+    if (body && body[k] !== undefined) {
+      const err = new Error("Field cannot be modified");
+      err.status = 400;
+      throw err;
+    }
+  }
+}
+
 export function createOwnerProject(db, user, body) {
+  rejectPrivilegedProjectFields(body);
   const ownerProfileId = requireOwnerProfile(user);
   const id = randomUUID();
   const now = new Date().toISOString();
@@ -328,9 +389,19 @@ export function createOwnerProject(db, user, body) {
     err.status = 400;
     throw err;
   }
+  const listing = pickListingFields(body, null);
+  const initialStatus = body.publish ? "published" : "draft";
+  if (initialStatus === "published" && !body.cityId) {
+    const err = new Error("City is required to publish");
+    err.status = 400;
+    throw err;
+  }
   db.prepare(
-    `INSERT INTO owner_project_drafts (id, owner_profile_id, title_fr, title_ar, description_fr, description_ar, city_id, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?)`,
+    `INSERT INTO owner_project_drafts (
+      id, owner_profile_id, title_fr, title_ar, description_fr, description_ar, city_id, status,
+      listing_transaction, property_type, price, surface, bedrooms, bathrooms, furnished,
+      amenities_json, neighborhood_fr, neighborhood_ar, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     id,
     ownerProfileId,
@@ -339,14 +410,32 @@ export function createOwnerProject(db, user, body) {
     String(body.descriptionFr ?? "").slice(0, 10000),
     String(body.descriptionAr ?? "").slice(0, 10000),
     body.cityId ? String(body.cityId).slice(0, 64) : null,
+    initialStatus,
+    listing.listing_transaction || "sale",
+    listing.property_type || "apartment",
+    listing.price ?? 0,
+    listing.surface ?? 0,
+    listing.bedrooms ?? 0,
+    listing.bathrooms ?? 1,
+    listing.furnished ?? 0,
+    listing.amenities_json || "[]",
+    listing.neighborhood_fr || "",
+    listing.neighborhood_ar || "",
     now,
     now,
   );
+  if (initialStatus === "published") {
+    const row = db.prepare(`SELECT * FROM owner_project_drafts WHERE id = ?`).get(id);
+    const pub = applyPublish(db, row, "published");
+    db.prepare(`UPDATE owner_project_drafts SET slug = ?, published_at = ? WHERE id = ?`).run(pub.slug, pub.published_at, id);
+    logOwnerActivity(db, { ownerProfileId, userId: user.id, action: "project_published", detail: id });
+  }
   logOwnerActivity(db, { ownerProfileId, userId: user.id, action: "project_created", detail: id });
   return getOwnerProject(db, user, id);
 }
 
 export function updateOwnerProject(db, user, projectId, body) {
+  rejectPrivilegedProjectFields(body);
   const ownerProfileId = requireOwnerProfile(user);
   const row = db.prepare(`SELECT * FROM owner_project_drafts WHERE id = ?`).get(projectId);
   if (!row || row.owner_profile_id !== ownerProfileId) {
@@ -354,31 +443,54 @@ export function updateOwnerProject(db, user, projectId, body) {
     err.status = 404;
     throw err;
   }
-  if (body.status === "published") {
-    const err = new Error("Publication is managed by APIO");
-    err.status = 400;
-    throw err;
-  }
-  const allowedStatus = new Set(["draft", "pending", "archived"]);
-  const nextStatus = body.status !== undefined ? String(body.status) : row.status;
-  if (!allowedStatus.has(nextStatus) && nextStatus !== row.status) {
+  let nextStatus = body.status !== undefined ? String(body.status) : row.status;
+  if (body.publish === true) nextStatus = "published";
+  const allowedStatus = new Set(["draft", "published", "archived"]);
+  if (!allowedStatus.has(nextStatus)) {
     const err = new Error("Invalid status");
     err.status = 400;
     throw err;
   }
+  const cityId =
+    body.cityId !== undefined ? (body.cityId ? String(body.cityId).slice(0, 64) : null) : row.city_id;
+  if (nextStatus === "published" && !cityId) {
+    const err = new Error("City is required to publish");
+    err.status = 400;
+    throw err;
+  }
+  const listing = pickListingFields(body, row);
   const now = new Date().toISOString();
+  const mergedRow = { ...row, ...listing, city_id: cityId, status: nextStatus };
+  const pub = applyPublish(db, mergedRow, nextStatus);
   db.prepare(
-    `UPDATE owner_project_drafts SET title_fr=?, title_ar=?, description_fr=?, description_ar=?, city_id=?, status=?, updated_at=? WHERE id=?`,
+    `UPDATE owner_project_drafts SET title_fr=?, title_ar=?, description_fr=?, description_ar=?, city_id=?, status=?,
+     listing_transaction=?, property_type=?, price=?, surface=?, bedrooms=?, bathrooms=?, furnished=?,
+     amenities_json=?, neighborhood_fr=?, neighborhood_ar=?, slug=?, published_at=?, updated_at=? WHERE id=?`,
   ).run(
     body.titleFr !== undefined ? String(body.titleFr).slice(0, 500) : row.title_fr,
     body.titleAr !== undefined ? String(body.titleAr).slice(0, 500) : row.title_ar,
     body.descriptionFr !== undefined ? String(body.descriptionFr).slice(0, 10000) : row.description_fr,
     body.descriptionAr !== undefined ? String(body.descriptionAr).slice(0, 10000) : row.description_ar,
-    body.cityId !== undefined ? (body.cityId ? String(body.cityId).slice(0, 64) : null) : row.city_id,
+    cityId,
     nextStatus,
+    listing.listing_transaction || row.listing_transaction || "sale",
+    listing.property_type || row.property_type || "apartment",
+    listing.price ?? row.price ?? 0,
+    listing.surface ?? row.surface ?? 0,
+    listing.bedrooms ?? row.bedrooms ?? 0,
+    listing.bathrooms ?? row.bathrooms ?? 1,
+    listing.furnished ?? row.furnished ?? 0,
+    listing.amenities_json || row.amenities_json || "[]",
+    listing.neighborhood_fr ?? row.neighborhood_fr ?? "",
+    listing.neighborhood_ar ?? row.neighborhood_ar ?? "",
+    pub.slug || row.slug,
+    pub.published_at,
     now,
     projectId,
   );
+  if (nextStatus === "published" && row.status !== "published") {
+    logOwnerActivity(db, { ownerProfileId, userId: user.id, action: "project_published", detail: projectId });
+  }
   logOwnerActivity(db, { ownerProfileId, userId: user.id, action: "project_updated", detail: projectId });
   return getOwnerProject(db, user, projectId);
 }

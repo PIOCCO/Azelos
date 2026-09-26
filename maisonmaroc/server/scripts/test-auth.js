@@ -270,6 +270,27 @@ async function main() {
         headers: { Cookie: ownerLogin.cookie },
       });
       assert("OWNER project IDOR delete blocked", idorDel.status === 404);
+
+      const pub = await req("/api/owner/projects/" + myProjectId, {
+        method: "PATCH",
+        headers: { Cookie: ownerLogin.cookie },
+        body: JSON.stringify({
+          publish: true,
+          cityId: "oujda",
+          titleFr: "Projet public test",
+          titleAr: "اختبار",
+          price: 1000000,
+        }),
+      });
+      assert("OWNER publish project", pub.status === 200 && pub.body?.project?.status === "published");
+
+      const listings = await req("/api/listings/member-properties");
+      assert("Public member listings", listings.status === 200);
+      if (pub.status === 200) {
+        const slug = pub.body?.project?.slug;
+        const found = (listings.body?.properties || []).some((p) => p.id === myProjectId || (slug && p.slug === slug));
+        assert("Published project in public listings", found);
+      }
     }
   }
 

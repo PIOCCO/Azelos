@@ -27,6 +27,12 @@ export default function OwnerProjectEditPage() {
     descriptionAr: "",
     cityId: "",
     status: "draft",
+    transaction: "sale" as "sale" | "rent",
+    propertyType: "apartment",
+    price: "",
+    surface: "",
+    bedrooms: "0",
+    bathrooms: "1",
   });
 
   const load = useCallback(async () => {
@@ -46,6 +52,12 @@ export default function OwnerProjectEditPage() {
         descriptionAr: data.project.description?.ar ?? "",
         cityId: data.project.cityId ?? "",
         status: data.project.status,
+        transaction: (data.project as { transaction?: "sale" | "rent" }).transaction ?? "sale",
+        propertyType: (data.project as { propertyType?: string }).propertyType ?? "apartment",
+        price: String((data.project as { price?: number }).price ?? ""),
+        surface: String((data.project as { surface?: number }).surface ?? ""),
+        bedrooms: String((data.project as { bedrooms?: number }).bedrooms ?? 0),
+        bathrooms: String((data.project as { bathrooms?: number }).bathrooms ?? 1),
       });
     }
   }, [id, isNew]);
@@ -54,18 +66,26 @@ export default function OwnerProjectEditPage() {
     load();
   }, [load]);
 
-  const save = async (e: FormEvent, submitPending = false) => {
+  const buildPayload = (publish: boolean) => ({
+    titleFr: form.titleFr,
+    titleAr: form.titleAr,
+    descriptionFr: form.descriptionFr,
+    descriptionAr: form.descriptionAr,
+    cityId: form.cityId || null,
+    transaction: form.transaction,
+    propertyType: form.propertyType,
+    price: Number(form.price) || 0,
+    surface: Number(form.surface) || 0,
+    bedrooms: Number(form.bedrooms) || 0,
+    bathrooms: Number(form.bathrooms) || 1,
+    ...(publish ? { publish: true } : { status: form.status === "published" ? "published" : "draft" }),
+  });
+
+  const save = async (e: FormEvent, publish = false) => {
     e.preventDefault();
     setSuccess(null);
     setError(null);
-    const payload = {
-      titleFr: form.titleFr,
-      titleAr: form.titleAr,
-      descriptionFr: form.descriptionFr,
-      descriptionAr: form.descriptionAr,
-      cityId: form.cityId || null,
-      status: submitPending ? "pending" : form.status === "pending" ? "pending" : form.status,
-    };
+    const payload = buildPayload(publish);
     if (isNew) {
       const { data, error: err } = await apiFetch<{ project: OwnerProjectListItem }>("/api/owner/projects", {
         method: "POST",
@@ -81,7 +101,8 @@ export default function OwnerProjectEditPage() {
       if (err) setError(err);
       else if (data) {
         setProject(data.project);
-        setSuccess(submitPending ? t("ownerPortal.projectSubmitted") : t("ownerPortal.saved"));
+        setSuccess(publish ? t("ownerPortal.projectPublished") : t("ownerPortal.saved"));
+        if (publish) setForm((f) => ({ ...f, status: "published" }));
       }
     }
   };
@@ -171,17 +192,43 @@ export default function OwnerProjectEditPage() {
           <span className="font-semibold">{t("ownerPortal.descriptionAr")}</span>
           <textarea dir="rtl" className="input mt-1 min-h-[120px]" value={form.descriptionAr} onChange={(e) => setForm({ ...form, descriptionAr: e.target.value })} />
         </label>
-        <label className="block text-sm sm:max-w-xs">
-          <span className="font-semibold">{t("ownerPortal.city")}</span>
-          <select className="input mt-1" value={form.cityId} onChange={(e) => setForm({ ...form, cityId: e.target.value })}>
-            <option value="">—</option>
-            {cities.map((c) => (
-              <option key={c.id} value={c.id}>
-                {L(c.name)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <label className="block text-sm">
+            <span className="font-semibold">{t("ownerPortal.city")}</span>
+            <select required className="input mt-1" value={form.cityId} onChange={(e) => setForm({ ...form, cityId: e.target.value })}>
+              <option value="">—</option>
+              {cities.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {L(c.name)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm">
+            <span className="font-semibold">{t("property.transaction")}</span>
+            <select className="input mt-1" value={form.transaction} onChange={(e) => setForm({ ...form, transaction: e.target.value as "sale" | "rent" })}>
+              <option value="sale">{t("filters.sale")}</option>
+              <option value="rent">{t("filters.rent")}</option>
+            </select>
+          </label>
+          <label className="block text-sm">
+            <span className="font-semibold">{t("property.type")}</span>
+            <select className="input mt-1" value={form.propertyType} onChange={(e) => setForm({ ...form, propertyType: e.target.value })}>
+              <option value="apartment">{t("property.types.apartment")}</option>
+              <option value="villa">{t("property.types.villa")}</option>
+              <option value="house">{t("property.types.house")}</option>
+              <option value="land">{t("property.types.land")}</option>
+            </select>
+          </label>
+          <label className="block text-sm">
+            <span className="font-semibold">{t("property.price")}</span>
+            <input dir="ltr" type="number" min={0} className="input mt-1" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+          </label>
+          <label className="block text-sm">
+            <span className="font-semibold">{t("property.surface")}</span>
+            <input dir="ltr" type="number" min={0} className="input mt-1" value={form.surface} onChange={(e) => setForm({ ...form, surface: e.target.value })} />
+          </label>
+        </div>
         {form.cityId && cityById(form.cityId) && (
           <p className="text-xs text-ink-500">{L(cityById(form.cityId)!.name)}</p>
         )}
@@ -189,11 +236,9 @@ export default function OwnerProjectEditPage() {
           <button type="submit" className="btn-primary">
             {t("ownerPortal.saveDraft")}
           </button>
-          {!isNew && (
-            <button type="button" className="btn-secondary" onClick={(e) => save(e as unknown as FormEvent, true)}>
-              {t("ownerPortal.submitForReview")}
-            </button>
-          )}
+          <button type="button" className="btn-primary" onClick={(e) => save(e as unknown as FormEvent, true)}>
+            {t("ownerPortal.publishProject")}
+          </button>
           {!isNew && (
             <button type="button" className="btn-secondary text-red-700" onClick={removeProject}>
               <Trash2 size={16} className="inline" aria-hidden /> {t("adminDash.delete")}

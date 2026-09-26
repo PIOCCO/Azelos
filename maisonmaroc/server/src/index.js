@@ -58,6 +58,13 @@ import {
 import { validateContactBody } from "./contact.js";
 import { registerAdminContentRoutes } from "./adminContentRoutes.js";
 import { registerOwnerRoutes } from "./ownerRoutes.js";
+import { registerAdminMemberRoutes } from "./adminMemberRoutes.js";
+import {
+  getPublishedMemberProperty,
+  getPublicProjectImage,
+  listPublishedMemberProperties,
+} from "./memberListings.js";
+import { getMemberProfileById, profileToPublicOwner } from "./memberProfiles.js";
 import { applySecurityMiddleware } from "./security.js";
 import { clampPagination, validateSlug, EMAIL_RE } from "./validateContent.js";
 import { ensureUploadDir, resolveStoredFile } from "./uploads.js";
@@ -193,6 +200,32 @@ app.get("/api/properties/:slugOrId", (req, res) => {
   const p = getPropertyBySlugOrId(req.params.slugOrId);
   if (!p) return res.status(404).json({ error: "Not found" });
   res.json({ property: p });
+});
+
+app.get("/api/listings/member-properties", publicContentLimiter, (_req, res) => {
+  const properties = listPublishedMemberProperties(db);
+  const ownerIds = [...new Set(properties.map((p) => p.ownerId))];
+  const owners = ownerIds
+    .map((id) => profileToPublicOwner(getMemberProfileById(db, id)))
+    .filter(Boolean);
+  res.json({ properties, owners });
+});
+
+app.get("/api/listings/member-properties/:slugOrId", publicContentLimiter, (req, res) => {
+  const property = getPublishedMemberProperty(db, req.params.slugOrId);
+  if (!property) return res.status(404).json({ error: "Not found" });
+  const owner = profileToPublicOwner(getMemberProfileById(db, property.ownerId));
+  res.json({ property, owner: owner || null });
+});
+
+app.get("/api/listings/project-images/:imageId/file", publicContentLimiter, (req, res) => {
+  const file = getPublicProjectImage(db, req.params.imageId);
+  if (!file) return res.status(404).json({ error: "Not found" });
+  const abs = resolveStoredFile(file.storageName);
+  if (!abs) return res.status(404).json({ error: "Not found" });
+  res.setHeader("Content-Type", file.mime);
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  fs.createReadStream(abs).pipe(res);
 });
 
 app.get("/api/content/news", publicContentLimiter, (req, res) => {
@@ -548,6 +581,12 @@ registerOwnerRoutes(app, db, {
   requireOwner,
   uploadLimiter,
   ownerMutationLimiter,
+});
+
+registerAdminMemberRoutes(app, db, {
+  requireAuth,
+  requireSuperAdmin,
+  adminMutationLimiter,
 });
 
 app.delete("/api/admin/owners/:id", requireAuth, requireSuperAdmin, (req, res) => {
