@@ -42,6 +42,9 @@ import MentionsLegalesPage from "./pages/legal/MentionsLegalesPage";
 import PrivacyPage from "./pages/legal/PrivacyPage";
 import CookiesPage from "./pages/legal/CookiesPage";
 import TermsPage from "./pages/legal/TermsPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 export default function App() {
   return (
@@ -76,6 +79,9 @@ export default function App() {
         <Route path="/register" element={<AuthPage mode="register" />} />
         <Route path="/client/login" element={<ClientAuthPage mode="login" />} />
         <Route path="/client/register" element={<ClientAuthPage mode="register" />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/client/account" element={<AccountPage />} />
         <Route path="/account" element={<Navigate to="/client/account" replace />} />
 

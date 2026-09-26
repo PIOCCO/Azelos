@@ -246,4 +246,24 @@ function ensureColumns(db) {
   addCol("owner_project_drafts", "published_at", "TEXT");
   addCol("owner_profile_overrides", "avatar_storage", "TEXT");
   addCol("owner_profile_overrides", "avatar_mime", "TEXT");
+  addCol("users", "email_verified_at", "TEXT");
+  db.prepare(
+    `UPDATE users SET email_verified_at = COALESCE(email_verified_at, created_at)
+     WHERE role = 'SUPER_ADMIN' AND email_verified_at IS NULL`,
+  ).run();
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS auth_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      purpose TEXT NOT NULL CHECK (purpose IN ('email_verify', 'password_reset')),
+      token_hash TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      used_at TEXT,
+      attempt_count INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_auth_tokens_user_purpose ON auth_tokens(user_id, purpose);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_tokens_hash ON auth_tokens(purpose, token_hash);
+  `);
 }

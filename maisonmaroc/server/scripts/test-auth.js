@@ -2,6 +2,8 @@
  * Authorization smoke tests against a running API (default http://localhost:3001).
  * Usage: npm run test:auth
  */
+import { markUserEmailVerified } from "./test-db-helper.js";
+
 const BASE = process.env.API_BASE || "http://localhost:3001";
 
 async function req(path, opts = {}) {
@@ -100,6 +102,7 @@ async function main() {
     }),
   });
   assert("Client register", reg.status === 201);
+  if (reg.status === 201) markUserEmailVerified(clientEmail);
 
   const clientLogin = await login("/api/auth/client/login", clientEmail, "password123");
   assert("Client login", clientLogin.status === 200);
@@ -158,6 +161,9 @@ async function main() {
       }),
     });
     assert("Admin create member", create2.status === 201);
+    if (create2.status === 201 && testOwnerEmail) {
+      markUserEmailVerified(testOwnerEmail);
+    }
 
     const newsList = await req("/api/admin/news", { headers: { Cookie: adminLogin.cookie } });
     assert("SUPER_ADMIN list news", newsList.status === 200);

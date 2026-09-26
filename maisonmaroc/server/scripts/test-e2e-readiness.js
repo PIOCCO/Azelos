@@ -2,6 +2,8 @@
  * End-to-end production-readiness scenario (local API on API_BASE).
  * Usage: npm run test:e2e
  */
+import { markUserEmailVerified } from "./test-db-helper.js";
+
 const BASE = process.env.API_BASE || "http://localhost:3001";
 
 async function req(path, opts = {}) {
@@ -75,6 +77,7 @@ async function main() {
   });
   assert("E2E: create Member A", createA.status === 201);
   const userAId = createA.body?.member?.id;
+  if (createA.status === 201) markUserEmailVerified(emailA);
 
   const createB = await req("/api/admin/members", {
     method: "POST",
@@ -88,6 +91,7 @@ async function main() {
     }),
   });
   assert("E2E: create Member B", createB.status === 201);
+  if (createB.status === 201) markUserEmailVerified(emailB);
 
   const memberA = await login("/api/auth/owner/login", emailA, pass);
   const memberB = await login("/api/auth/owner/login", emailB, pass);

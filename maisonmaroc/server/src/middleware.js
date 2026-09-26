@@ -6,6 +6,7 @@ import {
   signToken,
   ROLES,
 } from "./auth.js";
+import { assertEmailVerifiedForLogin } from "./authVerification.js";
 
 const COOKIE_NAME = "apio_token";
 
@@ -115,6 +116,7 @@ export const requireClient = requireRole(ROLES.CLIENT);
 
 export function loginUser(db, res, userRow) {
   assertActiveUser(userRow);
+  assertEmailVerifiedForLogin(userRow);
   const token = signAndSet(res, userRow);
   return { user: sanitizeUser(userRow), token };
 }

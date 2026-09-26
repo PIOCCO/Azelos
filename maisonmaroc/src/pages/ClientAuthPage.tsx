@@ -23,6 +23,7 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
   const [error, setError] = useState<string | null>(null);
   const [apiGoogleClientId, setApiGoogleClientId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [registerSent, setRegisterSent] = useState(false);
 
   const googleClientId = resolveGoogleClientId(apiGoogleClientId);
 
@@ -77,13 +78,21 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
     const body = isLogin
       ? { email, password }
       : { email, password, name, phone: phone || undefined };
-    const { data, error: err } = await apiFetch<{ user: typeof user }>(path, {
+    const { data, error: err } = await apiFetch<{ user?: typeof user; ok?: boolean; message?: string }>(path, {
       method: "POST",
       body: JSON.stringify(body),
     });
     setSubmitting(false);
-    if (err || !data?.user) {
-      setError(err || t("auth.errorGeneric"));
+    if (err) {
+      setError(err);
+      return;
+    }
+    if (!isLogin) {
+      setRegisterSent(true);
+      return;
+    }
+    if (!data?.user) {
+      setError(t("auth.errorGeneric"));
       return;
     }
     setUser(data.user);
@@ -125,6 +134,13 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
             </p>
           )}
 
+          {registerSent && (
+            <p className="mt-4 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800" role="status">
+              {t("auth.registerVerifySent")}
+            </p>
+          )}
+
+          {!registerSent && (
           <form onSubmit={submit} className="mt-6 space-y-4">
             {!isLogin && (
               <div>
@@ -160,13 +176,16 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
             </div>
             {isLogin && (
               <p className="text-end text-sm">
-                <span className="text-ink-400">{t("auth.forgotPassword")}</span>
+                <Link to="/forgot-password" className="text-brand-700 hover:underline">
+                  {t("auth.forgotPasswordLink")}
+                </Link>
               </p>
             )}
             <button type="submit" disabled={submitting} className="btn-primary w-full">
               {isLogin ? t("auth.login") : t("auth.register")}
             </button>
           </form>
+          )}
 
           <div className="mt-4">
             <p className="mb-2 text-center text-xs text-ink-400">{t("auth.orContinue")}</p>

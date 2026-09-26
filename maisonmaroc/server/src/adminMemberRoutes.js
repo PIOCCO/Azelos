@@ -17,9 +17,9 @@ export function registerAdminMemberRoutes(app, db, { requireAuth, requireSuperAd
     res.json({ members: listMembersForAdmin(db, { q, status, sort }) });
   });
 
-  app.post("/api/admin/members", requireAuth, requireSuperAdmin, adminMutationLimiter, (req, res) => {
+  app.post("/api/admin/members", requireAuth, requireSuperAdmin, adminMutationLimiter, async (req, res) => {
     try {
-      const result = createMemberWithAccount(db, req.user, req.body || {});
+      const result = await createMemberWithAccount(db, req.user, req.body || {});
       res.status(201).json({
         member: sanitizeUser(result.user),
         ownerProfileId: result.ownerProfileId,

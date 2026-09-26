@@ -12,7 +12,7 @@
     "documents:generate": "node scripts/generate-apio-pdfs.mjs",
     "test:auth": "node scripts/test-auth.js",
     "test:security": "node scripts/test-security.js",
-    "test": "node scripts/test-auth.js && node scripts/test-authorization.js && node scripts/test-security.js && node scripts/test-avatar-sync.js && node scripts/test-e2e-readiness.js",
+    "test": "node scripts/test-email-verification.js && node scripts/test-auth.js && node scripts/test-authorization.js && node scripts/test-security.js && node scripts/test-avatar-sync.js && node scripts/test-e2e-readiness.js",
     "test:e2e": "node scripts/test-e2e-readiness.js"
   },
   "dependencies": {
@@ -27,6 +27,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.4.0",
+    "nodemailer": "^6.10.1",
     "pdfkit": "^0.15.0",
     "uuid": "^10.0.0"
   }

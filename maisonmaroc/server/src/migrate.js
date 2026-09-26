@@ -28,6 +28,7 @@ if (!existingAdmin && adminEmail && adminPassword) {
       name: adminName,
       role: ROLES.SUPER_ADMIN,
       authProvider: "local",
+      emailVerifiedAt: new Date().toISOString(),
     });
     console.log(`Created SUPER_ADMIN: ${adminEmail}`);
   }

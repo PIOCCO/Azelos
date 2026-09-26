@@ -38,6 +38,8 @@ export function verifyToken(token) {
 
 export function sanitizeUser(row) {
   if (!row) return null;
+  const emailVerified =
+    row.auth_provider === "google" || Boolean(row.email_verified_at);
   return {
     id: row.id,
     email: row.email,
@@ -47,8 +49,27 @@ export function sanitizeUser(row) {
     status: row.status,
     authProvider: row.auth_provider,
     ownerProfileId: row.owner_profile_id,
+    emailVerified,
     createdAt: row.created_at,
   };
+}
+
+export function markEmailVerified(db, userId) {
+  const now = new Date().toISOString();
+  db.prepare(`UPDATE users SET email_verified_at = ?, updated_at = ? WHERE id = ?`).run(
+    now,
+    now,
+    userId,
+  );
+}
+
+export function setUserPassword(db, userId, plain) {
+  const now = new Date().toISOString();
+  db.prepare(`UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?`).run(
+    hashPassword(plain),
+    now,
+    userId,
+  );
 }
 
 export function findUserByEmail(db, email) {
@@ -71,8 +92,8 @@ export function createUser(db, input) {
   db.prepare(
     `INSERT INTO users (
       id, email, password_hash, name, phone, role, status,
-      auth_provider, google_subject, owner_profile_id, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      auth_provider, google_subject, owner_profile_id, email_verified_at, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     id,
     input.email.trim().toLowerCase(),
@@ -84,6 +105,7 @@ export function createUser(db, input) {
     input.authProvider ?? "local",
     input.googleSubject ?? null,
     input.ownerProfileId ?? null,
+    input.emailVerifiedAt ?? null,
     now,
     now,
   );

@@ -2,6 +2,8 @@
  * Profile avatar: public API URL must version on replace (cache-safe sync).
  * Usage: node scripts/test-avatar-sync.js
  */
+import { markUserEmailVerified } from "./test-db-helper.js";
+
 const BASE = process.env.API_BASE || "http://localhost:3001";
 
 async function req(path, opts = {}) {
@@ -88,6 +90,7 @@ async function main() {
     }),
   });
   assert("Avatar sync: create member", created.status === 201);
+  if (created.status === 201) markUserEmailVerified(email);
   const ownerProfileId = created.body?.member?.ownerProfileId;
   assert("Avatar sync: ownerProfileId present", Boolean(ownerProfileId));
 

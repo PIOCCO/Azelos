@@ -3,6 +3,7 @@ import { createMemberProfile, getMemberProfileById, updateMemberProfile, profile
 import { rowToPublicProperty } from "./memberListings.js";
 import { logAdminAction } from "./adminAudit.js";
 import { listMemberDocuments } from "./content.js";
+import { sendEmailVerification, isEmailConfigured } from "./authVerification.js";
 
 import { PRIVILEGED_ESCALATION_FIELDS, rejectForbiddenBodyFields } from "./securityFields.js";
 
@@ -61,7 +62,7 @@ export function listMembersForAdmin(db, { q = "", status = "", sort = "created_d
   return enriched;
 }
 
-export function createMemberWithAccount(db, adminUser, body) {
+export async function createMemberWithAccount(db, adminUser, body) {
   rejectMemberEscalation(body);
   const { email, password, name, phone, status, linkExistingProfileId, ...profileFields } = body || {};
   if (!email || !password || !name) {
@@ -125,6 +126,14 @@ export function createMemberWithAccount(db, adminUser, body) {
     targetId: userRow.id,
     detail: ownerProfileId,
   });
+
+  if (!isEmailConfigured()) {
+    const err = new Error("Email delivery is not configured. Cannot create member accounts.");
+    err.status = 503;
+    err.code = "EMAIL_NOT_CONFIGURED";
+    throw err;
+  }
+  await sendEmailVerification(db, userRow);
 
   return { user: userRow, ownerProfileId, profile: getMemberProfileById(db, ownerProfileId) };
 }

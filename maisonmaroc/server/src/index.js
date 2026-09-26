@@ -91,6 +91,16 @@ import { assertServerConfig } from "./startup.js";
 import { frontendRedirect } from "./redirect.js";
 import { validateDocumentId, validateUuid } from "./validateIds.js";
 import { logSecurityEvent } from "./securityLog.js";
+import { validatePasswordPolicy } from "./passwordPolicy.js";
+import {
+  sendEmailVerification,
+  sendPasswordReset,
+  verifyEmailWithToken,
+  resendVerificationEmail,
+  resetPasswordWithToken,
+  isEmailConfigured,
+} from "./authVerification.js";
+import { setUserPassword } from "./auth.js";
 
 assertServerConfig();
 
@@ -126,6 +136,12 @@ const rateLimitJson = (message) => ({
   handler(_req, res) {
     res.status(429).json({ error: message, code: "RATE_LIMIT" });
   },
+});
+
+const authEmailLimiter = rateLimit({
+  ...rateLimitJson("Too many email requests"),
+  max: Number(process.env.AUTH_EMAIL_RATE_MAX) || 10,
+  windowMs: 60 * 60 * 1000,
 });
 
 const authLimiter = rateLimit({
@@ -329,11 +345,18 @@ app.post("/api/auth/client/register", authLimiter, async (req, res) => {
     if (!EMAIL_RE.test(normalizedEmail) || normalizedEmail.length > 254) {
       return res.status(400).json({ error: "Invalid email" });
     }
-    if (String(password).length < 8) {
-      return res.status(400).json({ error: "Password must be at least 8 characters" });
+    const passCheck = validatePasswordPolicy(password);
+    if (!passCheck.ok) {
+      return res.status(400).json({ error: passCheck.error });
     }
     if (String(name).trim().length > 200) {
       return res.status(400).json({ error: "Invalid name" });
+    }
+    if (!isEmailConfigured()) {
+      return res.status(503).json({
+        error: "Email delivery is not configured. Registration is unavailable.",
+        code: "EMAIL_NOT_CONFIGURED",
+      });
     }
     if (findUserByEmail(db, normalizedEmail)) {
       return res.status(409).json({ error: "An account with this email already exists" });
@@ -346,8 +369,12 @@ app.post("/api/auth/client/register", authLimiter, async (req, res) => {
       role: ROLES.CLIENT,
       authProvider: "local",
     });
-    loginUser(db, res, row);
-    res.status(201).json({ user: sanitizeUser(row) });
+    await sendEmailVerification(db, row);
+    res.status(201).json({
+      ok: true,
+      message: "Account created. Check your email to verify before signing in.",
+      email: normalizedEmail,
+    });
   } catch (err) {
     handleAuthError(err, res);
   }
@@ -431,6 +458,69 @@ app.post("/api/auth/logout", (_req, res) => {
   res.json({ ok: true });
 });
 
+app.get("/api/auth/email/status", (_req, res) => {
+  res.json({
+    emailConfigured: isEmailConfigured(),
+    phoneOtpConfigured: false,
+  });
+});
+
+app.post("/api/auth/verify-email", authLimiter, (req, res) => {
+  try {
+    const token = String(req.body?.token || "").trim();
+    if (!token) return res.status(400).json({ error: "Token is required" });
+    const result = verifyEmailWithToken(db, token);
+    if (!result.ok) {
+      return res.status(result.status || 400).json({ error: result.error });
+    }
+    res.json({ ok: true, message: "Email verified. You can sign in now." });
+  } catch (err) {
+    handleAuthError(err, res);
+  }
+});
+
+app.post("/api/auth/verify-email/resend", authEmailLimiter, async (req, res) => {
+  try {
+    if (!isEmailConfigured()) {
+      return res.status(503).json({ error: "Email delivery is not configured", code: "EMAIL_NOT_CONFIGURED" });
+    }
+    const { email } = req.body || {};
+    const out = await resendVerificationEmail(db, email);
+    res.json(out);
+  } catch (err) {
+    handleAuthError(err, res);
+  }
+});
+
+app.post("/api/auth/password/forgot", authEmailLimiter, async (req, res) => {
+  try {
+    if (!isEmailConfigured()) {
+      return res.status(503).json({ error: "Email delivery is not configured", code: "EMAIL_NOT_CONFIGURED" });
+    }
+    const out = await sendPasswordReset(db, req.body?.email);
+    res.json(out);
+  } catch (err) {
+    handleAuthError(err, res);
+  }
+});
+
+app.post("/api/auth/password/reset", authLimiter, (req, res) => {
+  try {
+    const token = String(req.body?.token || "").trim();
+    const { password } = req.body || {};
+    const passCheck = validatePasswordPolicy(password);
+    if (!passCheck.ok) return res.status(400).json({ error: passCheck.error });
+    const result = resetPasswordWithToken(db, token, password);
+    if (!result.ok) {
+      return res.status(result.status || 400).json({ error: result.error });
+    }
+    setUserPassword(db, result.userId, password);
+    res.json({ ok: true, message: "Password updated. You can sign in now." });
+  } catch (err) {
+    handleAuthError(err, res);
+  }
+});
+
 app.get("/api/auth/me", requireAuth, (req, res) => {
   res.json({ user: req.user });
 });
@@ -456,9 +546,10 @@ async function handleGoogleProfile(res, profile) {
       err.status = 403;
       throw err;
     }
+    const now = new Date().toISOString();
     db.prepare(
-      `UPDATE users SET google_subject = ?, auth_provider = 'google', updated_at = ? WHERE id = ?`,
-    ).run(profile.sub, new Date().toISOString(), row.id);
+      `UPDATE users SET google_subject = ?, auth_provider = 'google', email_verified_at = COALESCE(email_verified_at, ?), updated_at = ? WHERE id = ?`,
+    ).run(profile.sub, now, now, row.id);
     row = findUserById(db, row.id);
     assertActiveUser(row);
     loginUser(db, res, row);
@@ -471,6 +562,7 @@ async function handleGoogleProfile(res, profile) {
     role: ROLES.CLIENT,
     authProvider: "google",
     googleSubject: profile.sub,
+    emailVerifiedAt: new Date().toISOString(),
   });
   loginUser(db, res, row);
   return sanitizeUser(row);
@@ -572,7 +664,13 @@ app.post("/api/admin/owners", requireAuth, requireSuperAdmin, async (req, res) =
       ownerProfileId: ownerProfileId ? String(ownerProfileId) : null,
       authProvider: "local",
     });
-    res.status(201).json({ owner: sanitizeUser(row) });
+    if (isEmailConfigured()) {
+      await sendEmailVerification(db, row);
+    }
+    res.status(201).json({
+      owner: sanitizeUser(row),
+      verificationEmailSent: isEmailConfigured(),
+    });
   } catch (err) {
     handleAuthError(err, res);
   }

@@ -1,6 +1,8 @@
 /**
  * Authorization regression tests (API on API_BASE, default http://localhost:3001).
  */
+import { markUserEmailVerified } from "./test-db-helper.js";
+
 const BASE = process.env.API_BASE || "http://localhost:3001";
 
 async function req(path, opts = {}) {
@@ -73,6 +75,7 @@ async function main() {
     });
     assert("Admin creates owner A for tests", createdA.status === 201);
     if (createdA.status === 201) {
+      markUserEmailVerified(ownerAEmail);
       ownerA = await login("/api/auth/owner/login", ownerAEmail, "password123");
     }
   }
@@ -151,6 +154,7 @@ async function main() {
       }),
     });
     assert("Admin creates member B", createB.status === 201);
+    if (createB.status === 201) markUserEmailVerified(ownerBEmail);
 
     const ownerB = await login("/api/auth/owner/login", ownerBEmail, "password123");
     assert("Owner B login", ownerB.status === 200);
