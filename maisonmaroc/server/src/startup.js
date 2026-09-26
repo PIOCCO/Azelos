@@ -26,6 +26,18 @@ export function assertServerConfig() {
     }
     if (!process.env.FRONTEND_URL?.trim()) {
       issues.push("Set FRONTEND_URL to the public APIO URL (e.g. https://dribex.ma/APIO).");
+    } else {
+      try {
+        const fe = new URL(process.env.FRONTEND_URL.trim());
+        const appPath = fe.pathname.replace(/\/+$/, "");
+        if (!process.env.COOKIE_PATH?.trim() && !appPath) {
+          issues.push(
+            "Set FRONTEND_URL with the /APIO path (e.g. https://dribex.ma/APIO) or set COOKIE_PATH=/APIO.",
+          );
+        }
+      } catch {
+        issues.push("FRONTEND_URL must be a valid absolute URL.");
+      }
     }
     if (process.argv[1]?.includes("adminIndex")) {
       if (!process.env.APIO_ADMIN_JWT_SECRET?.trim() || process.env.APIO_ADMIN_JWT_SECRET.length < 32) {

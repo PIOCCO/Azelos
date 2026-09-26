@@ -636,6 +636,7 @@ export const ar = {
   },
   account: {
     title: "حسابي",
+    clientAccountHint: "حساب مستخدم APIO — للاطلاع على الأعضاء والتواصل معهم.",
     myFavorites: "مفضلتي",
     myListings: "إعلاناتي",
     settings: "الإعدادات",

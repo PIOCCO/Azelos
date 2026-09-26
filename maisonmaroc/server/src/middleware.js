@@ -7,6 +7,7 @@ import {
   ROLES,
 } from "./auth.js";
 import { assertEmailVerifiedForLogin } from "./authVerification.js";
+import { resolveAuthCookiePath } from "./cookiePath.js";
 
 const COOKIE_NAME = "apio_token";
 
@@ -45,21 +46,27 @@ function cookieSecureDefault() {
   return process.env.NODE_ENV === "production";
 }
 
+function authCookiePath() {
+  return resolveAuthCookiePath();
+}
+
 export function setAuthCookie(res, token) {
   const secure = cookieSecureDefault();
   const sameSite = process.env.COOKIE_SAME_SITE || "lax";
+  const path = authCookiePath();
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
     secure,
     sameSite,
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: "/",
+    path,
   });
 }
 
 export function clearAuthCookie(res) {
+  const path = authCookiePath();
   res.clearCookie(COOKIE_NAME, {
-    path: "/",
+    path,
     httpOnly: true,
     secure: cookieSecureDefault(),
     sameSite: process.env.COOKIE_SAME_SITE || "lax",

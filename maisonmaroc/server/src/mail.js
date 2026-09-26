@@ -11,6 +11,10 @@ export function getTestOutbox() {
   return [...testOutbox];
 }
 
+function defaultCaptureFromAddress() {
+  return process.env.EMAIL_FROM?.trim() || "noreply@apio.test";
+}
+
 export function isEmailConfigured() {
   if (process.env.SMTP_TEST_MODE === "capture" && process.env.NODE_ENV !== "production") {
     return true;
@@ -78,7 +82,18 @@ export async function sendEmail({ to, subject, text, html }) {
   }
 
   const fromName = process.env.EMAIL_FROM_NAME?.trim() || "APIO";
-  const from = `"${fromName}" <${process.env.EMAIL_FROM.trim()}>`;
+  const fromAddress =
+    process.env.EMAIL_FROM?.trim() ||
+    (process.env.SMTP_TEST_MODE === "capture" && process.env.NODE_ENV !== "production"
+      ? defaultCaptureFromAddress()
+      : "");
+  if (!fromAddress) {
+    const err = new Error("Email delivery is not configured");
+    err.status = 503;
+    err.code = "EMAIL_NOT_CONFIGURED";
+    throw err;
+  }
+  const from = `"${fromName}" <${fromAddress}>`;
 
   try {
     await getTransport().sendMail({ from, to, subject, text, html });

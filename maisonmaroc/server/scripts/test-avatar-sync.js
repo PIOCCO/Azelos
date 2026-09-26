@@ -145,7 +145,7 @@ async function main() {
   assert("Avatar sync: avatar file #2", img2.status === 200);
 
   const ownerBEmail = `avatar-b-${Date.now()}@test.apio.ma`;
-  await adminReq("/api/admin/members", {
+  const createdB = await adminReq("/api/admin/members", {
     method: "POST",
     headers: { Cookie: admin.cookie },
     body: JSON.stringify({
@@ -156,6 +156,7 @@ async function main() {
       status: "ACTIVE",
     }),
   });
+  if (createdB.status === 201) markUserEmailVerified(ownerBEmail);
   const ownerB = await login("/api/auth/owner/login", ownerBEmail, pass);
   const hack = await uploadAvatar(ownerB.cookie, 9);
   assert("Avatar sync: Member B upload only affects self", hack.status === 201);
