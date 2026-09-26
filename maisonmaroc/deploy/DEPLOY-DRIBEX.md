@@ -6,7 +6,9 @@ This keeps **Dribex** at `/` and routes APIO under **`/APIO`** without sharing D
 
 ```text
 Browser → https://dribex.ma/APIO/*     → static SPA (dist/)
-Browser → https://dribex.ma/APIO/api/* → Nginx → APIO Express :3001 (/api/*)
+Browser → https://dribex.ma/APIO/api/* → Nginx → APIO Express :3001 (/api/*, no admin routes)
+
+Tailscale → host:7217 (example) → APIO Admin listener — see [APIO-ADMIN-TAILSCALE.md](./APIO-ADMIN-TAILSCALE.md)
 ```
 
 ## Build
