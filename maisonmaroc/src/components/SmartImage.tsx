@@ -1,4 +1,5 @@
-import { useState, type ImgHTMLAttributes } from "react";
+import { useEffect, useState, type ImgHTMLAttributes } from "react";
+import { apiMediaUrl } from "../lib/api";
 
 interface SmartImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   src: string;
@@ -17,7 +18,12 @@ export default function SmartImage({
 }: SmartImageProps) {
   const seed = fallbackSeed || encodeURIComponent(src).slice(-24) || "apio";
   const fallback = `https://picsum.photos/seed/${seed}/1200/800`;
-  const [current, setCurrent] = useState(src);
+  const resolvedSrc = apiMediaUrl(src) || src;
+  const [current, setCurrent] = useState(resolvedSrc);
+
+  useEffect(() => {
+    setCurrent(resolvedSrc);
+  }, [resolvedSrc]);
 
   return (
     <img
