@@ -48,7 +48,7 @@ export function sanitizeUser(row) {
     role: row.role,
     status: row.status,
     authProvider: row.auth_provider,
-    ownerProfileId: row.owner_profile_id,
+    ownerProfileId: row.role === ROLES.CLIENT ? null : row.owner_profile_id,
     emailVerified,
     createdAt: row.created_at,
   };
@@ -87,6 +87,11 @@ export function findUserByGoogleSubject(db, sub) {
 }
 
 export function createUser(db, input) {
+  if (input.role === ROLES.CLIENT && input.ownerProfileId) {
+    const err = new Error("Client accounts cannot be linked to a member profile");
+    err.status = 400;
+    throw err;
+  }
   const id = uuidv4();
   const now = new Date().toISOString();
   db.prepare(
@@ -104,7 +109,7 @@ export function createUser(db, input) {
     input.status ?? "ACTIVE",
     input.authProvider ?? "local",
     input.googleSubject ?? null,
-    input.ownerProfileId ?? null,
+    input.role === ROLES.CLIENT ? null : (input.ownerProfileId ?? null),
     input.emailVerifiedAt ?? null,
     now,
     now,

@@ -642,6 +642,7 @@ export const fr: Dict = {
   },
   account: {
     title: "Mon compte",
+    clientAccountHint: "Compte utilisateur APIO — pour consulter et contacter les membres.",
     myFavorites: "Mes favoris",
     myListings: "Mes annonces",
     settings: "Paramètres",

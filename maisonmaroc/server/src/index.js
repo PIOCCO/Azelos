@@ -535,6 +535,11 @@ async function handleGoogleProfile(res, profile) {
       err.status = 403;
       throw err;
     }
+    if (row.owner_profile_id) {
+      const err = new Error("Invalid client account configuration");
+      err.status = 403;
+      throw err;
+    }
     loginUser(db, res, row);
     return sanitizeUser(row);
   }
@@ -543,6 +548,11 @@ async function handleGoogleProfile(res, profile) {
   if (row) {
     if (row.role !== ROLES.CLIENT) {
       const err = new Error("This email is registered as a privileged account");
+      err.status = 403;
+      throw err;
+    }
+    if (row.owner_profile_id) {
+      const err = new Error("Invalid client account configuration");
       err.status = 403;
       throw err;
     }
@@ -563,6 +573,7 @@ async function handleGoogleProfile(res, profile) {
     authProvider: "google",
     googleSubject: profile.sub,
     emailVerifiedAt: new Date().toISOString(),
+    phone: null,
   });
   loginUser(db, res, row);
   return sanitizeUser(row);
@@ -573,7 +584,8 @@ app.get("/api/auth/google", (req, res) => {
     if (!isGoogleRedirectConfigured()) {
       return res.status(503).json({ error: "Google OAuth redirect is not configured" });
     }
-    const state = createOAuthState();
+    const next = String(req.query.next || "/").slice(0, 512);
+    const state = createOAuthState(next);
     res.redirect(googleAuthUrl(state));
   } catch (err) {
     handleAuthError(err, res);
@@ -589,10 +601,10 @@ app.get("/api/auth/google/callback", async (req, res) => {
     if (error) {
       return res.redirect(frontendRedirect("/client/login?error=oauth_cancelled"));
     }
-    consumeOAuthState(String(state || ""));
+    const returnTo = consumeOAuthState(String(state || ""));
     const profile = await exchangeCodeForProfile(String(code || ""));
     await handleGoogleProfile(res, profile);
-    res.redirect(frontendRedirect("/client/account"));
+    res.redirect(frontendRedirect(returnTo));
   } catch (err) {
     console.error("Google callback error", err.message);
     res.redirect(frontendRedirect("/client/login?error=oauth_failed"));

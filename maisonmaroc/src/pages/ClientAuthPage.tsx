@@ -197,7 +197,7 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
               />
             ) : (
               <a
-                href={googleOAuthStartUrl()}
+                href={googleOAuthStartUrl(params.get("next") || "/")}
                 className="btn-secondary flex w-full items-center justify-center gap-2"
               >
                 <GoogleIcon />

@@ -96,8 +96,13 @@ export async function apiFetch<T>(
   }
 }
 
-export function googleOAuthStartUrl() {
-  const path = "/api/auth/google";
+export function googleOAuthStartUrl(returnPath?: string) {
+  const params = new URLSearchParams();
+  if (returnPath && returnPath.startsWith("/") && !returnPath.startsWith("//")) {
+    params.set("next", returnPath.slice(0, 512));
+  }
+  const qs = params.toString();
+  const path = `/api/auth/google${qs ? `?${qs}` : ""}`;
   const root = apiRoot();
   if (root) return `${root}${path}`;
   if (typeof window !== "undefined") {
@@ -114,7 +119,7 @@ export function dashboardPathForRole(role: UserRole | undefined) {
     case "REAL_ESTATE_OWNER":
       return "/owner";
     case "CLIENT":
-      return "/client/account";
+      return "/";
     default:
       return "/";
   }

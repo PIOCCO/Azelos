@@ -4,6 +4,14 @@ import crypto from "node:crypto";
 const pendingStates = new Map();
 const STATE_TTL_MS = 10 * 60 * 1000;
 
+/** Safe in-app return path after OAuth (no open redirect). */
+export function sanitizeOAuthReturnPath(raw) {
+  const s = String(raw || "/").trim();
+  if (!s.startsWith("/") || s.startsWith("//")) return "/";
+  if (s.includes("://")) return "/";
+  return s.slice(0, 512);
+}
+
 function client() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -28,9 +36,12 @@ export function isGoogleRedirectConfigured() {
   );
 }
 
-export function createOAuthState() {
+export function createOAuthState(returnPath = "/") {
   const state = crypto.randomBytes(24).toString("hex");
-  pendingStates.set(state, Date.now() + STATE_TTL_MS);
+  pendingStates.set(state, {
+    exp: Date.now() + STATE_TTL_MS,
+    returnTo: sanitizeOAuthReturnPath(returnPath),
+  });
   pruneStates();
   return state;
 }
@@ -41,19 +52,20 @@ export function consumeOAuthState(state) {
     err.status = 400;
     throw err;
   }
-  const exp = pendingStates.get(state);
+  const entry = pendingStates.get(state);
   pendingStates.delete(state);
-  if (!exp || exp < Date.now()) {
+  if (!entry?.exp || entry.exp < Date.now()) {
     const err = new Error("Invalid OAuth state");
     err.status = 400;
     throw err;
   }
+  return entry.returnTo || "/";
 }
 
 function pruneStates() {
   const now = Date.now();
-  for (const [k, exp] of pendingStates) {
-    if (exp < now) pendingStates.delete(k);
+  for (const [k, entry] of pendingStates) {
+    if (!entry?.exp || entry.exp < now) pendingStates.delete(k);
   }
 }
 
@@ -66,7 +78,7 @@ export function googleAuthUrl(state) {
   const oauth = client();
   return oauth.generateAuthUrl({
     access_type: "offline",
-    scope: ["openid", "email", "profile"],
+    scope: ["openid", "email"],
     prompt: "select_account",
     state,
   });
@@ -106,9 +118,15 @@ export async function verifyIdToken(idToken) {
     err.status = 401;
     throw err;
   }
+  const email = payload.email.toLowerCase();
+  const localPart = email.split("@")[0] || "User";
+  const nameFromToken =
+    typeof payload.name === "string" && payload.name.trim()
+      ? payload.name.trim().slice(0, 200)
+      : localPart.slice(0, 200);
   return {
     sub: payload.sub,
-    email: payload.email.toLowerCase(),
-    name: payload.name || payload.email.split("@")[0],
+    email,
+    name: nameFromToken,
   };
 }
