@@ -123,7 +123,11 @@ const rateLimitJson = (message) => ({
   },
 });
 
-const authLimiter = rateLimit({ ...rateLimitJson("Too many authentication attempts"), max: 30 });
+const authLimiter = rateLimit({
+  ...rateLimitJson("Too many authentication attempts"),
+  max: process.env.NODE_ENV === "production" ? 30 : 120,
+  skipSuccessfulRequests: true,
+});
 
 const contactLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,

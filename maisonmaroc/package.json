@@ -14,6 +14,9 @@
     "build": "tsc -b && vite build",
     "build:dribex": "tsc -b && VITE_BASE_PATH=/apio/ vite build",
     "build:aipo": "tsc -b && VITE_BASE_PATH=/AIPO/ vite build",
+    "build:apio": "tsc -b && VITE_BASE_PATH=/APIO/ vite build",
+    "test": "npm run test --prefix server",
+    "test:e2e": "npm run test:e2e --prefix server",
     "preview": "vite preview --host",
     "lint": "tsc --noEmit"
   },
