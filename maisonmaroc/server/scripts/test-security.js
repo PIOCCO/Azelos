@@ -96,6 +96,20 @@ async function main() {
     });
     assert("Admin news rejects loopback imageUrl", ssrfUrl.status === 400);
 
+    const ssrf172 = await req("/api/admin/news", {
+      method: "POST",
+      headers: { Cookie: admin.cookie },
+      body: JSON.stringify({
+        slug: `sec3-${Date.now()}`,
+        titleFr: "T",
+        titleAr: "T",
+        bodyFr: "Contenu test suffisamment long.",
+        bodyAr: "محتوى.",
+        imageUrl: "https://172.16.0.1/internal",
+      }),
+    });
+    assert("Admin news rejects 172.16 private imageUrl", ssrf172.status === 400);
+
     const doc = await req("/api/admin/documents", {
       method: "POST",
       headers: { Cookie: admin.cookie },

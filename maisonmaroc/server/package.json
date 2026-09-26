@@ -12,7 +12,8 @@
     "documents:generate": "node scripts/generate-apio-pdfs.mjs",
     "test:auth": "node scripts/test-auth.js",
     "test:security": "node scripts/test-security.js",
-    "test": "node scripts/test-email-verification.js && node scripts/test-google-client-flow.js && node scripts/test-auth.js && node scripts/test-authorization.js && node scripts/test-security.js && node scripts/test-avatar-sync.js && node scripts/test-e2e-readiness.js",
+    "test:client-security": "node scripts/test-client-security.js",
+    "test": "node scripts/test-email-verification.js && node scripts/test-google-client-flow.js && node scripts/test-auth.js && node scripts/test-authorization.js && node scripts/test-security.js && node scripts/test-client-security.js && node scripts/test-avatar-sync.js && node scripts/test-e2e-readiness.js",
     "test:e2e": "node scripts/test-e2e-readiness.js"
   },
   "dependencies": {

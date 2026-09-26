@@ -72,6 +72,16 @@ function publicOwnerForProfileId(db, ownerProfileId) {
   return profile ? profileToPublicOwner(profile) : null;
 }
 import { applySecurityMiddleware } from "./security.js";
+import {
+  rejectPrototypePollutionMiddleware,
+  trustedHostMiddleware,
+} from "./requestSecurity.js";
+import {
+  rejectUnexpectedBodyKeys,
+  validateOptionalPhone,
+  validatePersonName,
+} from "./validateUserText.js";
+import { PRIVILEGED_ESCALATION_FIELDS, rejectForbiddenBodyFields } from "./securityFields.js";
 import { clampPagination, validateSlug, EMAIL_RE } from "./validateContent.js";
 import { ensureUploadDir, resolveStoredFile } from "./uploads.js";
 import {
@@ -113,7 +123,9 @@ const port = Number(process.env.PORT) || 3001;
 
 app.set("trust proxy", 1);
 applySecurityMiddleware(app);
+app.use(trustedHostMiddleware);
 app.use(express.json({ limit: "32kb" }));
+app.use(rejectPrototypePollutionMiddleware);
 app.use(cookieParser());
 app.use(
   cors({
@@ -337,6 +349,8 @@ app.post("/api/contact", contactLimiter, (req, res) => {
 app.post("/api/auth/client/register", authLimiter, async (req, res) => {
   try {
     rejectRoleInBody(req.body);
+    rejectForbiddenBodyFields(req.body, PRIVILEGED_ESCALATION_FIELDS);
+    rejectUnexpectedBodyKeys(req.body, ["email", "password", "name", "phone"]);
     const { email, password, name, phone } = req.body || {};
     if (!email || !password || !name) {
       return res.status(400).json({ error: "Email, password, and name are required" });
@@ -349,8 +363,13 @@ app.post("/api/auth/client/register", authLimiter, async (req, res) => {
     if (!passCheck.ok) {
       return res.status(400).json({ error: passCheck.error });
     }
-    if (String(name).trim().length > 200) {
-      return res.status(400).json({ error: "Invalid name" });
+    const nameCheck = validatePersonName(name);
+    if (!nameCheck.ok) {
+      return res.status(400).json({ error: nameCheck.error });
+    }
+    const phoneCheck = validateOptionalPhone(phone);
+    if (!phoneCheck.ok) {
+      return res.status(400).json({ error: phoneCheck.error });
     }
     if (!isEmailConfigured()) {
       return res.status(503).json({
@@ -364,8 +383,8 @@ app.post("/api/auth/client/register", authLimiter, async (req, res) => {
     const row = createUser(db, {
       email: normalizedEmail,
       passwordHash: hashPassword(password),
-      name: String(name).trim(),
-      phone: phone ? String(phone) : null,
+      name: nameCheck.value,
+      phone: phoneCheck.value,
       role: ROLES.CLIENT,
       authProvider: "local",
     });
@@ -903,6 +922,9 @@ app.post("/api/auth/register", (req, res, next) => {
 app.use((err, _req, res, _next) => {
   if (err?.message === "Not allowed by CORS") {
     return res.status(403).json({ error: "Forbidden" });
+  }
+  if (err?.status && err.status >= 400 && err.status < 500) {
+    return res.status(err.status).json({ error: err.message || "Bad request" });
   }
   console.error(err);
   res.status(500).json({ error: "Internal server error" });

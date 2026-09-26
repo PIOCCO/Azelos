@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { ROLES } from "./auth.js";
 import { getPropertyBySlugOrId } from "./catalog.js";
+import { validateMessagePlainText } from "./validateUserText.js";
 
 const MAX_MESSAGE_LENGTH = 5000;
 
@@ -25,12 +26,17 @@ export function validateConversationPayload(db, body) {
 }
 
 export function validateMessageBody(body) {
-  const text = String(body ?? "").trim();
-  if (!text) return { ok: false, error: "Message body is required" };
-  if (text.length > MAX_MESSAGE_LENGTH) {
+  const validated = validateMessagePlainText(body);
+  if (!validated.ok) {
+    if (validated.error === "Invalid message") {
+      return { ok: false, error: "Message body is required" };
+    }
+    return validated;
+  }
+  if (validated.value.length > MAX_MESSAGE_LENGTH) {
     return { ok: false, error: "Message is too long" };
   }
-  return { ok: true, value: text };
+  return { ok: true, value: validated.value };
 }
 
 export function listConversationsForUser(db, user) {

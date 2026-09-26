@@ -1,27 +1,57 @@
+import {
+  validateOptionalPhone,
+  validatePersonName,
+  validatePlainTextField,
+  rejectUnexpectedBodyKeys,
+} from "./validateUserText.js";
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const CONTACT_KEYS = ["firstName", "lastName", "email", "phone", "subject", "message"];
 
 export function validateContactBody(body) {
   const errors = [];
-  const firstName = String(body?.firstName ?? "").trim();
-  const lastName = String(body?.lastName ?? "").trim();
-  const email = String(body?.email ?? "").trim().toLowerCase();
-  const phone = body?.phone ? String(body.phone).trim() : "";
-  const subject = String(body?.subject ?? "")
-    .replace(/[\r\n]+/g, " ")
-    .trim();
-  const message = String(body?.message ?? "").trim();
+  try {
+    rejectUnexpectedBodyKeys(body, CONTACT_KEYS, "Unexpected field");
+  } catch {
+    return { ok: false, errors: ["Unexpected field"] };
+  }
 
-  if (firstName.length < 2 || firstName.length > 80) errors.push("Invalid first name");
-  if (lastName.length < 2 || lastName.length > 80) errors.push("Invalid last name");
+  const first = validatePersonName(body?.firstName);
+  if (!first.ok) errors.push("Invalid first name");
+  const last = validatePersonName(body?.lastName);
+  if (!last.ok) errors.push("Invalid last name");
+
+  const email = String(body?.email ?? "").trim().toLowerCase();
   if (!EMAIL_RE.test(email) || email.length > 254) errors.push("Invalid email");
-  if (phone.length > 32) errors.push("Invalid phone");
-  if (subject.length < 3 || subject.length > 200) errors.push("Invalid subject");
-  if (message.length < 10 || message.length > 5000) errors.push("Invalid message");
+
+  const phoneCheck = validateOptionalPhone(body?.phone);
+  if (!phoneCheck.ok) errors.push("Invalid phone");
+
+  const subjectCheck = validatePlainTextField(
+    String(body?.subject ?? "").replace(/[\r\n]+/g, " "),
+    { min: 3, max: 200, fieldName: "subject" },
+  );
+  if (!subjectCheck.ok) errors.push("Invalid subject");
+
+  const messageCheck = validatePlainTextField(body?.message, {
+    min: 10,
+    max: 5000,
+    fieldName: "message",
+  });
+  if (!messageCheck.ok) errors.push("Invalid message");
 
   if (errors.length) return { ok: false, errors };
 
   return {
     ok: true,
-    data: { firstName, lastName, email, phone: phone || null, subject, message },
+    data: {
+      firstName: first.value,
+      lastName: last.value,
+      email,
+      phone: phoneCheck.value,
+      subject: subjectCheck.value,
+      message: messageCheck.value,
+    },
   };
 }
