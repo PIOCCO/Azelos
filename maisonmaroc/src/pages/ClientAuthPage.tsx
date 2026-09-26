@@ -108,12 +108,10 @@ export default function ClientAuthPage({ mode }: { mode: "login" | "register" })
             src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=70"
             fallbackSeed="mm-auth"
             alt=""
-            className="h-full w-full object-cover"
+            className="h-full min-h-[420px] w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-brand-900/90 to-brand-700/40 p-8 text-white">
-            <div className="flex h-full flex-col justify-end">
-              <BrandLogo variant="auth" linkToHome={false} />
-            </div>
+          <div className="absolute inset-x-0 bottom-0 p-8">
+            <BrandLogo variant="onLight" linkToHome={false} />
           </div>
         </div>
 
