@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import { hashPassword, verifyPassword } from "./auth.js";
 import { getMemberProfileById } from "./memberProfiles.js";
 import { generateSlugForPublish } from "./memberListings.js";
-import { listPropertiesForOwnerProfile } from "./catalog.js";
 import { listMemberDocuments, getMemberDocumentForDownload } from "./content.js";
 import { unreadCountForUser } from "./messages.js";
 import { validateExternalMediaUrl } from "./validateUrls.js";
@@ -102,7 +101,12 @@ export function getOwnerDashboard(db, user) {
   const publicProfile = mergePublicProfile(seed, overrides);
   const completion = computeProfileCompletion(publicProfile, user);
 
-  const catalogProjects = listPropertiesForOwnerProfile(ownerProfileId);
+  const catalogProjects =
+    db
+      .prepare(
+        `SELECT COUNT(*) AS c FROM owner_project_drafts WHERE owner_profile_id = ? AND status = 'published'`,
+      )
+      .get(ownerProfileId)?.c || 0;
   const drafts = db
     .prepare(`SELECT status FROM owner_project_drafts WHERE owner_profile_id = ?`)
     .all(ownerProfileId);
@@ -116,7 +120,7 @@ export function getOwnerDashboard(db, user) {
     welcomeName: publicProfile?.agency?.fr || publicProfile?.name?.fr || user.name,
     stats: {
       profileCompletion: completion.percent,
-      catalogProjects: catalogProjects.length,
+      catalogProjects,
       draftProjects: drafts.length,
       pendingProjects: draftPending,
       draftOnly: draftDraft,
@@ -328,17 +332,16 @@ function rejectPrivilegedFields(body) {
 
 export function listOwnerProjects(db, user, { q = "", status = "" } = {}) {
   const ownerProfileId = requireOwnerProfile(user);
-  const catalog = listPropertiesForOwnerProfile(ownerProfileId).map((p) => ({
-    id: p.id,
-    slug: p.slug,
-    title: p.title,
-    source: "catalog",
-    status: "published",
-    cityId: null,
-    updatedAt: null,
-  }));
+  const catalog = db
+    .prepare(
+      `SELECT * FROM owner_project_drafts WHERE owner_profile_id = ? AND status = 'published' ORDER BY updated_at DESC`,
+    )
+    .all(ownerProfileId)
+    .map((r) => ({ ...rowToDraft(r), source: "draft", status: "published" }));
   let drafts = db
-    .prepare(`SELECT * FROM owner_project_drafts WHERE owner_profile_id = ? ORDER BY updated_at DESC`)
+    .prepare(
+      `SELECT * FROM owner_project_drafts WHERE owner_profile_id = ? AND status != 'published' ORDER BY updated_at DESC`,
+    )
     .all(ownerProfileId)
     .map(rowToDraft);
 

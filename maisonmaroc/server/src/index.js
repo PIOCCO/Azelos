@@ -64,7 +64,7 @@ import {
   getPublicProjectImage,
   listPublishedMemberProperties,
 } from "./memberListings.js";
-import { getMemberProfileById, profileToPublicOwner } from "./memberProfiles.js";
+import { getMemberProfileById, listPublicMemberProfiles, profileToPublicOwner } from "./memberProfiles.js";
 import { getPublicMemberAvatarFile, getPublicMemberProfile } from "./ownerPortal.js";
 
 function publicOwnerForProfileId(db, ownerProfileId) {
@@ -203,13 +203,24 @@ app.get("/api/health", (_req, res) => {
 
 // ——— Public catalog (marketplace remains public) ———
 app.get("/api/properties", (_req, res) => {
-  res.json({ properties: listPublicProperties() });
+  res.json({ properties: listPublicProperties(db) });
 });
 
 app.get("/api/properties/:slugOrId", (req, res) => {
-  const p = getPropertyBySlugOrId(req.params.slugOrId);
+  const p = getPropertyBySlugOrId(db, req.params.slugOrId);
   if (!p) return res.status(404).json({ error: "Not found" });
   res.json({ property: p });
+});
+
+app.get("/api/public/members", publicContentLimiter, (_req, res) => {
+  const profiles = listPublicMemberProfiles(db);
+  const members = profiles
+    .map((p) => {
+      const merged = getPublicMemberProfile(db, p.id);
+      return merged ? profileToPublicOwner(merged) : profileToPublicOwner(p);
+    })
+    .filter(Boolean);
+  res.json({ members });
 });
 
 app.get("/api/listings/member-properties", publicContentLimiter, (_req, res) => {
@@ -526,7 +537,7 @@ app.get("/api/owner/properties", requireAuth, requireOwner, (req, res) => {
   if (!ownerProfileId) {
     return res.json({ properties: [] });
   }
-  res.json({ properties: listPropertiesForOwnerProfile(ownerProfileId) });
+  res.json({ properties: listPropertiesForOwnerProfile(db, ownerProfileId) });
 });
 
 app.get("/api/owner/me", requireAuth, requireOwner, (req, res) => {
@@ -638,7 +649,7 @@ app.get("/api/admin/owners/:id/properties", requireAuth, requireSuperAdmin, (req
   const owner = findOwner(db, idCheck.value);
   if (!owner) return res.status(404).json({ error: "Not found" });
   res.json({
-    properties: listPropertiesForOwnerProfile(owner.owner_profile_id),
+    properties: listPropertiesForOwnerProfile(db, owner.owner_profile_id),
   });
 });
 
@@ -646,7 +657,8 @@ function serializeConversation(db, conv) {
   const msgs = listMessages(db, conv.id);
   const last = msgs[msgs.length - 1] || null;
   const client = findUserById(db, conv.client_id);
-  const property = getPropertyBySlugOrId(conv.property_slug) || getPropertyBySlugOrId(conv.property_id);
+  const property =
+    getPropertyBySlugOrId(db, conv.property_slug) || getPropertyBySlugOrId(db, conv.property_id);
   return {
     id: conv.id,
     propertyId: conv.property_id,
@@ -694,7 +706,7 @@ app.get("/api/messages/conversations", requireAuth, (req, res) => {
 });
 
 app.post("/api/messages/conversations", requireAuth, requireClient, messageLimiter, (req, res) => {
-  const validated = validateConversationPayload(req.body || {});
+  const validated = validateConversationPayload(db, req.body || {});
   if (!validated.ok) return res.status(400).json({ error: validated.error });
   const conv = createConversation(db, {
     clientId: req.user.id,

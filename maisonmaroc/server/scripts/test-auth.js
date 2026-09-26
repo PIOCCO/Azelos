@@ -51,8 +51,12 @@ function assert(name, cond) {
 }
 
 async function main() {
+  let testOwnerEmail = null;
+  const testOwnerPass = "password123";
+
   const pub = await req("/api/properties");
   assert("PUBLIC GET /api/properties", pub.status === 200);
+  assert("PUBLIC properties empty or from DB", Array.isArray(pub.body?.properties));
 
   const ownerDash = await req("/api/owner/properties");
   assert("PUBLIC GET /api/owner/properties denied", ownerDash.status === 401);
@@ -141,20 +145,19 @@ async function main() {
     });
     assert("Admin create owner rejects role in body", create.status === 400);
 
-    const create2 = await req("/api/admin/owners", {
+    testOwnerEmail = `owner2-${Date.now()}@test.apio.ma`;
+    const create2 = await req("/api/admin/members", {
       method: "POST",
       headers: { Cookie: adminLogin.cookie },
       body: JSON.stringify({
-        email: `owner2-${Date.now()}@test.apio.ma`,
+        email: testOwnerEmail,
         password: "password123",
         name: "Test Owner 2",
-        ownerProfileId: "sara-benali",
+        companyFr: "Test Co",
+        cityId: "oujda",
       }),
     });
-    assert("Admin create owner", create2.status === 201);
-    if (create2.status === 201) {
-      assert("Created owner role", create2.body?.owner?.role === "REAL_ESTATE_OWNER");
-    }
+    assert("Admin create member", create2.status === 201);
 
     const newsList = await req("/api/admin/news", { headers: { Cookie: adminLogin.cookie } });
     assert("SUPER_ADMIN list news", newsList.status === 200);
@@ -214,9 +217,9 @@ async function main() {
     }
   }
 
-  const demoEmail = process.env.DEMO_OWNER_EMAIL || "owner.demo@apio.ma";
-  const demoPass = process.env.DEMO_OWNER_PASSWORD || "change-me-demo-owner";
-  const ownerLogin = await login("/api/auth/owner/login", demoEmail, demoPass);
+  const ownerLogin = testOwnerEmail
+    ? await login("/api/auth/owner/login", testOwnerEmail, testOwnerPass)
+    : { status: 401, cookie: "" };
   assert("Owner login", ownerLogin.status === 200);
 
   if (ownerLogin.status === 200) {

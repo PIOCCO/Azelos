@@ -582,26 +582,7 @@ export function seedApioDocuments(db) {
   return syncApioDocuments(db);
 }
 
+/** Production startup: sync institutional documents only (no demo news or sample records). */
 export async function seedDemoContent(db) {
   await syncApioDocuments(db);
-  const count = db.prepare(`SELECT COUNT(*) AS c FROM news_posts`).get().c;
-  if (count > 0) return;
-  const now = new Date().toISOString();
-  db.prepare(
-    `INSERT INTO news_posts (id, slug, title_fr, title_ar, summary_fr, summary_ar, body_fr, body_ar, published, published_at, created_at, updated_at, author, archived)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, 0)`,
-  ).run(
-    randomUUID(),
-    "bienvenue-apio",
-    "Bienvenue sur le site institutionnel APIO",
-    "مرحبًا بكم في الموقع المؤسساتي لـ APIO",
-    "Espace d'information de l'association — contenu éditorial à compléter.",
-    "فضاء معلوماتي للجمعية — محتوى تحريري قابل للتحديث.",
-    "Ce contenu est un exemple éditorial. Remplacez-le par les communiqués officiels validés par APIO.",
-    "هذا محتوى توضيحي. يُرجى استبداله بالبلاغات الرسمية المعتمدة من APIO.",
-    now,
-    now,
-    now,
-    "APIO",
-  );
 }

@@ -4,7 +4,6 @@ import { LogOut, Plus, RefreshCw } from "lucide-react";
 import { useLocale } from "../lib/useLocale";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../lib/api";
-import { owners as seedOwners } from "../data/owners";
 import AdminContentPanels from "../components/admin/AdminContentPanels";
 
 interface OwnerRow {
@@ -28,7 +27,7 @@ export default function AdminDashboardPage() {
     password: "",
     name: "",
     phone: "",
-    ownerProfileId: seedOwners[0]?.id ?? "",
+    companyFr: "",
   });
 
   const load = useCallback(async () => {
@@ -46,19 +45,21 @@ export default function AdminDashboardPage() {
 
   const createOwner = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error: err } = await apiFetch("/api/admin/owners", {
+    const { error: err } = await apiFetch("/api/admin/members", {
       method: "POST",
       body: JSON.stringify({
         email: form.email,
         password: form.password,
         name: form.name,
         phone: form.phone || undefined,
-        ownerProfileId: form.ownerProfileId || undefined,
+        companyFr: form.companyFr || form.name,
+        cityId: "oujda",
+        status: "ACTIVE",
       }),
     });
     if (err) setError(err);
     else {
-      setForm((f) => ({ ...f, email: "", password: "", name: "", phone: "" }));
+      setForm((f) => ({ ...f, email: "", password: "", name: "", phone: "", companyFr: "" }));
       load();
     }
   };
@@ -109,14 +110,8 @@ export default function AdminDashboardPage() {
           <input className="input" required placeholder={t("auth.fullName")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <input dir="ltr" className="input" required type="email" placeholder={t("auth.email")} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           <input dir="ltr" className="input" type="tel" placeholder={t("auth.phone")} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-          <input dir="ltr" className="input" required type="password" minLength={8} placeholder={t("auth.password")} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-          <select className="input sm:col-span-2" value={form.ownerProfileId} onChange={(e) => setForm({ ...form, ownerProfileId: e.target.value })}>
-            {seedOwners.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.id} — {o.email}
-              </option>
-            ))}
-          </select>
+          <input className="input" required type="password" minLength={8} placeholder={t("auth.password")} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          <input className="input sm:col-span-2" placeholder={t("adminDash.companyFr")} value={form.companyFr} onChange={(e) => setForm({ ...form, companyFr: e.target.value })} aria-label={t("adminDash.companyFr")} />
           <button type="submit" className="btn-primary sm:col-span-2">
             {t("adminDash.createOwner")}
           </button>

@@ -6,19 +6,22 @@ interface SmartImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   fallbackSeed?: string;
 }
 
+const NEUTRAL_PLACEHOLDER =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"><rect fill="#eceae6" width="100%" height="100%"/></svg>',
+  );
+
 /**
- * Image with a guaranteed fallback: if the primary source fails, it swaps to a
- * deterministic placeholder so the UI never shows a broken image.
+ * Image with a neutral local fallback when the primary source is missing or fails.
  */
 export default function SmartImage({
   src,
-  fallbackSeed,
+  fallbackSeed: _fallbackSeed,
   alt = "",
   ...rest
 }: SmartImageProps) {
-  const seed = fallbackSeed || encodeURIComponent(src).slice(-24) || "apio";
-  const fallback = `https://picsum.photos/seed/${seed}/1200/800`;
-  const resolvedSrc = apiMediaUrl(src) || src;
+  const resolvedSrc = (src && (apiMediaUrl(src) || src)) || NEUTRAL_PLACEHOLDER;
   const [current, setCurrent] = useState(resolvedSrc);
 
   useEffect(() => {
@@ -31,7 +34,7 @@ export default function SmartImage({
       alt={alt}
       loading="lazy"
       onError={() => {
-        if (current !== fallback) setCurrent(fallback);
+        if (current !== NEUTRAL_PLACEHOLDER) setCurrent(NEUTRAL_PLACEHOLDER);
       }}
       {...rest}
     />

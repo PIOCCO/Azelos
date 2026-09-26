@@ -1,7 +1,6 @@
 import { hashPassword, createUser, findUserByEmail, ROLES } from "./auth.js";
 import { createMemberProfile, getMemberProfileById, updateMemberProfile, profileToPublicOwner } from "./memberProfiles.js";
-import { listPropertiesForOwnerProfile } from "./catalog.js";
-import { listPublishedMemberProperties, rowToPublicProperty } from "./memberListings.js";
+import { rowToPublicProperty } from "./memberListings.js";
 import { logAdminAction } from "./adminAudit.js";
 import { listMemberDocuments } from "./content.js";
 
@@ -35,7 +34,6 @@ export function listMembersForAdmin(db, { q = "", status = "", sort = "created_d
 
   const enriched = rows.map((r) => {
     const profile = getMemberProfileById(db, r.owner_profile_id);
-    const seedCount = listPropertiesForOwnerProfile(r.owner_profile_id).length;
     const dbCount = db
       .prepare(
         `SELECT COUNT(*) AS c FROM owner_project_drafts WHERE owner_profile_id = ? AND status = 'published'`,
@@ -49,7 +47,7 @@ export function listMembersForAdmin(db, { q = "", status = "", sort = "created_d
     return {
       ...r,
       company: profile?.agency?.fr || profile?.name?.fr || null,
-      projectCount: seedCount + (dbCount || 0),
+      projectCount: dbCount || 0,
       lastActivity: lastAct || r.updated_at,
     };
   });
@@ -83,6 +81,11 @@ export function createMemberWithAccount(db, adminUser, body) {
   }
 
   let ownerProfileId = linkExistingProfileId ? String(linkExistingProfileId).trim() : null;
+  if (ownerProfileId && !getMemberProfileById(db, ownerProfileId)) {
+    const err = new Error("Member profile not found");
+    err.status = 404;
+    throw err;
+  }
   if (!ownerProfileId) {
     const profile = createMemberProfile(db, {
       nameFr: profileFields.legalNameFr || name,
@@ -132,7 +135,6 @@ export function getMemberDetailForAdmin(db, userId) {
     .get(userId);
   if (!user) return null;
   const profile = getMemberProfileById(db, user.owner_profile_id);
-  const seedProjects = listPropertiesForOwnerProfile(user.owner_profile_id);
   const dbRows = db
     .prepare(`SELECT * FROM owner_project_drafts WHERE owner_profile_id = ? ORDER BY updated_at DESC`)
     .all(user.owner_profile_id);
@@ -150,7 +152,6 @@ export function getMemberDetailForAdmin(db, userId) {
     user,
     profile,
     publicOwner: profileToPublicOwner(profile),
-    seedProjects,
     memberProjects: dbProjects,
     documents: listMemberDocuments(db),
     activity,

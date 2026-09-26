@@ -4,7 +4,7 @@ import { getPropertyBySlugOrId } from "./catalog.js";
 
 const MAX_MESSAGE_LENGTH = 5000;
 
-export function validateConversationPayload(body) {
+export function validateConversationPayload(db, body) {
   const propertyId = String(body?.propertyId ?? "").trim();
   const propertySlug = String(body?.propertySlug ?? "").trim();
   const agentProfileId = String(body?.agentProfileId ?? "").trim();
@@ -14,7 +14,7 @@ export function validateConversationPayload(body) {
   if (propertyId.length > 128 || propertySlug.length > 200 || agentProfileId.length > 128) {
     return { ok: false, error: "Invalid property reference" };
   }
-  const property = getPropertyBySlugOrId(propertyId);
+  const property = getPropertyBySlugOrId(db, propertyId);
   if (!property || property.id !== propertyId || property.slug !== propertySlug) {
     return { ok: false, error: "Invalid property" };
   }

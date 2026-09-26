@@ -218,6 +218,10 @@ export const ar = {
     viewListing: "عرض الإعلان",
     next: "التالي",
     back: "السابق",
+    emptyTitle: "النشر مخصص لأعضاء APIO",
+    emptyDescription:
+      "تُنشر المشاريع العقارية عبر فضاء المقاولين الأعضاء. تواصل مع الجمعية للانضمام.",
+    contactCta: "اتصل بـ APIO",
   },
   contact: {
     title: "تواصل مع",
@@ -423,6 +427,7 @@ export const ar = {
     allStatuses: "كل الحالات",
     backToMembers: "العودة للأعضاء",
     memberProjects: "مشاريع العضو",
+    noMemberProjects: "لا توجد مشاريع مسجلة لهذا العضو.",
     catalogSeed: "منصة APIO (مرجع)",
     member: "عضو",
     hide: "إخفاء",
@@ -574,11 +579,13 @@ export const ar = {
       title: "مقاولونا",
       sub: "دليل المهنيين الأعضاء في الجمعية.",
       viewAll: "جميع الأعضاء",
+      empty: "لا يوجد أعضاء منشورون حالياً.",
     },
     projects: {
       title: "المشاريع العقارية",
       view: "عرض المشروع",
       viewAll: "جميع المشاريع",
+      empty: "لا توجد مشاريع منشورة حالياً.",
     },
     news: { title: "الأخبار", viewAll: "كل الأخبار" },
     events: { title: "الفعاليات", viewAll: "كل الفعاليات" },

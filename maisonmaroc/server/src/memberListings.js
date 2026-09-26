@@ -31,11 +31,6 @@ export function rowToPublicProperty(db, row) {
   const slug = row.slug || ensureProjectSlug(db, row);
   const images = listProjectImages(db, row.id);
   const imageUrls = images.map((img) => `/api/listings/project-images/${img.id}/file`);
-  if (!imageUrls.length) {
-    imageUrls.push(
-      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1280&q=70",
-    );
-  }
   const cityId = row.city_id || "oujda";
   const coords = cityCoords[cityId] || cityCoords.oujda;
   let amenities = [];

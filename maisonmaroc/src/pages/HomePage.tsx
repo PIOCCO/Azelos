@@ -244,6 +244,9 @@ export default function HomePage() {
           <h2 className="home-section-title text-center">{t("homePage.members.title")}</h2>
           <p className="mx-auto mt-2 max-w-xl text-center text-sm text-ink-500">{t("homePage.members.sub")}</p>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {members.length === 0 ? (
+              <p className="col-span-full text-center text-sm text-ink-500">{t("homePage.members.empty")}</p>
+            ) : null}
             {members.map((o) => {
               const city = cityById(o.cityId);
               return (
@@ -274,6 +277,9 @@ export default function HomePage() {
         <div className="home-container">
           <h2 className="home-section-title text-center">{t("homePage.projects.title")}</h2>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {featured.length === 0 ? (
+              <p className="col-span-full text-center text-sm text-ink-500">{t("homePage.projects.empty")}</p>
+            ) : null}
             {featured.map((p) => {
               const city = cityById(p.cityId);
               return (

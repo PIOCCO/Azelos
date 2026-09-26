@@ -38,7 +38,7 @@ export default function PropertyCard({
         className={`relative overflow-hidden ${isList ? "sm:w-64 sm:shrink-0" : ""}`}
       >
         <SmartImage
-          src={property.images[0]}
+          src={property.images[0] ?? ""}
           fallbackSeed={property.id}
           alt={L(property.title)}
           className={`w-full object-cover transition duration-500 group-hover:scale-105 ${

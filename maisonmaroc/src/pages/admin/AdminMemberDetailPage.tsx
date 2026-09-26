@@ -12,7 +12,6 @@ export default function AdminMemberDetailPage() {
     user: { id: string; email: string; name: string; status: string; owner_profile_id: string; created_at: string };
     profile: { agency?: { fr: string; ar: string }; name?: { fr: string; ar: string } };
     memberProjects: (Property & { status: string; hidden?: boolean })[];
-    seedProjects: { slug: string; title: { fr: string; ar: string } }[];
     activity: { id: string; action: string; createdAt: string }[];
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,25 +57,23 @@ export default function AdminMemberDetailPage() {
       <section className="rounded-2xl border border-ink-100 bg-white p-6">
         <h2 className="text-lg font-bold text-navy">{t("adminDash.memberProjects")}</h2>
         <ul className="mt-4 divide-y divide-ink-100">
-          {detail.memberProjects.map((p) => (
-            <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-              <span>{L(p.title)}</span>
-              <span className="text-xs font-bold uppercase text-ink-500">
-                {p.status} {p.hidden ? `· ${t("adminDash.hidden")}` : ""}
-              </span>
-              {p.slug && (
-                <Link to={`/property/${p.slug}`} className="text-sm text-brand-700 hover:underline">
-                  {t("common.viewMore")}
-                </Link>
-              )}
-            </li>
-          ))}
-          {detail.seedProjects.map((p) => (
-            <li key={p.slug} className="flex flex-wrap items-center justify-between gap-2 py-3 text-ink-600">
-              <span>{L(p.title)}</span>
-              <span className="text-xs">{t("adminDash.catalogSeed")}</span>
-            </li>
-          ))}
+          {detail.memberProjects.length === 0 ? (
+            <li className="py-3 text-sm text-ink-500">{t("adminDash.noMemberProjects")}</li>
+          ) : (
+            detail.memberProjects.map((p) => (
+              <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <span>{L(p.title)}</span>
+                <span className="text-xs font-bold uppercase text-ink-500">
+                  {p.status} {p.hidden ? `· ${t("adminDash.hidden")}` : ""}
+                </span>
+                {p.slug && (
+                  <Link to={`/property/${p.slug}`} className="text-sm text-brand-700 hover:underline">
+                    {t("common.viewMore")}
+                  </Link>
+                )}
+              </li>
+            ))
+          )}
         </ul>
       </section>
 

@@ -8,7 +8,6 @@ import { useListings } from "../context/ListingsContext";
 import type { ConversationSummary, Message } from "../lib/messagingTypes";
 import { formatPrice, relativeDate } from "../lib/format";
 import SmartImage from "../components/SmartImage";
-import { owners } from "../data/owners";
 
 function messagesBase(role: string) {
   return role === "REAL_ESTATE_OWNER" ? "/owner/messages" : "/client/messages";
@@ -19,7 +18,7 @@ export default function MessagesPage({ role }: { role: "CLIENT" | "REAL_ESTATE_O
   const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
-  const { propertyBySlug: propBySlug } = useListings();
+  const { propertyBySlug: propBySlug, ownerById } = useListings();
   const {
     conversations,
     loading,
@@ -58,7 +57,7 @@ export default function MessagesPage({ role }: { role: "CLIENT" | "REAL_ESTATE_O
   }, [id, loadThread]);
 
   const property = thread ? propBySlug(thread.propertySlug) : undefined;
-  const agent = thread ? owners.find((o) => o.id === thread.agentProfileId) : undefined;
+  const agent = thread ? ownerById(thread.agentProfileId) : undefined;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,7 +125,7 @@ export default function MessagesPage({ role }: { role: "CLIENT" | "REAL_ESTATE_O
             )}
             {conversations.map((c) => {
               const p = propBySlug(c.propertySlug);
-              const ag = owners.find((o) => o.id === c.agentProfileId);
+              const ag = ownerById(c.agentProfileId);
               const active = c.id === id;
               return (
                 <button

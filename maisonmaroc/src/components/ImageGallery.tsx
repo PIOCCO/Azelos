@@ -13,6 +13,14 @@ export default function ImageGallery({ images, alt, seed }: Props) {
   const go = (dir: number) =>
     setActive((a) => (a + dir + images.length) % images.length);
 
+  if (!images.length) {
+    return (
+      <div className="grid h-[280px] place-items-center rounded-2xl bg-ink-100 text-sm text-ink-500 sm:h-[440px]">
+        —
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="relative overflow-hidden rounded-2xl">

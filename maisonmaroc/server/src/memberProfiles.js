@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { getOwnerProfileById as getSeedOwnerProfileById } from "./ownersCatalog.js";
 
 function slugify(input) {
   return String(input || "membre")
@@ -15,7 +14,19 @@ export function getMemberProfileById(db, ownerProfileId) {
   if (!ownerProfileId) return null;
   const row = db.prepare(`SELECT * FROM apio_member_profiles WHERE id = ?`).get(ownerProfileId);
   if (row) return rowToProfile(row);
-  return getSeedOwnerProfileById(ownerProfileId);
+  return null;
+}
+
+export function listPublicMemberProfiles(db) {
+  const rows = db
+    .prepare(
+      `SELECT p.* FROM apio_member_profiles p
+       INNER JOIN users u ON u.owner_profile_id = p.id
+       WHERE u.role = 'REAL_ESTATE_OWNER' AND u.status = 'ACTIVE'
+       ORDER BY COALESCE(p.agency_fr, p.name_fr) COLLATE NOCASE`,
+    )
+    .all();
+  return rows.map(rowToProfile);
 }
 
 export function rowToProfile(r) {
@@ -44,7 +55,7 @@ export function rowToProfile(r) {
 export function createMemberProfile(db, data) {
   const base = slugify(data.agencyFr || data.nameFr || "apio-member");
   let id = data.id ? String(data.id).slice(0, 64) : `${base}-${randomUUID().slice(0, 8)}`;
-  if (getSeedOwnerProfileById(id) || db.prepare(`SELECT 1 FROM apio_member_profiles WHERE id = ?`).get(id)) {
+  if (db.prepare(`SELECT 1 FROM apio_member_profiles WHERE id = ?`).get(id)) {
     id = `${base}-${randomUUID().slice(0, 8)}`;
   }
   const now = new Date().toISOString();
@@ -132,7 +143,7 @@ export function profileToPublicOwner(profile) {
     agency: profile.agency,
     avatar: profile.avatar || "",
     verified: Boolean(profile.verified),
-    rating: 5,
+    rating: 0,
     reviewsCount: 0,
     phone: profile.phone || "",
     whatsapp: profile.whatsapp || profile.phone || "",

@@ -53,14 +53,30 @@ async function main() {
   const unauthProject = await req("/api/owner/projects", { method: "POST", body: JSON.stringify({ titleFr: "X" }) });
   assert("Unauthenticated project create denied", unauthProject.status === 401);
 
-  const demoEmail = process.env.DEMO_OWNER_EMAIL || "owner.demo@apio.ma";
-  const demoPass = process.env.DEMO_OWNER_PASSWORD || "change-me-demo-owner";
-  const ownerA = await login("/api/auth/owner/login", demoEmail, demoPass);
-  assert("Owner A login", ownerA.status === 200);
-
   const adminEmail = process.env.SUPER_ADMIN_EMAIL || "admin@apio.ma";
   const adminPass = process.env.SUPER_ADMIN_PASSWORD || "change-me-on-first-login";
   const admin = await login("/api/auth/admin/login", adminEmail, adminPass);
+
+  const ownerAEmail = `owner-a-${Date.now()}@test.apio.ma`;
+  let ownerA = { status: 401, cookie: "" };
+  if (admin.status === 200) {
+    const createdA = await req("/api/admin/members", {
+      method: "POST",
+      headers: { Cookie: admin.cookie },
+      body: JSON.stringify({
+        email: ownerAEmail,
+        password: "password123",
+        name: "Owner A",
+        companyFr: "Company A",
+        cityId: "oujda",
+      }),
+    });
+    assert("Admin creates owner A for tests", createdA.status === 201);
+    if (createdA.status === 201) {
+      ownerA = await login("/api/auth/owner/login", ownerAEmail, "password123");
+    }
+  }
+  assert("Owner A login", ownerA.status === 200);
 
   let projectAId = null;
   if (ownerA.status === 200) {

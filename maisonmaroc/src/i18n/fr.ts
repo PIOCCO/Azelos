@@ -225,6 +225,10 @@ export const fr: Dict = {
     viewListing: "Voir l'annonce",
     next: "Suivant",
     back: "Précédent",
+    emptyTitle: "Publication réservée aux membres APIO",
+    emptyDescription:
+      "Les projets immobiliers sont publiés par les promoteurs membres via l'espace professionnel. Contactez l'association pour l'adhésion.",
+    contactCta: "Contacter l'APIO",
   },
   contact: {
     title: "Contacter",
@@ -430,6 +434,7 @@ export const fr: Dict = {
     allStatuses: "Tous les statuts",
     backToMembers: "Retour aux membres",
     memberProjects: "Projets du membre",
+    noMemberProjects: "Aucun projet enregistré pour ce membre.",
     catalogSeed: "Catalogue APIO (référence)",
     member: "Membre",
     hide: "Masquer",
@@ -581,11 +586,13 @@ export const fr: Dict = {
       title: "Nos promoteurs",
       sub: "Annuaire des professionnels membres de l'association.",
       viewAll: "Voir tous les membres",
+      empty: "Aucun membre publié pour le moment.",
     },
     projects: {
       title: "Projets immobiliers",
       view: "Voir le projet",
       viewAll: "Voir tous les projets",
+      empty: "Aucun projet publié pour le moment.",
     },
     news: { title: "Actualités", viewAll: "Toutes les actualités" },
     events: { title: "Événements", viewAll: "Tous les événements" },

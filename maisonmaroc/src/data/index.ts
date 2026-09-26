@@ -1,11 +1,6 @@
 export * from "./types";
 export { cities, cityById } from "./cities";
-export { owners, ownerById } from "./owners";
-export {
-  properties,
-  propertyById,
-  propertyBySlug,
-  propertiesByOwner,
-} from "./properties";
+export { owners } from "./owners";
+export { properties } from "./properties";
 export { reviews, reviewsByOwner } from "./reviews";
 export { amenityMeta, amenityKeys, propertyTypeKeys, transactionKeys } from "./meta";
