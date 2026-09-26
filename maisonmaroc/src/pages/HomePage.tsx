@@ -86,11 +86,11 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="home-hero" aria-label={t("homePage.nav.home")}>
-        <HomeHeroMedia images={[...HOME_HERO_IMAGES]} alt={L(INSTITUTION.name)} />
+        <HomeHeroMedia slides={[...HOME_HERO_IMAGES]} defaultAlt={L(INSTITUTION.name)} />
         <div className="home-hero-overlay" aria-hidden />
         <div className="home-container home-hero-content">
-          <p className="home-hero-kicker">{INSTITUTION.shortName.fr}</p>
-          <h1 className="home-display-title home-hero-title mt-3">{L(INSTITUTION.name)}</h1>
+          <p className="home-hero-kicker">{L(INSTITUTION.shortName)}</p>
+          <h1 className="home-display-title home-hero-title mt-3">{t("homePage.cta.title")}</h1>
           <p className="home-hero-lead mt-5 max-w-lg text-base leading-relaxed">{L(INSTITUTION.tagline)}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/a-propos" className="home-btn home-btn-primary">

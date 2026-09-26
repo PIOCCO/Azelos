@@ -140,13 +140,63 @@ h4 {
   @apply bg-ink-200;
 }
 .home-hero-media__slide {
-  @apply absolute inset-0 opacity-0 transition-opacity duration-700 ease-out;
+  @apply absolute inset-0 opacity-0;
+  z-index: 0;
+  transition: opacity var(--hero-fade-ms, 1400ms) ease-in-out;
+}
+.home-hero-media__slide--fade-reduced {
+  transition-duration: 500ms;
 }
 .home-hero-media__slide--active {
   @apply opacity-100;
+  z-index: 1;
+}
+.home-hero-media__motion {
+  @apply h-full w-full overflow-hidden;
+}
+.home-hero-media__motion--active {
+  animation: hero-ken-burns 6.2s ease-out forwards;
 }
 .home-hero-media__img {
-  @apply block h-full w-full object-cover object-center;
+  @apply block h-full w-full object-cover;
+  object-position: var(--hero-object-pos-mobile, center);
+}
+@media (min-width: 768px) {
+  .home-hero-media__img {
+    object-position: var(--hero-object-pos, center);
+  }
+}
+@keyframes hero-ken-burns {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.08) translate3d(-1.2%, -0.6%, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-media__motion--active {
+    animation: none;
+  }
+}
+.home-hero-media__progress {
+  @apply pointer-events-none absolute bottom-6 end-6 z-[2] flex gap-1.5 sm:bottom-8 sm:end-8;
+}
+.home-hero-media__dot {
+  @apply h-1 w-1 rounded-full bg-white/35 transition-all duration-500;
+}
+.home-hero-media__dot--active {
+  @apply w-5 bg-white/80;
+}
+.home-hero-media__controls {
+  @apply pointer-events-none absolute inset-y-0 start-0 end-0 z-[2] flex items-center justify-between px-2 opacity-0 transition-opacity duration-300 sm:px-4;
+}
+.home-hero-media--cinema:hover .home-hero-media__controls,
+.home-hero-media--cinema:focus-within .home-hero-media__controls {
+  @apply opacity-100;
+}
+.home-hero-media__nav {
+  @apply pointer-events-auto grid h-10 w-10 place-items-center rounded-full border border-white/25 bg-black/20 text-white/90 backdrop-blur-sm transition hover:bg-black/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60;
 }
 .home-hero-overlay {
   @apply pointer-events-none absolute inset-0 z-[1];
