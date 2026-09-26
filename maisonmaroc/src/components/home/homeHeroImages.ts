@@ -27,7 +27,7 @@ function slide(id: string, alt: string, opts?: Partial<HomeHeroSlide>): HomeHero
 /** Visual story: region → architecture → habitat → ville → détail → espace public → paysage → signature. */
 export const HOME_HERO_IMAGES: HomeHeroSlide[] = [
   slide(
-    "photo-1518548419970-58e985b0a4a2",
+    "photo-1486325212027-8081e485255e",
     "Vue urbaine élevée — paysage bâti de la région de l'Oriental",
     { caption: "Territoire & urbanisation", objectPosition: "center 35%", objectPositionMobile: "center 30%" },
   ),
