@@ -1,5 +1,23 @@
-import { defineConfig } from "vite";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** Copy `public/APIO/homepage-style` → `dist/homepage-style` so URLs are `{base}homepage-style/…`. */
+function apioHomepageStyleDistCopy(): Plugin {
+  const src = path.resolve(__dirname, "public/APIO/homepage-style");
+  return {
+    name: "apio-homepage-style-dist-copy",
+    closeBundle() {
+      if (!fs.existsSync(src)) return;
+      const dest = path.resolve(__dirname, "dist/homepage-style");
+      fs.cpSync(src, dest, { recursive: true });
+    },
+  };
+}
 
 function normalizeBase(raw: string | undefined) {
   const base = (raw ?? "./").trim() || "./";
@@ -9,7 +27,7 @@ function normalizeBase(raw: string | undefined) {
 
 export default defineConfig({
   base: normalizeBase(process.env.VITE_BASE_PATH),
-  plugins: [react()],
+  plugins: [react(), apioHomepageStyleDistCopy()],
   server: {
     host: true,
     port: 5173,

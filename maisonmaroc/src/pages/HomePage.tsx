@@ -25,29 +25,11 @@ import {
   roleOfAssociation,
 } from "../data/institutionalContent";
 import { cities, cityById } from "../data/cities";
+import { APIO_HOMEPAGE_IMAGES, HOME_HERO_IMAGES } from "../config/apioHomepageImages";
 import { fetchDocuments, fetchEvents, fetchNews, type AssociationEvent, type NewsArticle, type PublicDocument } from "../lib/contentApi";
 import { formatDate } from "../lib/format";
 import OrientalMap from "../components/home/OrientalMap";
 import HomeHeroMedia from "../components/home/HomeHeroMedia";
-import { HOME_HERO_IMAGES } from "../components/home/homeHeroImages";
-const MOSAIC = [
-  "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80",
-  cities[0]?.image,
-  cities[2]?.image || cities[1]?.image,
-];
-const REGION_LEFT = [
-  cities[1]?.image || MOSAIC[0],
-  cities[0]?.image || MOSAIC[1],
-];
-const REGION_RIGHT = {
-  tall: "https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=800&q=80",
-  small: [
-    cities[3]?.image || MOSAIC[2],
-    cities[4]?.image || MOSAIC[0],
-  ],
-};
-const CTA_BG =
-  "https://images.unsplash.com/photo-1518548419970-58e985b0a4a2?auto=format&fit=crop&w=1920&q=80";
 
 const MISSION_ICONS = [Users, Handshake, Megaphone, Building2, Building2];
 
@@ -130,9 +112,27 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="home-mosaic grid grid-cols-2 gap-3">
-            <SmartImage src={MOSAIC[0]} alt="" className="col-span-2 h-48 w-full object-cover sm:h-56" fallbackSeed="m1" />
-            <SmartImage src={MOSAIC[1]} alt="" className="h-40 w-full object-cover" fallbackSeed="m2" />
-            <SmartImage src={MOSAIC[2]} alt="" className="h-40 w-full object-cover" fallbackSeed="m3" />
+            <SmartImage
+              src={APIO_HOMEPAGE_IMAGES.about.wide}
+              alt=""
+              className="col-span-2 h-48 w-full object-cover sm:h-56"
+              fallbackSeed="about-wide"
+              loading="lazy"
+            />
+            <SmartImage
+              src={APIO_HOMEPAGE_IMAGES.about.left}
+              alt=""
+              className="h-40 w-full object-cover"
+              fallbackSeed="about-left"
+              loading="lazy"
+            />
+            <SmartImage
+              src={APIO_HOMEPAGE_IMAGES.about.right}
+              alt=""
+              className="h-40 w-full object-cover"
+              fallbackSeed="about-right"
+              loading="lazy"
+            />
           </div>
         </div>
       </section>
@@ -164,9 +164,15 @@ export default function HomePage() {
               <h2 className="home-section-title max-w-sm">{t("homePage.region.immobilierTitle")}</h2>
               <p className="mt-5 text-sm leading-relaxed text-ink-600">{L(regionIntro.body)}</p>
               <div className="mt-8 hidden flex-col gap-4 lg:flex">
-                {REGION_LEFT.map((src, idx) => (
+                {APIO_HOMEPAGE_IMAGES.region.left.map((src, idx) => (
                   <div key={idx} className="home-region-photo aspect-[4/5] max-h-[220px]">
-                    <SmartImage src={src} alt="" className="h-full w-full object-cover" fallbackSeed={`reg-l-${idx}`} />
+                    <SmartImage
+                      src={src}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      fallbackSeed={`reg-l-${idx}`}
+                      loading="lazy"
+                    />
                   </div>
                 ))}
               </div>
@@ -188,16 +194,23 @@ export default function HomePage() {
             <div className="hidden flex-col gap-4 lg:col-span-4 lg:flex xl:col-span-4">
               <div className="home-region-photo aspect-[3/5] min-h-[280px] flex-1">
                 <SmartImage
-                  src={REGION_RIGHT.tall}
+                  src={APIO_HOMEPAGE_IMAGES.region.rightTall}
                   alt=""
                   className="h-full w-full object-cover"
                   fallbackSeed="reg-r-tall"
+                  loading="lazy"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                {REGION_RIGHT.small.map((src, idx) => (
+                {APIO_HOMEPAGE_IMAGES.region.rightSmall.map((src, idx) => (
                   <div key={idx} className="home-region-photo aspect-[3/4]">
-                    <SmartImage src={src} alt="" className="h-full w-full object-cover" fallbackSeed={`reg-r-${idx}`} />
+                    <SmartImage
+                      src={src}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      fallbackSeed={`reg-r-${idx}`}
+                      loading="lazy"
+                    />
                   </div>
                 ))}
               </div>
@@ -205,9 +218,20 @@ export default function HomePage() {
           </div>
 
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:hidden">
-            {[REGION_LEFT[0], REGION_LEFT[1], REGION_RIGHT.tall, REGION_RIGHT.small[0]].map((src, idx) => (
+            {[
+              APIO_HOMEPAGE_IMAGES.region.left[0],
+              APIO_HOMEPAGE_IMAGES.region.left[1],
+              APIO_HOMEPAGE_IMAGES.region.rightTall,
+              APIO_HOMEPAGE_IMAGES.region.rightSmall[0],
+            ].map((src, idx) => (
               <div key={idx} className="home-region-photo aspect-[3/4]">
-                <SmartImage src={src} alt="" className="h-full w-full object-cover" fallbackSeed={`reg-m-${idx}`} />
+                <SmartImage
+                  src={src}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  fallbackSeed={`reg-m-${idx}`}
+                  loading="lazy"
+                />
               </div>
             ))}
           </div>
@@ -394,7 +418,13 @@ export default function HomePage() {
 
       {/* CTA */}
       <section className="relative overflow-hidden">
-        <SmartImage src={CTA_BG} alt="" className="absolute inset-0 h-full w-full object-cover" fallbackSeed="cta" />
+        <SmartImage
+          src={APIO_HOMEPAGE_IMAGES.cta}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          fallbackSeed="cta"
+          loading="lazy"
+        />
         <div className="absolute inset-0 bg-navy/85" />
         <div className="home-container relative py-20 text-center">
           <h2 className="home-display-title home-cta-headline mx-auto max-w-2xl">{t("homePage.cta.title")}</h2>

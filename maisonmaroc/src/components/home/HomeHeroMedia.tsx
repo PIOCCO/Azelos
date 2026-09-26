@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import SmartImage from "../SmartImage";
-import type { HomeHeroSlide } from "./homeHeroImages";
-import { HOME_HERO_TIMING } from "./homeHeroImages";
+import type { HomeHeroSlide } from "./homeHeroSlide";
+import { HOME_HERO_TIMING } from "../../config/apioHomepageImages";
 
 export type HomeHeroMediaProps = {
   slides: HomeHeroSlide[];
