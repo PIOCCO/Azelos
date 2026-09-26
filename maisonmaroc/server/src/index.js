@@ -47,6 +47,8 @@ import {
   createContactSubmission,
   getNewsBySlug,
   getPublicDocumentFile,
+  publicDownloadFilename,
+  contentDispositionAttachment,
   listPublicDocuments,
   listPublishedEvents,
   listPublishedNews,
@@ -208,12 +210,14 @@ app.get("/api/content/documents/:id/file", publicContentLimiter, (req, res) => {
   if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
   const doc = getPublicDocumentFile(db, idCheck.value);
   if (!doc || !doc.file_storage) return res.status(404).json({ error: "Not found" });
+  const mime = String(doc.file_mime || "").toLowerCase();
+  if (!mime.includes("pdf")) return res.status(404).json({ error: "Not found" });
   const abs = resolveStoredFile(doc.file_storage);
   if (!abs) return res.status(404).json({ error: "Not found" });
-  res.setHeader("Content-Type", doc.file_mime || "application/octet-stream");
+  const filename = publicDownloadFilename(doc.title_fr, doc.id);
+  res.setHeader("Content-Type", "application/pdf");
   res.setHeader("X-Content-Type-Options", "nosniff");
-  const inline = req.query.inline === "1";
-  res.setHeader("Content-Disposition", inline ? "inline" : "attachment");
+  res.setHeader("Content-Disposition", contentDispositionAttachment(filename));
   fs.createReadStream(abs).pipe(res);
 });
 

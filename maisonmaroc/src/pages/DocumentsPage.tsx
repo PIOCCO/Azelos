@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Link } from "react-router-dom";
-import { Download, ExternalLink, Eye, FileText, Search } from "lucide-react";
+import { Download, FileText, Search } from "lucide-react";
 import PageHeader from "../components/PageHeader";
 import PageMeta from "../components/PageMeta";
 import { fetchDocuments, type PublicDocument } from "../lib/contentApi";
@@ -11,7 +10,6 @@ import {
   DOCUMENT_CATEGORY_ORDER,
   type DocumentCategoryId,
 } from "../data/documentCategories.fr";
-import { safeExternalHref } from "../lib/safeUrl";
 
 const FR = {
   metaTitle: "Centre de documentation — APIO",
@@ -25,20 +23,38 @@ const FR = {
   badgeComingSoon: "Document à venir",
   badgeTemplate: "Modèle à compléter",
   badgeOnline: "Consultation en ligne",
-  download: "Télécharger",
-  view: "Consulter",
+  downloadPdf: "Télécharger le PDF",
   noFile: "Fichier non disponible — document en préparation.",
   version: "Mise à jour",
   type: "Format",
   errorLoad: "Impossible de charger les documents. Veuillez réessayer plus tard.",
 };
 
-function apiFileUrl(fileUrl: string, inline = false) {
+function documentDownloadHref(fileUrl: string) {
   const base = import.meta.env.VITE_API_URL ?? "";
-  const path = fileUrl.startsWith("http") ? fileUrl : `${base}${fileUrl}`;
-  if (!inline) return path;
-  const sep = path.includes("?") ? "&" : "?";
-  return `${path}${sep}inline=1`;
+  return fileUrl.startsWith("http") ? fileUrl : `${base}${fileUrl}`;
+}
+
+function suggestedPdfFilename(titleFr: string, docId: string) {
+  const base = String(titleFr || docId)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+  const stem = base || docId.slice(0, 40);
+  return `${stem}.pdf`;
+}
+
+/** Public PDF download only — no preview, no HTML templates, no « à venir ». */
+function canDownloadPdf(doc: PublicDocument) {
+  if (doc.availability === "coming_soon") return false;
+  if (!doc.fileUrl) return false;
+  const mime = (doc.fileMime || "").toLowerCase();
+  if (mime.includes("pdf")) return true;
+  if (doc.fileFormat?.toUpperCase() === "PDF" && !mime.includes("html")) return true;
+  return false;
 }
 
 function docMatchesSearch(doc: PublicDocument, q: string) {
@@ -163,12 +179,7 @@ export default function DocumentsPage() {
               <ul className="mt-6 grid gap-4 sm:grid-cols-2">
                 {section.items.map((doc) => {
                   const badge = availabilityBadge(doc);
-                  const canDownload = Boolean(doc.fileUrl);
-                  const canViewOnline = Boolean(doc.viewUrl);
-                  const canViewFile =
-                    canDownload &&
-                    doc.fileMime &&
-                    (doc.fileMime.includes("pdf") || doc.fileMime.includes("html"));
+                  const showPdfDownload = canDownloadPdf(doc);
 
                   return (
                     <li key={doc.id}>
@@ -200,56 +211,17 @@ export default function DocumentsPage() {
                           )}
                         </dl>
                         <div className="mt-4 flex flex-wrap gap-2">
-                          {canViewOnline && (() => {
-                            const external = safeExternalHref(doc.viewUrl);
-                            const internal = doc.viewUrl?.startsWith("/") ? doc.viewUrl : null;
-                            if (external) {
-                              return (
-                                <a
-                                  href={external}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="home-btn home-btn-primary inline-flex min-h-[40px] px-4 py-2 text-[11px]"
-                                >
-                                  <Eye size={14} className="me-1.5" /> {FR.view}
-                                </a>
-                              );
-                            }
-                            if (internal) {
-                              return (
-                                <Link
-                                  to={internal}
-                                  className="home-btn home-btn-primary inline-flex min-h-[40px] px-4 py-2 text-[11px]"
-                                >
-                                  <Eye size={14} className="me-1.5" /> {FR.view}
-                                </Link>
-                              );
-                            }
-                            return null;
-                          })()}
-                          {canViewFile && (
+                          {showPdfDownload ? (
                             <a
-                              href={apiFileUrl(doc.fileUrl!, true)}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              href={documentDownloadHref(doc.fileUrl!)}
                               className="home-btn home-btn-outline inline-flex min-h-[40px] border-navy px-4 py-2 text-[11px] text-navy"
-                            >
-                              <ExternalLink size={14} className="me-1.5" /> {FR.view}
-                            </a>
-                          )}
-                          {canDownload ? (
-                            <a
-                              href={apiFileUrl(doc.fileUrl!)}
-                              className="home-btn home-btn-outline inline-flex min-h-[40px] border-navy px-4 py-2 text-[11px] text-navy"
-                              download
+                              download={suggestedPdfFilename(doc.title.fr, doc.id)}
                               rel="noopener noreferrer"
                             >
-                              <Download size={14} className="me-1.5" /> {FR.download}
+                              <Download size={14} className="me-1.5" aria-hidden /> {FR.downloadPdf}
                             </a>
                           ) : (
-                            !canViewOnline && (
-                              <span className="text-xs leading-relaxed text-ink-500">{FR.noFile}</span>
-                            )
+                            <span className="text-xs leading-relaxed text-ink-500">{FR.noFile}</span>
                           )}
                         </div>
                       </article>

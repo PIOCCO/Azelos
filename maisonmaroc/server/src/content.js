@@ -158,6 +158,25 @@ export function getPublicDocumentFile(db, id) {
   return r || null;
 }
 
+/** Safe attachment filename for public PDF downloads (no path segments). */
+export function publicDownloadFilename(titleFr, docId) {
+  const base = String(titleFr || docId)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+  const stem = base || String(docId).replace(/[^a-z0-9-]+/gi, "-").slice(0, 40);
+  return `${stem}.pdf`;
+}
+
+export function contentDispositionAttachment(filename) {
+  const ascii = String(filename).replace(/[^\x20-\x7E]/g, "_").replace(/["\\]/g, "_");
+  const encoded = encodeURIComponent(filename);
+  return `attachment; filename="${ascii}"; filename*=UTF-8''${encoded}`;
+}
+
 export function createContactSubmission(db, payload, ip) {
   const id = randomUUID();
   const ipHash = ip
