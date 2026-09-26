@@ -19,6 +19,25 @@ export function parseOrigins() {
   return raw.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
+/** Non-production: allow Vite dev over LAN / Tailscale (e.g. http://100.x.x.x:5173). */
+export function isDevLanOrigin(origin) {
+  if (process.env.NODE_ENV === "production") return false;
+  if (process.env.ALLOW_DEV_LAN_ORIGINS === "false") return false;
+  try {
+    const u = new URL(origin);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+    const h = u.hostname;
+    if (h === "localhost" || h === "127.0.0.1" || h === "[::1]") return true;
+    if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+    if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+    if (/^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+    if (/^100\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 function cookieSecureDefault() {
   if (process.env.COOKIE_SECURE === "true") return true;
   if (process.env.COOKIE_SECURE === "false") return false;

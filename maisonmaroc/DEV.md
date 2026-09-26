@@ -12,6 +12,8 @@ npm run dev          # Node 18+ — starts API (:3001) then Vite (:5173)
 
 Open **http://localhost:5173**
 
+Access via **LAN or Tailscale IP** (e.g. `http://100.x.x.x:5173`): in development the API allows private-network origins automatically. If login returns **403 Forbidden**, add your exact origin to `server/.env` → `ALLOWED_ORIGINS` and restart the API.
+
 ## `ECONNREFUSED 127.0.0.1:3001`
 
 Vite proxies `/api/*` to the backend. This error means **only the frontend is running**.

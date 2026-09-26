@@ -21,6 +21,7 @@ import {
   attachUser,
   clearAuthCookie,
   handleAuthError,
+  isDevLanOrigin,
   loginUser,
   parseOrigins,
   requireAuth,
@@ -94,7 +95,7 @@ app.use(
   cors({
     origin(origin, callback) {
       const allowed = parseOrigins();
-      if (!origin || allowed.includes(origin)) {
+      if (!origin || allowed.includes(origin) || isDevLanOrigin(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
