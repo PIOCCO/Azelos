@@ -143,40 +143,28 @@ h4 {
   @apply absolute inset-0 opacity-0;
   z-index: 0;
   transition: opacity var(--hero-fade-ms, 1400ms) ease-in-out;
+  will-change: opacity;
 }
 .home-hero-media__slide--fade-reduced {
-  transition-duration: 500ms;
+  transition: none;
 }
 .home-hero-media__slide--active {
   @apply opacity-100;
   z-index: 1;
 }
-.home-hero-media__motion {
-  @apply h-full w-full overflow-hidden;
-}
-.home-hero-media__motion--active {
-  animation: hero-ken-burns 6.2s ease-out forwards;
-}
 .home-hero-media__img {
   @apply block h-full w-full object-cover;
   object-position: var(--hero-object-pos-mobile, center);
+  transform: none;
 }
 @media (min-width: 768px) {
   .home-hero-media__img {
     object-position: var(--hero-object-pos, center);
   }
 }
-@keyframes hero-ken-burns {
-  from {
-    transform: scale(1) translate3d(0, 0, 0);
-  }
-  to {
-    transform: scale(1.08) translate3d(-1.2%, -0.6%, 0);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
-  .home-hero-media__motion--active {
-    animation: none;
+  .home-hero-media__slide {
+    transition: none;
   }
 }
 .home-hero-media__progress {

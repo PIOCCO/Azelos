@@ -25,6 +25,7 @@ function usePrefersReducedMotion() {
 }
 
 function preloadImage(src: string) {
+  if (!src) return;
   const img = new Image();
   img.decoding = "async";
   img.src = src;
@@ -38,7 +39,6 @@ export default function HomeHeroMedia({
 }: HomeHeroMediaProps) {
   const reducedMotion = usePrefersReducedMotion();
   const [index, setIndex] = useState(0);
-  const [motionKey, setMotionKey] = useState(0);
   const pausedRef = useRef(false);
   const count = slides.length;
 
@@ -47,7 +47,6 @@ export default function HomeHeroMedia({
       if (count === 0) return;
       const i = ((next % count) + count) % count;
       setIndex(i);
-      setMotionKey((k) => k + 1);
     },
     [count],
   );
@@ -56,13 +55,17 @@ export default function HomeHeroMedia({
   const goPrev = useCallback(() => go(index - 1), [go, index]);
 
   useEffect(() => {
-    if (count <= 1 || pausedRef.current) return undefined;
-    const hold = reducedMotion ? timing.displayMs * 1.4 : timing.displayMs;
+    preloadImage(slides[0]?.src ?? "");
+    if (count > 1) preloadImage(slides[1]?.src ?? "");
+  }, [count, slides]);
+
+  useEffect(() => {
+    if (count <= 1 || reducedMotion || pausedRef.current) return undefined;
     const id = window.setInterval(() => {
       if (!pausedRef.current) go(index + 1);
-    }, hold);
+    }, timing.cycleMs);
     return () => window.clearInterval(id);
-  }, [count, go, index, reducedMotion, timing.displayMs]);
+  }, [count, go, index, reducedMotion, timing.cycleMs]);
 
   useEffect(() => {
     if (count <= 1) return;
@@ -76,7 +79,9 @@ export default function HomeHeroMedia({
     return <div className="home-hero-media home-hero-media--empty" aria-hidden />;
   }
 
-  const fadeClass = reducedMotion ? "home-hero-media__slide--fade-reduced" : "home-hero-media__slide--fade";
+  const fadeClass = reducedMotion
+    ? "home-hero-media__slide--fade-reduced"
+    : "home-hero-media__slide--fade";
 
   return (
     <div
@@ -101,22 +106,17 @@ export default function HomeHeroMedia({
               } as React.CSSProperties
             }
           >
-            <div
-              className={`home-hero-media__motion ${isActive && !reducedMotion ? "home-hero-media__motion--active" : ""}`}
-              key={isActive ? `motion-${motionKey}` : `motion-idle-${i}`}
-            >
-              <SmartImage
-                src={slide.src}
-                srcSet={slide.srcSet}
-                sizes="100vw"
-                alt={isActive ? alt : ""}
-                className="home-hero-media__img"
-                fallbackSeed={`${fallbackSeed}-${i}`}
-                loading={i === 0 || i === 1 ? "eager" : "lazy"}
-                fetchPriority={isActive ? "high" : i === (index + 1) % count ? "low" : "auto"}
-                decoding="async"
-              />
-            </div>
+            <SmartImage
+              src={slide.src}
+              srcSet={slide.srcSet}
+              sizes="100vw"
+              alt={isActive ? alt : ""}
+              className="home-hero-media__img"
+              fallbackSeed={`${fallbackSeed}-${i}`}
+              loading={i === 0 || i === 1 ? "eager" : "lazy"}
+              fetchPriority={isActive ? "high" : i === (index + 1) % count ? "low" : "auto"}
+              decoding="async"
+            />
             {slide.caption && isActive ? (
               <span className="sr-only">{slide.caption}</span>
             ) : null}
@@ -124,7 +124,7 @@ export default function HomeHeroMedia({
         );
       })}
 
-      {count > 1 && (
+      {count > 1 && !reducedMotion && (
         <>
           <div className="home-hero-media__progress" aria-hidden>
             {slides.map((_, i) => (
@@ -143,7 +143,7 @@ export default function HomeHeroMedia({
                 goPrev();
                 window.setTimeout(() => {
                   pausedRef.current = false;
-                }, timing.displayMs * 2);
+                }, timing.cycleMs * 2);
               }}
               aria-label="Image précédente"
             >
@@ -157,7 +157,7 @@ export default function HomeHeroMedia({
                 goNext();
                 window.setTimeout(() => {
                   pausedRef.current = false;
-                }, timing.displayMs * 2);
+                }, timing.cycleMs * 2);
               }}
               aria-label="Image suivante"
             >

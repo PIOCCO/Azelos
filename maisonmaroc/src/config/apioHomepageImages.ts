@@ -104,6 +104,8 @@ export const HOME_HERO_IMAGES: HomeHeroSlide[] = HERO_SLIDE_FILES.map((slide) =>
 }));
 
 export const HOME_HERO_TIMING = {
-  displayMs: 6200,
+  /** Time between crossfade starts — no extra pause before the next fade */
+  cycleMs: 5200,
+  /** Crossfade duration (1–1.5s) */
   fadeMs: 1400,
 } as const;
