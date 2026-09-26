@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface AvatarProps {
   src: string;
@@ -11,6 +11,9 @@ export default function Avatar({ src, name, className = "" }: AvatarProps) {
     name,
   )}&background=1c2e8f&color=fff&bold=true&size=256`;
   const [current, setCurrent] = useState(src);
+  useEffect(() => {
+    setCurrent(src);
+  }, [src]);
   return (
     <img
       src={current}

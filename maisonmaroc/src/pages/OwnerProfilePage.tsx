@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { apiFetch } from "../lib/api";
+import { apiFetch, apiMediaUrl } from "../lib/api";
 import { BadgeCheck, MapPin, CalendarDays, Building2, Languages } from "lucide-react";
 import { useListings } from "../context/ListingsContext";
 import { cityById } from "../data/cities";
@@ -35,7 +35,7 @@ export default function OwnerProfilePage() {
 
   if (!owner) return <NotFoundPage />;
 
-  const displayAvatar = publicProfile?.avatar || owner.avatar;
+  const displayAvatar = apiMediaUrl(publicProfile?.avatar) || owner.avatar;
 
   const listings = propertiesByOwner(owner.id);
   const city = cityById(owner.cityId);

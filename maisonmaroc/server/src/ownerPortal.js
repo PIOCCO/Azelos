@@ -46,12 +46,22 @@ function getOverrides(db, ownerProfileId) {
   return db.prepare(`SELECT * FROM owner_profile_overrides WHERE owner_profile_id = ?`).get(ownerProfileId);
 }
 
-export function memberAvatarPublicUrl(ownerProfileId) {
-  return `/api/public/member-avatars/${ownerProfileId}/file`;
+export function memberAvatarPublicUrl(ownerProfileId, cacheVersion) {
+  const id = String(ownerProfileId || "").slice(0, 128);
+  const base = `/api/public/member-avatars/${id}/file`;
+  if (cacheVersion == null || cacheVersion === "") return base;
+  return `${base}?v=${encodeURIComponent(String(cacheVersion))}`;
+}
+
+function avatarCacheVersion(overrides) {
+  if (!overrides?.avatar_storage) return null;
+  return overrides.updated_at || overrides.avatar_storage;
 }
 
 function resolveAvatar(seed, overrides, ownerProfileId) {
-  if (overrides?.avatar_storage) return memberAvatarPublicUrl(ownerProfileId);
+  if (overrides?.avatar_storage) {
+    return memberAvatarPublicUrl(ownerProfileId, avatarCacheVersion(overrides));
+  }
   if (overrides?.avatar_url) return overrides.avatar_url;
   return seed?.avatar || "";
 }
@@ -266,7 +276,7 @@ export function uploadOwnerProfileAvatar(db, user, stored) {
   const existing = getOverrides(db, ownerProfileId);
   const oldStorage = existing?.avatar_storage;
   const now = new Date().toISOString();
-  const publicUrl = memberAvatarPublicUrl(ownerProfileId);
+  const publicUrl = memberAvatarPublicUrl(ownerProfileId, now);
   if (!existing) {
     db.prepare(
       `INSERT INTO owner_profile_overrides (owner_profile_id, avatar_url, avatar_storage, avatar_mime, updated_at)

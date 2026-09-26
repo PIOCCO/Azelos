@@ -2,6 +2,15 @@ import { appBasename } from "./appBase";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
+/** Resolve API-hosted media paths (e.g. member avatars) for use in img src. */
+export function apiMediaUrl(url: string | undefined | null): string {
+  if (!url) return "";
+  if (url.startsWith("http") || url.startsWith("//") || url.startsWith("data:") || url.startsWith("blob:")) {
+    return url;
+  }
+  return `${API_BASE}${url}`;
+}
+
 /** Set when fetch fails (API not running or wrong VITE_API_URL). */
 let apiUnreachable = false;
 

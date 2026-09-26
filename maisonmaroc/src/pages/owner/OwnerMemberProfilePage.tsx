@@ -1,7 +1,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Trash2, Upload, User } from "lucide-react";
-import { apiFetch } from "../../lib/api";
+import { apiFetch, apiMediaUrl } from "../../lib/api";
 import type { OwnerProfileBundle } from "../../lib/ownerPortalTypes";
 import { useLocale } from "../../lib/useLocale";
 import { cityById } from "../../data/cities";
@@ -9,12 +9,6 @@ import ProfileCompletionBar from "../../components/owner/ProfileCompletionBar";
 import { PortalError, PortalLoading, PortalSuccessBanner } from "../../components/owner/PortalStates";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
-
-function avatarSrc(url: string | undefined) {
-  if (!url) return "";
-  if (url.startsWith("http") || url.startsWith("//")) return url;
-  return `${API_BASE}${url}`;
-}
 
 export default function OwnerMemberProfilePage() {
   const { t, L } = useLocale();
@@ -56,7 +50,7 @@ export default function OwnerMemberProfilePage() {
   }, [load]);
 
   const previewAvatar = useMemo(
-    () => avatarSrc(bundle?.publicProfile.avatar || form.avatarUrl),
+    () => apiMediaUrl(bundle?.publicProfile.avatar || form.avatarUrl),
     [bundle?.publicProfile.avatar, form.avatarUrl],
   );
 

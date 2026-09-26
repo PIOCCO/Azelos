@@ -238,7 +238,11 @@ app.get("/api/public/member-avatars/:ownerProfileId/file", publicContentLimiter,
   if (!abs) return res.status(404).json({ error: "Not found" });
   res.setHeader("Content-Type", file.mime);
   res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("Cache-Control", "public, max-age=3600");
+  if (req.query.v) {
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  } else {
+    res.setHeader("Cache-Control", "public, max-age=300, must-revalidate");
+  }
   fs.createReadStream(abs).pipe(res);
 });
 
