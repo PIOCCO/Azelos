@@ -57,6 +57,7 @@ import {
 } from "./content.js";
 import { validateContactBody } from "./contact.js";
 import { registerAdminContentRoutes } from "./adminContentRoutes.js";
+import { registerOwnerRoutes } from "./ownerRoutes.js";
 import { applySecurityMiddleware } from "./security.js";
 import { clampPagination, validateSlug, EMAIL_RE } from "./validateContent.js";
 import { ensureUploadDir, resolveStoredFile } from "./uploads.js";
@@ -149,6 +150,16 @@ const uploadLimiter = rateLimit({
   legacyHeaders: false,
   handler(_req, res) {
     res.status(429).json({ error: "Too many uploads", code: "RATE_LIMIT" });
+  },
+});
+
+const ownerMutationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler(_req, res) {
+    res.status(429).json({ error: "Too many requests", code: "RATE_LIMIT" });
   },
 });
 
@@ -530,6 +541,13 @@ registerAdminContentRoutes(app, db, {
   requireSuperAdmin,
   adminMutationLimiter,
   uploadLimiter,
+});
+
+registerOwnerRoutes(app, db, {
+  requireAuth,
+  requireOwner,
+  uploadLimiter,
+  ownerMutationLimiter,
 });
 
 app.delete("/api/admin/owners/:id", requireAuth, requireSuperAdmin, (req, res) => {

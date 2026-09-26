@@ -13,7 +13,17 @@ import AccountPage from "./pages/AccountPage";
 import ClientAuthPage from "./pages/ClientAuthPage";
 import OwnerLoginPage from "./pages/OwnerLoginPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
-import OwnerDashboardPage from "./pages/OwnerDashboardPage";
+import OwnerPortalLayout from "./components/owner/OwnerPortalLayout";
+import OwnerHomePage from "./pages/owner/OwnerHomePage";
+import OwnerMemberProfilePage from "./pages/owner/OwnerMemberProfilePage";
+import OwnerPublicProfilePage from "./pages/owner/OwnerPublicProfilePage";
+import OwnerProjectsPage from "./pages/owner/OwnerProjectsPage";
+import OwnerProjectEditPage from "./pages/owner/OwnerProjectEditPage";
+import OwnerDocumentsPage from "./pages/owner/OwnerDocumentsPage";
+import OwnerMembershipPage from "./pages/owner/OwnerMembershipPage";
+import OwnerRequestsPage from "./pages/owner/OwnerRequestsPage";
+import OwnerNotificationsPage from "./pages/owner/OwnerNotificationsPage";
+import OwnerSettingsPage from "./pages/owner/OwnerSettingsPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import MessagesPage from "./pages/MessagesPage";
 import NotFoundPage from "./pages/NotFoundPage";
@@ -76,9 +86,21 @@ export default function App() {
         </Route>
 
         <Route element={<ProtectedRoute roles={["REAL_ESTATE_OWNER"]} loginPath="/owner/login" />}>
-          <Route path="/owner" element={<OwnerDashboardPage />} />
-          <Route path="/owner/messages" element={<MessagesPage role="REAL_ESTATE_OWNER" />} />
-          <Route path="/owner/messages/:id" element={<MessagesPage role="REAL_ESTATE_OWNER" />} />
+          <Route element={<OwnerPortalLayout />}>
+            <Route path="/owner" element={<OwnerHomePage />} />
+            <Route path="/owner/profile" element={<OwnerMemberProfilePage />} />
+            <Route path="/owner/profile/public" element={<OwnerPublicProfilePage />} />
+            <Route path="/owner/projects" element={<OwnerProjectsPage />} />
+            <Route path="/owner/projects/new" element={<OwnerProjectEditPage />} />
+            <Route path="/owner/projects/:id" element={<OwnerProjectEditPage />} />
+            <Route path="/owner/documents" element={<OwnerDocumentsPage />} />
+            <Route path="/owner/membership" element={<OwnerMembershipPage />} />
+            <Route path="/owner/requests" element={<OwnerRequestsPage />} />
+            <Route path="/owner/notifications" element={<OwnerNotificationsPage />} />
+            <Route path="/owner/settings" element={<OwnerSettingsPage />} />
+            <Route path="/owner/messages" element={<MessagesPage role="REAL_ESTATE_OWNER" />} />
+            <Route path="/owner/messages/:id" element={<MessagesPage role="REAL_ESTATE_OWNER" />} />
+          </Route>
         </Route>
 
         <Route element={<ProtectedRoute roles={["SUPER_ADMIN"]} loginPath="/admin/login" />}>

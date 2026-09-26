@@ -159,6 +159,36 @@ export function getPublicDocumentFile(db, id) {
   return r || null;
 }
 
+export function listMemberDocuments(db) {
+  const rows = db
+    .prepare(`SELECT * FROM documents WHERE published = 1 AND visibility IN ('public', 'members')`)
+    .all();
+  const orderIdx = (cat) => {
+    const i = DOCUMENT_CATEGORY_ORDER.indexOf(cat);
+    return i === -1 ? 999 : i;
+  };
+  rows.sort((a, b) => {
+    const c = orderIdx(a.category) - orderIdx(b.category);
+    if (c !== 0) return c;
+    return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+  });
+  return rows.map((r) => ({
+    ...rowToDocument(r),
+    fileUrl: `/api/owner/documents/${r.id}/file`,
+    visibility: r.visibility,
+  }));
+}
+
+export function getMemberDocumentForDownload(db, id) {
+  return (
+    db
+      .prepare(
+        `SELECT * FROM documents WHERE id = ? AND published = 1 AND visibility IN ('public', 'members')`,
+      )
+      .get(id) || null
+  );
+}
+
 /** Safe attachment filename for public PDF downloads (no path segments). */
 export function publicDownloadFilename(titleFr, docId) {
   const base = String(titleFr || docId)

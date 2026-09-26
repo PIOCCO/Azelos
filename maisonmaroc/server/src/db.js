@@ -143,4 +143,53 @@ function ensureColumns(db) {
   addCol("documents", "file_format", "TEXT");
   addCol("documents", "sort_order", "INTEGER NOT NULL DEFAULT 0");
   addCol("documents", "view_url", "TEXT");
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS owner_profile_overrides (
+      owner_profile_id TEXT PRIMARY KEY,
+      bio_fr TEXT,
+      bio_ar TEXT,
+      phone TEXT,
+      whatsapp TEXT,
+      email_public TEXT,
+      website TEXT,
+      avatar_url TEXT,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS owner_project_drafts (
+      id TEXT PRIMARY KEY,
+      owner_profile_id TEXT NOT NULL,
+      title_fr TEXT NOT NULL DEFAULT '',
+      title_ar TEXT NOT NULL DEFAULT '',
+      description_fr TEXT NOT NULL DEFAULT '',
+      description_ar TEXT NOT NULL DEFAULT '',
+      city_id TEXT,
+      status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'pending', 'published', 'rejected', 'archived')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_owner_drafts_profile ON owner_project_drafts(owner_profile_id);
+
+    CREATE TABLE IF NOT EXISTS owner_project_images (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES owner_project_drafts(id) ON DELETE CASCADE,
+      storage_name TEXT NOT NULL,
+      mime TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      is_primary INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_owner_proj_images ON owner_project_images(project_id);
+
+    CREATE TABLE IF NOT EXISTS owner_activity_log (
+      id TEXT PRIMARY KEY,
+      owner_profile_id TEXT NOT NULL,
+      user_id TEXT,
+      action TEXT NOT NULL,
+      detail TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_owner_activity_profile ON owner_activity_log(owner_profile_id);
+  `);
 }

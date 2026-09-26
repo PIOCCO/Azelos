@@ -239,6 +239,38 @@ async function main() {
       }),
     });
     assert("OWNER admin events denied", ownerNews.status === 403);
+
+    const dash = await req("/api/owner/dashboard", { headers: { Cookie: ownerLogin.cookie } });
+    assert("OWNER dashboard", dash.status === 200 && typeof dash.body?.stats?.profileCompletion === "number");
+
+    const profilePatch = await req("/api/owner/me", {
+      method: "PATCH",
+      headers: { Cookie: ownerLogin.cookie },
+      body: JSON.stringify({ role: "SUPER_ADMIN", status: "ACTIVE" }),
+    });
+    assert("OWNER patch me rejects role", profilePatch.status === 400);
+
+    const projCreate = await req("/api/owner/projects", {
+      method: "POST",
+      headers: { Cookie: ownerLogin.cookie },
+      body: JSON.stringify({ titleFr: "Test IDOR", titleAr: "اختبار" }),
+    });
+    assert("OWNER create draft project", projCreate.status === 201);
+    const myProjectId = projCreate.body?.project?.id;
+
+    if (myProjectId) {
+      const fakeId = "00000000-0000-4000-8000-000000000099";
+      const idorGet = await req(`/api/owner/projects/${fakeId}`, {
+        headers: { Cookie: ownerLogin.cookie },
+      });
+      assert("OWNER project IDOR get blocked", idorGet.status === 404);
+
+      const idorDel = await req(`/api/owner/projects/${fakeId}`, {
+        method: "DELETE",
+        headers: { Cookie: ownerLogin.cookie },
+      });
+      assert("OWNER project IDOR delete blocked", idorDel.status === 404);
+    }
   }
 
   const health = await req("/api/health");

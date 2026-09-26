@@ -140,6 +140,25 @@ export function persistValidatedPdfUpload(buffer) {
   return stored;
 }
 
+const IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp"];
+
+export const projectImageUploadMiddleware = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: Math.min(MAX_BYTES, 5 * 1024 * 1024), files: 1, parts: 4 },
+  fileFilter(_req, file, cb) {
+    const name = String(file.originalname || "").slice(0, 255);
+    if (name.includes("\0") || name.includes("..")) return cb(new Error("Invalid filename"));
+    const lower = name.toLowerCase();
+    if (lower.endsWith(".svg") || lower.endsWith(".html")) return cb(new Error("Unsupported file type"));
+    if (!IMAGE_MIMES.includes(file.mimetype)) return cb(new Error("Only JPEG, PNG or WebP images are allowed"));
+    cb(null, true);
+  },
+}).single("file");
+
+export function persistValidatedProjectImage(buffer) {
+  return persistValidatedUpload(buffer, { allowedMimes: IMAGE_MIMES });
+}
+
 export function resolveStoredFile(storageName) {
   const base = path.basename(String(storageName || ""));
   if (!base || base !== storageName || base.includes("..") || base.includes("/") || base.includes("\\")) {
