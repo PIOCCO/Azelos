@@ -3,6 +3,7 @@
  * Usage: npm run test:auth
  */
 import { markUserEmailVerified } from "./test-db-helper.js";
+import { adminLogin as adminPortLogin, adminReq } from "./test-admin-helper.js";
 
 const BASE = process.env.API_BASE || "http://localhost:3001";
 
@@ -64,16 +65,16 @@ async function main() {
   assert("PUBLIC GET /api/owner/properties denied", ownerDash.status === 401);
 
   const adminOwners = await req("/api/admin/owners");
-  assert("PUBLIC GET /api/admin/owners denied", adminOwners.status === 401);
+  assert("PUBLIC GET /api/admin/owners hidden", adminOwners.status === 404);
 
   const adminNews = await req("/api/admin/news");
-  assert("PUBLIC GET /api/admin/news denied", adminNews.status === 401);
+  assert("PUBLIC GET /api/admin/news hidden", adminNews.status === 404);
 
   const adminEvents = await req("/api/admin/events");
-  assert("PUBLIC GET /api/admin/events denied", adminEvents.status === 401);
+  assert("PUBLIC GET /api/admin/events hidden", adminEvents.status === 404);
 
   const adminDocs = await req("/api/admin/documents");
-  assert("PUBLIC GET /api/admin/documents denied", adminDocs.status === 401);
+  assert("PUBLIC GET /api/admin/documents hidden", adminDocs.status === 404);
 
   const ownerReg = await req("/api/auth/owner/register", {
     method: "POST",
@@ -115,27 +116,27 @@ async function main() {
   const clientAdmin = await req("/api/admin/owners", {
     headers: { Cookie: clientLogin.cookie },
   });
-  assert("CLIENT admin API denied", clientAdmin.status === 403);
+  assert("CLIENT admin API hidden on public port", clientAdmin.status === 404);
 
   const clientAdminNews = await req("/api/admin/news", {
     method: "POST",
     headers: { Cookie: clientLogin.cookie },
     body: JSON.stringify({ slug: "x", titleFr: "a", titleAr: "b", bodyFr: "c", bodyAr: "d" }),
   });
-  assert("CLIENT admin news POST denied", clientAdminNews.status === 403);
+  assert("CLIENT admin news POST hidden on public port", clientAdminNews.status === 404);
 
   const adminEmail = process.env.SUPER_ADMIN_EMAIL || "admin@apio.ma";
   const adminPass = process.env.SUPER_ADMIN_PASSWORD || "change-me-on-first-login";
-  const adminLogin = await login("/api/auth/admin/login", adminEmail, adminPass);
+  const adminLogin = await adminPortLogin(adminEmail, adminPass);
   assert("Super-admin login", adminLogin.status === 200);
 
   if (adminLogin.status === 200) {
-    const owners = await req("/api/admin/owners", {
+    const owners = await adminReq("/api/admin/owners", {
       headers: { Cookie: adminLogin.cookie },
     });
     assert("SUPER_ADMIN list owners", owners.status === 200);
 
-    const create = await req("/api/admin/owners", {
+    const create = await adminReq("/api/admin/owners", {
       method: "POST",
       headers: { Cookie: adminLogin.cookie },
       body: JSON.stringify({
@@ -149,7 +150,7 @@ async function main() {
     assert("Admin create owner rejects role in body", create.status === 400);
 
     testOwnerEmail = `owner2-${Date.now()}@test.apio.ma`;
-    const create2 = await req("/api/admin/members", {
+    const create2 = await adminReq("/api/admin/members", {
       method: "POST",
       headers: { Cookie: adminLogin.cookie },
       body: JSON.stringify({
@@ -165,11 +166,11 @@ async function main() {
       markUserEmailVerified(testOwnerEmail);
     }
 
-    const newsList = await req("/api/admin/news", { headers: { Cookie: adminLogin.cookie } });
+    const newsList = await adminReq("/api/admin/news", { headers: { Cookie: adminLogin.cookie } });
     assert("SUPER_ADMIN list news", newsList.status === 200);
 
     const slug = `test-${Date.now()}`;
-    const newsCreate = await req("/api/admin/news", {
+    const newsCreate = await adminReq("/api/admin/news", {
       method: "POST",
       headers: { Cookie: adminLogin.cookie },
       body: JSON.stringify({
@@ -183,14 +184,14 @@ async function main() {
     });
     assert("SUPER_ADMIN create news", newsCreate.status === 201);
 
-    const badNews = await req("/api/admin/news", {
+    const badNews = await adminReq("/api/admin/news", {
       method: "POST",
       headers: { Cookie: adminLogin.cookie },
       body: JSON.stringify({ slug: "INVALID SLUG", titleFr: "x", titleAr: "y", bodyFr: "a", bodyAr: "b" }),
     });
     assert("Admin news rejects invalid slug", badNews.status === 400);
 
-    const eventCreate = await req("/api/admin/events", {
+    const eventCreate = await adminReq("/api/admin/events", {
       method: "POST",
       headers: { Cookie: adminLogin.cookie },
       body: JSON.stringify({
@@ -202,7 +203,7 @@ async function main() {
     });
     assert("SUPER_ADMIN create event", eventCreate.status === 201);
 
-    const docCreate = await req("/api/admin/documents", {
+    const docCreate = await adminReq("/api/admin/documents", {
       method: "POST",
       headers: { Cookie: adminLogin.cookie },
       body: JSON.stringify({
@@ -233,12 +234,12 @@ async function main() {
       headers: { Cookie: ownerLogin.cookie },
     });
     assert("OWNER own properties", mine.status === 200);
-    const adminAsOwner = await req("/api/admin/owners", {
+    const adminAsOwner = await adminReq("/api/admin/owners", {
       headers: { Cookie: ownerLogin.cookie },
     });
-    assert("OWNER admin denied", adminAsOwner.status === 403);
+    assert("OWNER denied on admin port (no admin session)", adminAsOwner.status === 401);
 
-    const ownerNews = await req("/api/admin/events", {
+    const ownerNews = await adminReq("/api/admin/events", {
       method: "POST",
       headers: { Cookie: ownerLogin.cookie },
       body: JSON.stringify({
@@ -247,7 +248,7 @@ async function main() {
         startsAt: new Date().toISOString(),
       }),
     });
-    assert("OWNER admin events denied", ownerNews.status === 403);
+    assert("OWNER admin events denied on admin port", ownerNews.status === 401);
 
     const dash = await req("/api/owner/dashboard", { headers: { Cookie: ownerLogin.cookie } });
     assert("OWNER dashboard", dash.status === 200 && typeof dash.body?.stats?.profileCompletion === "number");

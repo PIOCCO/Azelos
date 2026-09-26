@@ -6,7 +6,13 @@ import { useAuth } from "../context/AuthContext";
 import BrandLogo from "../components/BrandLogo";
 import { apiFetch, dashboardPathForRole } from "../lib/api";
 
-export default function AdminLoginPage() {
+type AdminLoginPageProps = {
+  /** Standalone admin app uses `/login`; legacy public path was `/admin/login`. */
+  loginPath?: string;
+  homePath?: string;
+};
+
+export default function AdminLoginPage({ homePath = "/admin" }: AdminLoginPageProps) {
   const { t } = useLocale();
   const { user, setUser, refresh } = useAuth();
   const navigate = useNavigate();
@@ -16,9 +22,9 @@ export default function AdminLoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user?.role === "SUPER_ADMIN") navigate("/admin", { replace: true });
+    if (user?.role === "SUPER_ADMIN") navigate(homePath, { replace: true });
     else if (user) navigate(dashboardPathForRole(user.role), { replace: true });
-  }, [user, navigate]);
+  }, [user, navigate, homePath]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +41,7 @@ export default function AdminLoginPage() {
     }
     setUser(data.user);
     await refresh();
-    navigate("/admin");
+    navigate(homePath);
   };
 
   return (

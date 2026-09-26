@@ -118,7 +118,7 @@ async function main() {
       method: "GET",
       headers: { Cookie: cookie },
     });
-    assert("CLIENT cannot list admin members", adminProbe.status === 401 || adminProbe.status === 403);
+    assert("CLIENT cannot list admin members on public API", adminProbe.status === 404);
 
     const ownerProbe = await req("/api/owner/me", {
       headers: { Cookie: cookie },

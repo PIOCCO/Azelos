@@ -3,6 +3,7 @@
  * Usage: npm run test:e2e
  */
 import { markUserEmailVerified } from "./test-db-helper.js";
+import { adminLogin as adminPortLogin, adminReq } from "./test-admin-helper.js";
 
 const BASE = process.env.API_BASE || "http://localhost:3001";
 
@@ -53,8 +54,7 @@ function assert(name, cond) {
 }
 
 async function main() {
-  const admin = await login(
-    "/api/auth/admin/login",
+  const admin = await adminPortLogin(
     process.env.SUPER_ADMIN_EMAIL || "admin@apio.ma",
     process.env.SUPER_ADMIN_PASSWORD || "change-me-on-first-login",
   );
@@ -64,7 +64,7 @@ async function main() {
   const emailB = `e2e-b-${Date.now()}@test.apio.ma`;
   const pass = "password123";
 
-  const createA = await req("/api/admin/members", {
+  const createA = await adminReq("/api/admin/members", {
     method: "POST",
     headers: { Cookie: admin.cookie },
     body: JSON.stringify({
@@ -79,7 +79,7 @@ async function main() {
   const userAId = createA.body?.member?.id;
   if (createA.status === 201) markUserEmailVerified(emailA);
 
-  const createB = await req("/api/admin/members", {
+  const createB = await adminReq("/api/admin/members", {
     method: "POST",
     headers: { Cookie: admin.cookie },
     body: JSON.stringify({
@@ -146,7 +146,7 @@ async function main() {
   }
 
   if (projectId && admin.status === 200) {
-    const hide = await req(`/api/admin/member-projects/${projectId}`, {
+    const hide = await adminReq(`/api/admin/member-projects/${projectId}`, {
       method: "PATCH",
       headers: { Cookie: admin.cookie },
       body: JSON.stringify({ hidden: true }),
@@ -159,7 +159,7 @@ async function main() {
   }
 
   if (userAId && admin.status === 200 && memberA.status === 200) {
-    const suspend = await req(`/api/admin/members/${userAId}`, {
+    const suspend = await adminReq(`/api/admin/members/${userAId}`, {
       method: "PATCH",
       headers: { Cookie: admin.cookie },
       body: JSON.stringify({ status: "DISABLED" }),

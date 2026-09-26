@@ -19,7 +19,10 @@ interface MemberRow {
   lastActivity?: string;
 }
 
-export default function AdminMembersPage() {
+type AdminMembersPageProps = { adminBase?: string };
+
+export default function AdminMembersPage({ adminBase = "/admin" }: AdminMembersPageProps) {
+  const adminRoot = adminBase.replace(/\/$/, "") || "";
   const { t } = useLocale();
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -102,7 +105,7 @@ export default function AdminMembersPage() {
             className="btn-secondary inline-flex items-center gap-2"
             onClick={async () => {
               await logout();
-              navigate("/admin/login");
+              navigate(`${adminRoot}/login`.replace("//", "/"));
             }}
           >
             <LogOut size={16} /> {t("nav.logout")}
@@ -114,7 +117,7 @@ export default function AdminMembersPage() {
         <button type="button" className={`btn ${tab === "members" ? "btn-primary" : "btn-secondary"}`} onClick={() => setTab("members")}>
           {t("adminDash.tabMembers")}
         </button>
-        <Link to="/admin/projects" className="btn-secondary">
+        <Link to={`${adminRoot}/projects`} className="btn-secondary">
           {t("adminDash.tabProjects")}
         </Link>
         <button type="button" className={`btn ${tab === "content" ? "btn-primary" : "btn-secondary"}`} onClick={() => setTab("content")}>
@@ -185,7 +188,7 @@ export default function AdminMembersPage() {
                       <td className="px-4 py-3">{m.projectCount ?? 0}</td>
                       <td className="px-4 py-3">{new Date(m.created_at).toLocaleDateString()}</td>
                       <td className="px-4 py-3 space-x-2 whitespace-nowrap">
-                        <Link to={`/admin/members/${m.id}`} className="font-semibold text-brand-700 hover:underline">
+                        <Link to={`${adminRoot}/members/${m.id}`} className="font-semibold text-brand-700 hover:underline">
                           {t("adminDash.view")}
                         </Link>
                         <button type="button" className="text-brand-700 hover:underline" onClick={() => toggleStatus(m)}>

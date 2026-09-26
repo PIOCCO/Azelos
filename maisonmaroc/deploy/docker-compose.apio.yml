@@ -1,11 +1,13 @@
-# Optional APIO backend only — does NOT replace Dribex stack.
-# Nginx on the host proxies https://dribex.ma/APIO/api/ → apio-server:3001
+# Optional APIO stack — does NOT replace Dribex.
+# Public API: host 127.0.0.1:3001 → nginx /APIO/api/
+# Admin (Tailscale-only): host 127.0.0.1:7217 → Tailscale/nginx allowlist (see nginx-apio-admin-tailscale.example.conf)
 services:
   apio-server:
     build:
       context: ..
       dockerfile: deploy/Dockerfile.apio-server
     restart: unless-stopped
+    command: ["node", "src/index.js"]
     env_file:
       - ../server/.env
     environment:
@@ -21,6 +23,32 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+
+  apio-admin:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.apio-server
+    restart: unless-stopped
+    command: ["node", "src/adminIndex.js"]
+    env_file:
+      - ../server/.env
+    environment:
+      NODE_ENV: production
+      APIO_ADMIN_PORT: 7217
+      APIO_ADMIN_BIND: 0.0.0.0
+      APIO_ADMIN_STATIC_DIR: /app/admin/dist
+    volumes:
+      - apio-data:/data
+    ports:
+      - "127.0.0.1:7217:7217"
+    depends_on:
+      - apio-server
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:7217/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
 volumes:
   apio-data:

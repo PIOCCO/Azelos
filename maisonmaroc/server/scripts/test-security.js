@@ -3,6 +3,7 @@
  * Usage: npm run test:security
  */
 import { markUserEmailVerified } from "./test-db-helper.js";
+import { adminLogin as adminPortLogin, adminReq } from "./test-admin-helper.js";
 
 const BASE = process.env.API_BASE || "http://localhost:3001";
 
@@ -33,11 +34,7 @@ function cookieFrom(setCookie) {
 async function adminLogin() {
   const email = process.env.SUPER_ADMIN_EMAIL || "admin@apio.ma";
   const password = process.env.SUPER_ADMIN_PASSWORD || "change-me-on-first-login";
-  const r = await req("/api/auth/admin/login", {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
-  });
-  return { ...r, cookie: cookieFrom(r.headers.get("set-cookie")) };
+  return adminPortLogin(email, password);
 }
 
 let passed = 0;
@@ -68,7 +65,7 @@ async function main() {
 
   const admin = await adminLogin();
   if (admin.status === 200) {
-    const badUrl = await req("/api/admin/news", {
+    const badUrl = await adminReq("/api/admin/news", {
       method: "POST",
       headers: { Cookie: admin.cookie },
       body: JSON.stringify({
@@ -82,7 +79,7 @@ async function main() {
     });
     assert("Admin news rejects javascript: imageUrl", badUrl.status === 400);
 
-    const ssrfUrl = await req("/api/admin/news", {
+    const ssrfUrl = await adminReq("/api/admin/news", {
       method: "POST",
       headers: { Cookie: admin.cookie },
       body: JSON.stringify({
@@ -96,7 +93,7 @@ async function main() {
     });
     assert("Admin news rejects loopback imageUrl", ssrfUrl.status === 400);
 
-    const ssrf172 = await req("/api/admin/news", {
+    const ssrf172 = await adminReq("/api/admin/news", {
       method: "POST",
       headers: { Cookie: admin.cookie },
       body: JSON.stringify({
@@ -110,7 +107,7 @@ async function main() {
     });
     assert("Admin news rejects 172.16 private imageUrl", ssrf172.status === 400);
 
-    const doc = await req("/api/admin/documents", {
+    const doc = await adminReq("/api/admin/documents", {
       method: "POST",
       headers: { Cookie: admin.cookie },
       body: JSON.stringify({
@@ -128,7 +125,7 @@ async function main() {
         new Blob(["NOT A PDF FILE AT ALL"], { type: "application/pdf" }),
         "evil.pdf",
       );
-      const fakePdf = await req(`/api/admin/documents/${doc.body.id}/upload`, {
+      const fakePdf = await adminReq(`/api/admin/documents/${doc.body.id}/upload`, {
         method: "POST",
         headers: { Cookie: admin.cookie },
         body: fd,
@@ -141,14 +138,14 @@ async function main() {
         new Blob(["<svg onload=alert(1)>"], { type: "application/pdf" }),
         "evil.svg.pdf",
       );
-      const svg = await req(`/api/admin/documents/${doc.body.id}/upload`, {
+      const svg = await adminReq(`/api/admin/documents/${doc.body.id}/upload`, {
         method: "POST",
         headers: { Cookie: admin.cookie },
         body: fd2,
       });
       assert("SVG/markup disguised as PDF rejected", svg.status === 400);
 
-      await req(`/api/admin/documents/${doc.body.id}`, {
+      await adminReq(`/api/admin/documents/${doc.body.id}`, {
         method: "DELETE",
         headers: { Cookie: admin.cookie },
       });

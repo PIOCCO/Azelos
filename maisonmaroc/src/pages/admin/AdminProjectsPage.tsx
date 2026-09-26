@@ -12,7 +12,10 @@ interface AdminProject {
   ownerLabel?: string;
 }
 
-export default function AdminProjectsPage() {
+type AdminProjectsPageProps = { adminBase?: string };
+
+export default function AdminProjectsPage({ adminBase = "/admin" }: AdminProjectsPageProps) {
+  const adminRoot = adminBase.replace(/\/$/, "") || "";
   const { t, L } = useLocale();
   const [projects, setProjects] = useState<AdminProject[]>([]);
   const [q, setQ] = useState("");
@@ -36,7 +39,7 @@ export default function AdminProjectsPage() {
     <div className="container-page space-y-6 py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-navy">{t("adminDash.tabProjects")}</h1>
-        <Link to="/admin" className="text-sm font-semibold text-brand-700 hover:underline">
+        <Link to={adminRoot || "/"} className="text-sm font-semibold text-brand-700 hover:underline">
           {t("adminDash.backToMembers")}
         </Link>
       </div>

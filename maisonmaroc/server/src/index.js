@@ -25,7 +25,6 @@ import {
   loginUser,
   parseOrigins,
   requireAuth,
-  requireSuperAdmin,
   requireOwner,
   requireClient,
 } from "./middleware.js";
@@ -38,7 +37,6 @@ import {
   isGoogleRedirectConfigured,
   verifyIdToken,
 } from "./google.js";
-import { deleteOwner, findOwner, listOwners, updateOwner } from "./users.js";
 import {
   getPropertyBySlugOrId,
   listPropertiesForOwnerProfile,
@@ -56,9 +54,8 @@ import {
   syncApioDocuments,
 } from "./content.js";
 import { validateContactBody } from "./contact.js";
-import { registerAdminContentRoutes } from "./adminContentRoutes.js";
 import { registerOwnerRoutes } from "./ownerRoutes.js";
-import { registerAdminMemberRoutes } from "./adminMemberRoutes.js";
+import { blockPublicAdminAccess } from "./publicAdminGuard.js";
 import {
   getPublishedMemberProperty,
   getPublicProjectImage,
@@ -127,6 +124,8 @@ app.use(trustedHostMiddleware);
 app.use(express.json({ limit: "32kb" }));
 app.use(rejectPrototypePollutionMiddleware);
 app.use(cookieParser());
+app.use(attachUser(db));
+app.use(blockPublicAdminAccess());
 app.use(
   cors({
     origin(origin, callback) {
@@ -178,16 +177,6 @@ const publicContentLimiter = rateLimit({
   max: 120,
 });
 
-const adminMutationLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 200,
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler(_req, res) {
-    res.status(429).json({ error: "Too many admin operations", code: "RATE_LIMIT" });
-  },
-});
-
 const uploadLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 30,
@@ -217,8 +206,6 @@ const messageLimiter = rateLimit({
     res.status(429).json({ error: "Too many messages", code: "RATE_LIMIT" });
   },
 });
-
-app.use(attachUser(db));
 
 app.get("/api/health", (_req, res) => {
   try {
@@ -447,31 +434,6 @@ app.post("/api/auth/owner/login", authLimiter, (req, res) => {
   }
 });
 
-app.post("/api/auth/admin/login", authLimiter, (req, res) => {
-  try {
-    const { email, password } = req.body || {};
-    const row = findUserByEmail(db, email || "");
-    if (!row || row.role !== ROLES.SUPER_ADMIN) {
-      logSecurityEvent("auth_failure", { route: "admin_login", ip: req.ip });
-      const err = new Error("Invalid credentials");
-      err.status = 401;
-      throw err;
-    }
-    if (!verifyPassword(password, row.password_hash)) {
-      logSecurityEvent("auth_failure", { route: "admin_login", ip: req.ip });
-      const err = new Error("Invalid credentials");
-      err.status = 401;
-      throw err;
-    }
-    assertActiveUser(row);
-    logSecurityEvent("admin_login_success", { userId: row.id, ip: req.ip });
-    loginUser(db, res, row);
-    res.json({ user: sanitizeUser(row) });
-  } catch (err) {
-    handleAuthError(err, res);
-  }
-});
-
 app.post("/api/auth/logout", (_req, res) => {
   clearAuthCookie(res);
   res.json({ ok: true });
@@ -667,119 +629,11 @@ app.get("/api/owner/me", requireAuth, requireOwner, (req, res) => {
   res.json({ user: req.user });
 });
 
-// ——— Admin owner management ———
-app.get("/api/admin/owners", requireAuth, requireSuperAdmin, (_req, res) => {
-  res.json({ owners: listOwners(db) });
-});
-
-app.post("/api/admin/owners", requireAuth, requireSuperAdmin, async (req, res) => {
-  try {
-    rejectRoleInBody(req.body);
-    const { email, password, name, phone, ownerProfileId, status } = req.body || {};
-    if (!email || !password || !name) {
-      return res.status(400).json({ error: "Email, password, and name are required" });
-    }
-    if (String(password).length < 8) {
-      return res.status(400).json({ error: "Password must be at least 8 characters" });
-    }
-    if (findUserByEmail(db, email)) {
-      return res.status(409).json({ error: "Email already in use" });
-    }
-    const row = createUser(db, {
-      email,
-      passwordHash: hashPassword(password),
-      name: String(name).trim(),
-      phone: phone ? String(phone) : null,
-      role: ROLES.REAL_ESTATE_OWNER,
-      status: status === "DISABLED" ? "DISABLED" : "ACTIVE",
-      ownerProfileId: ownerProfileId ? String(ownerProfileId) : null,
-      authProvider: "local",
-    });
-    if (isEmailConfigured()) {
-      await sendEmailVerification(db, row);
-    }
-    res.status(201).json({
-      owner: sanitizeUser(row),
-      verificationEmailSent: isEmailConfigured(),
-    });
-  } catch (err) {
-    handleAuthError(err, res);
-  }
-});
-
-app.get("/api/admin/owners/:id", requireAuth, requireSuperAdmin, (req, res) => {
-  const idCheck = validateUuid(req.params.id);
-  if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
-  const owner = findOwner(db, idCheck.value);
-  if (!owner) return res.status(404).json({ error: "Not found" });
-  res.json({ owner });
-});
-
-app.patch("/api/admin/owners/:id", requireAuth, requireSuperAdmin, async (req, res) => {
-  try {
-    rejectRoleInBody(req.body);
-    const idCheck = validateUuid(req.params.id);
-    if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
-    const existing = findOwner(db, idCheck.value);
-    if (!existing) return res.status(404).json({ error: "Not found" });
-    const { name, phone, status, ownerProfileId, password, email } = req.body || {};
-    if (email && findUserByEmail(db, email) && findUserByEmail(db, email).id !== idCheck.value) {
-      return res.status(409).json({ error: "Email already in use" });
-    }
-    const updated = updateOwner(db, idCheck.value, {
-      name,
-      phone,
-      status,
-      ownerProfileId,
-      email,
-      password,
-    });
-    res.json({ owner: updated });
-  } catch (err) {
-    handleAuthError(err, res);
-  }
-});
-
-registerAdminContentRoutes(app, db, {
-  requireAuth,
-  requireSuperAdmin,
-  adminMutationLimiter,
-  uploadLimiter,
-});
-
 registerOwnerRoutes(app, db, {
   requireAuth,
   requireOwner,
   uploadLimiter,
   ownerMutationLimiter,
-});
-
-registerAdminMemberRoutes(app, db, {
-  requireAuth,
-  requireSuperAdmin,
-  adminMutationLimiter,
-});
-
-app.delete("/api/admin/owners/:id", requireAuth, requireSuperAdmin, (req, res) => {
-  const idCheck = validateUuid(req.params.id);
-  if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
-  if (req.user?.id === idCheck.value) {
-    return res.status(400).json({ error: "Cannot delete your own account" });
-  }
-  if (!deleteOwner(db, idCheck.value)) {
-    return res.status(404).json({ error: "Not found" });
-  }
-  res.json({ ok: true });
-});
-
-app.get("/api/admin/owners/:id/properties", requireAuth, requireSuperAdmin, (req, res) => {
-  const idCheck = validateUuid(req.params.id);
-  if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
-  const owner = findOwner(db, idCheck.value);
-  if (!owner) return res.status(404).json({ error: "Not found" });
-  res.json({
-    properties: listPropertiesForOwnerProfile(db, owner.owner_profile_id),
-  });
 });
 
 function serializeConversation(db, conv) {

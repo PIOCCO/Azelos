@@ -12,7 +12,6 @@ import AuthPage from "./pages/AuthPage";
 import AccountPage from "./pages/AccountPage";
 import ClientAuthPage from "./pages/ClientAuthPage";
 import OwnerLoginPage from "./pages/OwnerLoginPage";
-import AdminLoginPage from "./pages/AdminLoginPage";
 import OwnerPortalLayout from "./components/owner/OwnerPortalLayout";
 import OwnerHomePage from "./pages/owner/OwnerHomePage";
 import OwnerMemberProfilePage from "./pages/owner/OwnerMemberProfilePage";
@@ -24,9 +23,6 @@ import OwnerMembershipPage from "./pages/owner/OwnerMembershipPage";
 import OwnerRequestsPage from "./pages/owner/OwnerRequestsPage";
 import OwnerNotificationsPage from "./pages/owner/OwnerNotificationsPage";
 import OwnerSettingsPage from "./pages/owner/OwnerSettingsPage";
-import AdminMembersPage from "./pages/admin/AdminMembersPage";
-import AdminMemberDetailPage from "./pages/admin/AdminMemberDetailPage";
-import AdminProjectsPage from "./pages/admin/AdminProjectsPage";
 import MessagesPage from "./pages/MessagesPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import TooManyRequestsPage from "./pages/TooManyRequestsPage";
@@ -86,8 +82,6 @@ export default function App() {
         <Route path="/account" element={<Navigate to="/client/account" replace />} />
 
         <Route path="/owner/login" element={<OwnerLoginPage />} />
-        <Route path="/admin/login" element={<AdminLoginPage />} />
-
         <Route element={<ProtectedRoute roles={["CLIENT"]} loginPath="/client/login" />}>
           <Route path="/client/messages" element={<MessagesPage role="CLIENT" />} />
           <Route path="/client/messages/:id" element={<MessagesPage role="CLIENT" />} />
@@ -111,11 +105,7 @@ export default function App() {
           </Route>
         </Route>
 
-        <Route element={<ProtectedRoute roles={["SUPER_ADMIN"]} loginPath="/admin/login" />}>
-          <Route path="/admin" element={<AdminMembersPage />} />
-          <Route path="/admin/members/:id" element={<AdminMemberDetailPage />} />
-          <Route path="/admin/projects" element={<AdminProjectsPage />} />
-        </Route>
+        <Route path="/admin/*" element={<Navigate to="/403" replace />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Route>

@@ -5,7 +5,10 @@ import { apiFetch } from "../../lib/api";
 import { useLocale } from "../../lib/useLocale";
 import type { Property } from "../../data/types";
 
-export default function AdminMemberDetailPage() {
+type AdminMemberDetailPageProps = { adminBase?: string };
+
+export default function AdminMemberDetailPage({ adminBase = "/admin" }: AdminMemberDetailPageProps) {
+  const adminRoot = adminBase.replace(/\/$/, "") || "";
   const { id } = useParams();
   const { t, L } = useLocale();
   const [detail, setDetail] = useState<{
@@ -38,7 +41,7 @@ export default function AdminMemberDetailPage() {
 
   return (
     <div className="container-page space-y-6 py-8">
-      <Link to="/admin" className="inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline">
+      <Link to={adminRoot || "/"} className="inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:underline">
         <ArrowLeft size={16} aria-hidden /> {t("adminDash.backToMembers")}
       </Link>
       <header className="rounded-2xl border border-ink-100 bg-white p-6">

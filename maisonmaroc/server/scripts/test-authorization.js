@@ -2,6 +2,7 @@
  * Authorization regression tests (API on API_BASE, default http://localhost:3001).
  */
 import { markUserEmailVerified } from "./test-db-helper.js";
+import { adminLogin as adminPortLogin, adminReq } from "./test-admin-helper.js";
 
 const BASE = process.env.API_BASE || "http://localhost:3001";
 
@@ -57,12 +58,12 @@ async function main() {
 
   const adminEmail = process.env.SUPER_ADMIN_EMAIL || "admin@apio.ma";
   const adminPass = process.env.SUPER_ADMIN_PASSWORD || "change-me-on-first-login";
-  const admin = await login("/api/auth/admin/login", adminEmail, adminPass);
+  const admin = await adminPortLogin(adminEmail, adminPass);
 
   const ownerAEmail = `owner-a-${Date.now()}@test.apio.ma`;
   let ownerA = { status: 401, cookie: "" };
   if (admin.status === 200) {
-    const createdA = await req("/api/admin/members", {
+    const createdA = await adminReq("/api/admin/members", {
       method: "POST",
       headers: { Cookie: admin.cookie },
       body: JSON.stringify({
@@ -125,7 +126,7 @@ async function main() {
     assert("Profile patch rejects avatarUrl", avatarUrlHack.status === 400);
 
     const adminAsOwner = await req("/api/admin/members", { headers: { Cookie: ownerA.cookie } });
-    assert("Owner cannot list admin members", adminAsOwner.status === 403);
+    assert("Owner cannot list admin members on public API", adminAsOwner.status === 404);
 
     const adminCreate = await req("/api/admin/members", {
       method: "POST",
@@ -137,12 +138,12 @@ async function main() {
         companyFr: "X",
       }),
     });
-    assert("Owner cannot create members", adminCreate.status === 403);
+    assert("Owner cannot create members on public API", adminCreate.status === 404);
   }
 
   if (admin.status === 200 && ownerA.status === 200) {
     const ownerBEmail = `owner-b-${Date.now()}@test.apio.ma`;
-    const createB = await req("/api/admin/members", {
+    const createB = await adminReq("/api/admin/members", {
       method: "POST",
       headers: { Cookie: admin.cookie },
       body: JSON.stringify({
@@ -185,7 +186,7 @@ async function main() {
     }
 
     const suspendedEmail = `owner-susp-${Date.now()}@test.apio.ma`;
-    await req("/api/admin/members", {
+    await adminReq("/api/admin/members", {
       method: "POST",
       headers: { Cookie: admin.cookie },
       body: JSON.stringify({
@@ -199,11 +200,11 @@ async function main() {
     const suspLogin = await login("/api/auth/owner/login", suspendedEmail, "password123");
     assert("Suspended member login denied", suspLogin.status === 403);
 
-    const adminProj = await req("/api/admin/member-projects", { headers: { Cookie: admin.cookie } });
+    const adminProj = await adminReq("/api/admin/member-projects", { headers: { Cookie: admin.cookie } });
     assert("Admin lists member projects", adminProj.status === 200);
 
     const ownerAdminProj = await req("/api/admin/member-projects", { headers: { Cookie: ownerA.cookie } });
-    assert("Owner cannot access admin member-projects", ownerAdminProj.status === 403);
+    assert("Owner cannot access admin member-projects on public API", ownerAdminProj.status === 404);
   }
 
   const clientEmail = `client-auth-${Date.now()}@test.apio.ma`;
@@ -223,7 +224,7 @@ async function main() {
         companyFr: "C",
       }),
     });
-    assert("Client cannot create members", clientMember.status === 403);
+    assert("Client cannot create members on public API", clientMember.status === 404);
   }
 
   console.log(`\n${passed} passed, ${failed} failed`);

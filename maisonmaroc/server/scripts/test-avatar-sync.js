@@ -3,6 +3,7 @@
  * Usage: node scripts/test-avatar-sync.js
  */
 import { markUserEmailVerified } from "./test-db-helper.js";
+import { adminLogin as adminPortLogin, adminReq } from "./test-admin-helper.js";
 
 const BASE = process.env.API_BASE || "http://localhost:3001";
 
@@ -69,8 +70,7 @@ function assert(name, cond) {
 }
 
 async function main() {
-  const admin = await login(
-    "/api/auth/admin/login",
+  const admin = await adminPortLogin(
     process.env.SUPER_ADMIN_EMAIL || "admin@apio.ma",
     process.env.SUPER_ADMIN_PASSWORD || "change-me-on-first-login",
   );
@@ -78,7 +78,7 @@ async function main() {
 
   const email = `avatar-sync-${Date.now()}@test.apio.ma`;
   const pass = "password123";
-  const created = await req("/api/admin/members", {
+  const created = await adminReq("/api/admin/members", {
     method: "POST",
     headers: { Cookie: admin.cookie },
     body: JSON.stringify({
@@ -145,7 +145,7 @@ async function main() {
   assert("Avatar sync: avatar file #2", img2.status === 200);
 
   const ownerBEmail = `avatar-b-${Date.now()}@test.apio.ma`;
-  await req("/api/admin/members", {
+  await adminReq("/api/admin/members", {
     method: "POST",
     headers: { Cookie: admin.cookie },
     body: JSON.stringify({

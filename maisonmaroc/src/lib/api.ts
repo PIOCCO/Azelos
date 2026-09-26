@@ -115,7 +115,7 @@ export function googleOAuthStartUrl(returnPath?: string) {
 export function dashboardPathForRole(role: UserRole | undefined) {
   switch (role) {
     case "SUPER_ADMIN":
-      return "/admin";
+      return "/";
     case "REAL_ESTATE_OWNER":
       return "/owner";
     case "CLIENT":

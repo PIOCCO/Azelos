@@ -27,6 +27,14 @@ export function assertServerConfig() {
     if (!process.env.FRONTEND_URL?.trim()) {
       issues.push("Set FRONTEND_URL to the public APIO URL (e.g. https://dribex.ma/APIO).");
     }
+    if (process.argv[1]?.includes("adminIndex")) {
+      if (!process.env.APIO_ADMIN_JWT_SECRET?.trim() || process.env.APIO_ADMIN_JWT_SECRET.length < 32) {
+        issues.push("Set APIO_ADMIN_JWT_SECRET (≥32 chars) for the APIO Admin server in production.");
+      }
+      if (!process.env.APIO_ADMIN_ALLOWED_NETWORKS?.trim()) {
+        issues.push("Set APIO_ADMIN_ALLOWED_NETWORKS (Tailscale CIDRs) for the APIO Admin server.");
+      }
+    }
   } else if (!process.env.JWT_SECRET) {
     console.warn("[apio-server] Using default JWT secret — set JWT_SECRET for non-local deployments.");
   }

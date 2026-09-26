@@ -16,6 +16,8 @@
     "build:aipo": "tsc -b && VITE_BASE_PATH=/AIPO/ vite build",
     "build:apio": "tsc -b && VITE_BASE_PATH=/APIO/ vite build",
     "build:production": "npm run build:apio",
+    "build:admin": "vite build --config admin/vite.config.ts",
+    "dev:admin-web": "vite --config admin/vite.config.ts",
     "test": "npm run test --prefix server",
     "test:e2e": "npm run test:e2e --prefix server",
     "preview": "vite preview --host",
