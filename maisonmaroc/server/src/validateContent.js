@@ -1,4 +1,5 @@
 import { validateExternalMediaUrl } from "./validateUrls.js";
+import { validateNewsCategory } from "./newsCategories.js";
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -54,6 +55,14 @@ export function validateNewsPayload(body, { partial = false } = {}) {
     out.publishedAt = body.publishedAt ? String(body.publishedAt) : null;
   }
   if (body.archived !== undefined) out.archived = Boolean(body.archived);
+  if (body.featured !== undefined) out.featured = Boolean(body.featured);
+  if (body.category !== undefined) {
+    const cat = validateNewsCategory(body.category, { required: true });
+    if (!cat.ok) errors.push(cat.error);
+    else out.category = cat.value;
+  } else if (!partial) {
+    out.category = "association";
+  }
 
   if (errors.length) return { ok: false, errors };
   return { ok: true, data: out };

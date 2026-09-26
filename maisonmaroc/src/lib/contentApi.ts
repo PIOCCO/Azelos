@@ -1,4 +1,5 @@
 import type { Bilingual } from "../data/types";
+import type { NewsCategoryId } from "./newsCategories";
 import { apiFetch } from "./api";
 
 export interface NewsArticle {
@@ -9,7 +10,23 @@ export interface NewsArticle {
   body: Bilingual;
   imageUrl: string | null;
   author: string | null;
+  category: NewsCategoryId | string;
+  featured: boolean;
   publishedAt: string;
+  updatedAt?: string | null;
+}
+
+export interface NewsListResponse {
+  articles: NewsArticle[];
+  total: number;
+  featured: NewsArticle | null;
+  limit: number;
+  offset: number;
+}
+
+export interface NewsCategoriesResponse {
+  categories: { id: string }[];
+  inUse: string[];
 }
 
 export interface AssociationEvent {
@@ -40,12 +57,35 @@ export interface PublicDocument {
   fileMime: string | null;
 }
 
-export async function fetchNews() {
-  return apiFetch<{ articles: NewsArticle[] }>("/api/content/news");
+export type FetchNewsParams = {
+  limit?: number;
+  offset?: number;
+  category?: string;
+  q?: string;
+};
+
+function newsQuery(params?: FetchNewsParams) {
+  const sp = new URLSearchParams();
+  if (params?.limit != null) sp.set("limit", String(params.limit));
+  if (params?.offset != null) sp.set("offset", String(params.offset));
+  if (params?.category) sp.set("category", params.category);
+  if (params?.q) sp.set("q", params.q);
+  const qs = sp.toString();
+  return qs ? `?${qs}` : "";
+}
+
+export async function fetchNews(params?: FetchNewsParams) {
+  return apiFetch<NewsListResponse>(`/api/content/news${newsQuery(params)}`);
+}
+
+export async function fetchNewsCategories() {
+  return apiFetch<NewsCategoriesResponse>("/api/content/news/categories");
 }
 
 export async function fetchNewsArticle(slug: string) {
-  return apiFetch<{ article: NewsArticle }>(`/api/content/news/${encodeURIComponent(slug)}`);
+  return apiFetch<{ article: NewsArticle; related: NewsArticle[] }>(
+    `/api/content/news/${encodeURIComponent(slug)}`,
+  );
 }
 
 export async function fetchEvents(upcomingOnly = false) {

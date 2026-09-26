@@ -9,9 +9,10 @@ type Props = {
   article: NewsArticle;
   title: string;
   excerpt: string;
+  categoryLabel?: string;
 };
 
-export default function NewsFeaturedArticle({ article, title, excerpt }: Props) {
+export default function NewsFeaturedArticle({ article, title, excerpt, categoryLabel }: Props) {
   return (
     <article className="inst-news-featured overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-sm lg:grid lg:grid-cols-2">
       <Link to={`/actualites/${article.slug}`} className="relative block min-h-[220px] lg:min-h-full">
@@ -30,7 +31,9 @@ export default function NewsFeaturedArticle({ article, title, excerpt }: Props) 
       </Link>
       <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-10">
         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-navy/60">{NEWS_FR.featured}</p>
-        <p className="mt-2 text-xs font-bold uppercase tracking-wide text-ink-400">{NEWS_FR.categoryDefault}</p>
+        <span className="mt-2 inline-flex rounded-full bg-[#f5f2ed] px-3 py-1 text-xs font-bold uppercase tracking-wide text-navy/70">
+          {categoryLabel || NEWS_FR.categoryDefault}
+        </span>
         <time className="mt-3 text-sm font-semibold text-ink-500" dateTime={article.publishedAt}>
           {NEWS_FR.publishedOn} {formatDate(article.publishedAt, "fr")}
         </time>

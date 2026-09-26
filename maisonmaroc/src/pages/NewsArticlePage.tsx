@@ -4,23 +4,32 @@ import { ArrowLeft } from "lucide-react";
 import PageMeta from "../components/PageMeta";
 import SmartImage from "../components/SmartImage";
 import NewsArticleCard from "../components/news/NewsArticleCard";
-import { fetchNews, fetchNewsArticle, type NewsArticle } from "../lib/contentApi";
+import NewsListSkeleton from "../components/news/NewsListSkeleton";
+import { fetchNewsArticle, type NewsArticle } from "../lib/contentApi";
+import { newsCategoryLabel } from "../lib/newsCategories";
 import { formatDate } from "../lib/format";
+import { useLocale } from "../lib/useLocale";
+import { apiMediaUrl } from "../lib/api";
+import { CANONICAL_ORIGIN } from "../config/site";
 import { NEWS_FR } from "../data/newsCopy.fr";
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-function frenchFields(article: NewsArticle) {
-  return {
-    title: article.title.fr,
-    excerpt: article.summary.fr || "",
-  };
+function articleFields(article: NewsArticle, lang: "fr" | "ar") {
+  const title = lang === "ar" ? article.title.ar : article.title.fr;
+  const summary = lang === "ar" ? article.summary.ar : article.summary.fr;
+  const body = lang === "ar" ? article.body.ar : article.body.fr;
+  const excerpt = summary.trim() || body.slice(0, 160).trim() + (body.length > 160 ? "…" : "");
+  return { title, body, excerpt };
 }
 
 export default function NewsArticlePage() {
   const { slug } = useParams<{ slug: string }>();
+  const { lang } = useLocale();
+  const copy = NEWS_FR;
+
   const [article, setArticle] = useState<NewsArticle | null>(null);
-  const [recent, setRecent] = useState<NewsArticle[]>([]);
+  const [related, setRelated] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState(false);
@@ -33,7 +42,9 @@ export default function NewsArticlePage() {
     }
     let cancelled = false;
     (async () => {
-      const [articleRes, listRes] = await Promise.all([fetchNewsArticle(slug), fetchNews()]);
+      setLoading(true);
+      setError(false);
+      const articleRes = await fetchNewsArticle(slug);
       if (cancelled) return;
       if (articleRes.status === 404) {
         setNotFound(true);
@@ -46,9 +57,7 @@ export default function NewsArticlePage() {
         return;
       }
       setArticle(articleRes.data.article);
-      if (listRes.data?.articles) {
-        setRecent(listRes.data.articles.filter((a) => a.slug !== slug).slice(0, 3));
-      }
+      setRelated(articleRes.data.related ?? []);
       setLoading(false);
     })();
     return () => {
@@ -56,16 +65,37 @@ export default function NewsArticlePage() {
     };
   }, [slug]);
 
-  const metaDescription = useMemo(() => {
-    if (!article) return NEWS_FR.metaListDescription;
-    const s = article.summary.fr || article.body.fr;
-    return s.slice(0, 160).trim() + (s.length > 160 ? "…" : "");
-  }, [article]);
+  const fields = article ? articleFields(article, lang) : null;
+  const categoryLabel = article ? newsCategoryLabel(article.category, lang) : "";
+
+  const metaDescription = fields?.excerpt || copy.metaListDescription;
+  const ogImage = article?.imageUrl ? apiMediaUrl(article.imageUrl) : undefined;
+
+  const jsonLd = useMemo(() => {
+    if (!article || !fields) return undefined;
+    const origin = CANONICAL_ORIGIN || (typeof window !== "undefined" ? window.location.origin : "");
+    const url = `${origin}/actualites/${article.slug}`;
+    return {
+      "@context": "https://schema.org",
+      "@type": "NewsArticle",
+      headline: fields.title,
+      datePublished: article.publishedAt,
+      dateModified: article.updatedAt || article.publishedAt,
+      author: article.author
+        ? { "@type": "Organization", name: article.author }
+        : { "@type": "Organization", name: "APIO" },
+      image: ogImage ? [ogImage] : undefined,
+      mainEntityOfPage: url,
+      articleSection: categoryLabel,
+    };
+  }, [article, fields, categoryLabel, ogImage]);
 
   if (loading) {
     return (
       <div className="page-shell bg-[#faf9f7] pb-16">
-        <div className="home-container max-w-3xl py-16 text-ink-600">{NEWS_FR.loading}</div>
+        <div className="home-container max-w-6xl py-10">
+          <NewsListSkeleton cards={3} />
+        </div>
       </div>
     );
   }
@@ -73,50 +103,55 @@ export default function NewsArticlePage() {
   if (error) {
     return (
       <div className="page-shell bg-[#faf9f7] pb-16">
-        <div className="home-container max-w-3xl py-16 text-red-800">{NEWS_FR.error}</div>
+        <div className="home-container max-w-3xl py-16 text-center">
+          <p className="text-red-800">{copy.error}</p>
+          <button type="button" className="btn-primary mt-4" onClick={() => window.location.reload()}>
+            {copy.retry}
+          </button>
+        </div>
       </div>
     );
   }
 
-  if (notFound || !article) {
+  if (notFound || !article || !fields) {
     return (
       <div className="page-shell bg-[#faf9f7] pb-16">
-        <PageMeta title={NEWS_FR.notFound} description={NEWS_FR.metaListDescription} path="/actualites" />
+        <PageMeta title={copy.notFound} description={copy.metaListDescription} path="/actualites" />
         <div className="home-container flex max-w-3xl flex-col items-start gap-6 py-20">
-          <p className="home-section-title text-xl">{NEWS_FR.notFound}</p>
+          <p className="home-section-title text-xl">{copy.notFound}</p>
           <Link to="/actualites" className="home-btn home-btn-primary inline-flex items-center gap-2">
-            <ArrowLeft size={16} /> {NEWS_FR.backToNews}
+            <ArrowLeft size={16} /> {copy.backToNews}
           </Link>
         </div>
       </div>
     );
   }
 
-  const title = article.title.fr;
-  const body = article.body.fr;
-
   return (
     <article className="page-shell bg-[#faf9f7] pb-16">
       <PageMeta
-        title={`${title} — APIO`}
+        title={`${fields.title} — APIO`}
         description={metaDescription}
         path={`/actualites/${article.slug}`}
-        imageUrl={article.imageUrl}
+        imageUrl={ogImage}
         ogType="article"
+        jsonLd={jsonLd}
       />
       <div className="home-container max-w-3xl">
         <Link to="/actualites" className="home-text-link inline-flex items-center gap-1 text-sm">
-          <ArrowLeft size={16} /> {NEWS_FR.backToNews}
+          <ArrowLeft size={16} /> {copy.backToNews}
         </Link>
 
-        <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.16em] text-ink-400">{NEWS_FR.categoryDefault}</p>
-        <time className="mt-2 block text-sm font-semibold text-ink-500" dateTime={article.publishedAt}>
-          {NEWS_FR.publishedOn} {formatDate(article.publishedAt, "fr")}
+        <span className="mt-6 inline-flex rounded-full bg-[#f5f2ed] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-navy/70">
+          {categoryLabel}
+        </span>
+        <time className="mt-4 block text-sm font-semibold text-ink-500" dateTime={article.publishedAt}>
+          {copy.publishedOn} {formatDate(article.publishedAt, lang)}
         </time>
-        <h1 className="home-display-title mt-4 text-navy">{title}</h1>
+        <h1 className="home-display-title mt-4 text-navy">{fields.title}</h1>
         {article.author && (
           <p className="mt-3 text-sm text-ink-500">
-            {NEWS_FR.source} : {article.author}
+            {copy.source} : {article.author}
           </p>
         )}
         {article.imageUrl && (
@@ -127,18 +162,25 @@ export default function NewsArticlePage() {
             fallbackSeed={article.slug}
           />
         )}
-        <div className="inst-news-body mt-10 whitespace-pre-wrap text-base leading-relaxed text-ink-800">{body}</div>
+        <div className="inst-news-body mt-10 whitespace-pre-wrap text-base leading-relaxed text-ink-800">
+          {fields.body}
+        </div>
       </div>
 
-      {recent.length > 0 && (
+      {related.length > 0 && (
         <section className="home-container mt-16 max-w-6xl" aria-labelledby="related-news">
           <h2 id="related-news" className="home-section-title text-xl sm:text-2xl">
-            {NEWS_FR.recentArticles}
+            {copy.relatedArticles}
           </h2>
           <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {recent.map((a) => (
+            {related.map((a) => (
               <li key={a.id}>
-                <NewsArticleCard article={a} {...frenchFields(a)} compact />
+                <NewsArticleCard
+                  article={a}
+                  {...articleFields(a, lang)}
+                  categoryLabel={newsCategoryLabel(a.category, lang)}
+                  compact
+                />
               </li>
             ))}
           </ul>

@@ -486,6 +486,7 @@ export const fr: Dict = {
     organizer: "Organisateur",
     contactInfo: "Contact / inscription",
     published: "Publié",
+    featured: "À la une",
     draft: "Brouillon",
     archived: "Archivé",
     archive: "Archiver",

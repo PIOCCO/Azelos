@@ -479,6 +479,7 @@ export const ar = {
     organizer: "المنظم",
     contactInfo: "الاتصال / التسجيل",
     published: "منشور",
+    featured: "في الواجهة",
     draft: "مسودة",
     archived: "مؤرشف",
     archive: "أرشفة",

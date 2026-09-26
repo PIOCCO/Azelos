@@ -9,6 +9,7 @@ import {
 import { buildPdfBuffer } from "./apioPdfBuilder.js";
 import { getPdfSpec } from "./apioPdfSpecs.js";
 import { deleteStoredFile, UPLOAD_DIR } from "./uploads.js";
+import { NEWS_CATEGORY_IDS, normalizeNewsCategory, newsCategoriesForApi } from "./newsCategories.js";
 
 function rowToNews(r) {
   return {
@@ -19,7 +20,10 @@ function rowToNews(r) {
     body: { fr: r.body_fr, ar: r.body_ar },
     imageUrl: r.image_url || null,
     author: r.author || null,
+    category: normalizeNewsCategory(r.category) || "association",
+    featured: Boolean(r.featured),
     publishedAt: r.published_at,
+    updatedAt: r.updated_at || null,
   };
 }
 
@@ -78,6 +82,8 @@ function rowToAdminNews(r) {
     author: r.author || null,
     published: Boolean(r.published),
     archived: Boolean(r.archived),
+    featured: Boolean(r.featured),
+    category: normalizeNewsCategory(r.category) || "association",
     publishedAt: r.published_at,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
@@ -109,21 +115,114 @@ function rowToAdminDocument(r) {
   return rowToDocument(r, { includeInternal: true });
 }
 
-export function listPublishedNews(db, { limit = 50, offset = 0 } = {}) {
+const PUBLISHED_NEWS_WHERE = `published = 1 AND archived = 0`;
+
+function sanitizeSearchQuery(q) {
+  return String(q)
+    .trim()
+    .slice(0, 120)
+    .replace(/[%_]/g, " ");
+}
+
+export function getPublishedFeaturedNews(db) {
+  let r = db
+    .prepare(
+      `SELECT * FROM news_posts WHERE ${PUBLISHED_NEWS_WHERE} AND featured = 1 ORDER BY published_at DESC LIMIT 1`,
+    )
+    .get();
+  if (!r) {
+    r = db
+      .prepare(`SELECT * FROM news_posts WHERE ${PUBLISHED_NEWS_WHERE} ORDER BY published_at DESC LIMIT 1`)
+      .get();
+  }
+  return r ? rowToNews(r) : null;
+}
+
+export function listPublishedNewsCategoriesInUse(db) {
   const rows = db
     .prepare(
-      `SELECT * FROM news_posts WHERE published = 1 AND archived = 0 ORDER BY published_at DESC LIMIT ? OFFSET ?`,
+      `SELECT DISTINCT category FROM news_posts WHERE ${PUBLISHED_NEWS_WHERE} AND category IS NOT NULL`,
     )
-    .all(limit, offset);
-  return rows.map(rowToNews);
+    .all();
+  const used = new Set(rows.map((r) => normalizeNewsCategory(r.category)).filter(Boolean));
+  return NEWS_CATEGORY_IDS.filter((id) => used.has(id));
+}
+
+export function queryPublishedNews(
+  db,
+  { limit = 12, offset = 0, category = null, q = null, excludeId = null } = {},
+) {
+  const clauses = [PUBLISHED_NEWS_WHERE];
+  const params = [];
+
+  if (category) {
+    const cat = normalizeNewsCategory(category);
+    if (!cat) {
+      return { articles: [], total: 0 };
+    }
+    clauses.push("category = ?");
+    params.push(cat);
+  }
+
+  if (q && String(q).trim()) {
+    const term = `%${sanitizeSearchQuery(q)}%`;
+    clauses.push(
+      `(title_fr LIKE ? OR title_ar LIKE ? OR summary_fr LIKE ? OR body_fr LIKE ?)`,
+    );
+    params.push(term, term, term, term);
+  }
+
+  if (excludeId) {
+    clauses.push("id != ?");
+    params.push(excludeId);
+  }
+
+  const where = clauses.join(" AND ");
+  const total = db.prepare(`SELECT COUNT(*) AS c FROM news_posts WHERE ${where}`).get(...params).c;
+
+  const rows = db
+    .prepare(
+      `SELECT * FROM news_posts WHERE ${where} ORDER BY published_at DESC LIMIT ? OFFSET ?`,
+    )
+    .all(...params, limit, offset);
+
+  return { articles: rows.map(rowToNews), total };
+}
+
+/** @deprecated use queryPublishedNews */
+export function listPublishedNews(db, { limit = 50, offset = 0 } = {}) {
+  return queryPublishedNews(db, { limit, offset }).articles;
 }
 
 export function getNewsBySlug(db, slug) {
   const r = db
-    .prepare(`SELECT * FROM news_posts WHERE slug = ? AND published = 1 AND archived = 0`)
+    .prepare(`SELECT * FROM news_posts WHERE slug = ? AND ${PUBLISHED_NEWS_WHERE}`)
     .get(slug);
   return r ? rowToNews(r) : null;
 }
+
+export function listRelatedPublishedNews(db, { slug, category, limit = 3 } = {}) {
+  const current = getNewsBySlug(db, slug);
+  if (!current) return [];
+  const cat = normalizeNewsCategory(category || current.category) || "association";
+  let { articles } = queryPublishedNews(db, {
+    limit: limit + 1,
+    offset: 0,
+    category: cat,
+    excludeId: current.id,
+  });
+  if (articles.length < limit) {
+    const extra = queryPublishedNews(db, {
+      limit: limit + 1,
+      offset: 0,
+      excludeId: current.id,
+    }).articles.filter((a) => !articles.some((x) => x.id === a.id));
+    articles = [...articles, ...extra].slice(0, limit);
+  }
+  return articles.slice(0, limit);
+}
+
+export { newsCategoriesForApi };
 
 export function listPublishedEvents(db, { upcomingOnly = false } = {}) {
   const now = new Date().toISOString();
@@ -264,7 +363,7 @@ export function adminUpsertNews(db, data) {
     }
     db.prepare(
       `UPDATE news_posts SET slug=?, title_fr=?, title_ar=?, summary_fr=?, summary_ar=?, body_fr=?, body_ar=?,
-       image_url=?, author=?, published=?, published_at=?, archived=?, updated_at=? WHERE id=?`,
+       image_url=?, author=?, category=?, featured=?, published=?, published_at=?, archived=?, updated_at=? WHERE id=?`,
     ).run(
       data.slug,
       data.titleFr,
@@ -275,6 +374,8 @@ export function adminUpsertNews(db, data) {
       data.bodyAr,
       data.imageUrl || null,
       data.author || null,
+      data.category || "association",
+      data.featured ? 1 : 0,
       data.published ? 1 : 0,
       data.published ? data.publishedAt || now : null,
       data.archived ? 1 : 0,
@@ -285,8 +386,8 @@ export function adminUpsertNews(db, data) {
   }
   const id = randomUUID();
   db.prepare(
-    `INSERT INTO news_posts (id, slug, title_fr, title_ar, summary_fr, summary_ar, body_fr, body_ar, image_url, author, published, published_at, archived, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO news_posts (id, slug, title_fr, title_ar, summary_fr, summary_ar, body_fr, body_ar, image_url, author, category, featured, published, published_at, archived, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     id,
     data.slug,
@@ -298,6 +399,8 @@ export function adminUpsertNews(db, data) {
     data.bodyAr,
     data.imageUrl || null,
     data.author || null,
+    data.category || "association",
+    data.featured ? 1 : 0,
     data.published ? 1 : 0,
     data.published ? data.publishedAt || now : null,
     data.archived ? 1 : 0,

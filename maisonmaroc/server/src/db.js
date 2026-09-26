@@ -134,6 +134,8 @@ function ensureColumns(db) {
     if (!names.includes(col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${ddl}`);
   };
   addCol("news_posts", "archived", "INTEGER NOT NULL DEFAULT 0");
+  addCol("news_posts", "category", "TEXT NOT NULL DEFAULT 'association'");
+  addCol("news_posts", "featured", "INTEGER NOT NULL DEFAULT 0");
   addCol("events", "contact_info", "TEXT");
   addCol("events", "image_url", "TEXT");
   addCol("documents", "file_storage", "TEXT");

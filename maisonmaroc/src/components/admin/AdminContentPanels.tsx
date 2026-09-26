@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLocale } from "../../lib/useLocale";
+import { NEWS_CATEGORY_IDS, newsCategoryLabel } from "../../lib/newsCategories";
 import {
   type AdminDocumentRow,
   type AdminEventRow,
@@ -33,6 +34,8 @@ const emptyNews = (): Partial<AdminNewsRow> & { bodyFr: string; bodyAr: string }
   author: "APIO",
   published: false,
   archived: false,
+  featured: false,
+  category: "association",
 });
 
 export default function AdminContentPanels() {
@@ -74,7 +77,7 @@ export default function AdminContentPanels() {
 }
 
 function AdminNewsPanel({ onError }: { onError: (m: string | null) => void }) {
-  const { t } = useLocale();
+  const { t, lang } = useLocale();
   const [rows, setRows] = useState<AdminNewsRow[]>([]);
   const [editing, setEditing] = useState<(Partial<AdminNewsRow> & { bodyFr: string; bodyAr: string }) | null>(null);
   const [isNew, setIsNew] = useState(false);
@@ -134,6 +137,32 @@ function AdminNewsPanel({ onError }: { onError: (m: string | null) => void }) {
           <textarea className="input sm:col-span-2" required rows={4} placeholder={t("adminDash.bodyAr")} value={editing.bodyAr} onChange={(e) => setEditing({ ...editing, bodyAr: e.target.value })} />
           <input className="input sm:col-span-2" placeholder={t("adminDash.coverUrl")} value={editing.imageUrl || ""} onChange={(e) => setEditing({ ...editing, imageUrl: e.target.value })} dir="ltr" />
           <input className="input" placeholder={t("inst.news.author")} value={editing.author || ""} onChange={(e) => setEditing({ ...editing, author: e.target.value })} />
+          <select
+            className="input"
+            value={editing.category || "association"}
+            onChange={(e) => setEditing({ ...editing, category: e.target.value })}
+          >
+            {NEWS_CATEGORY_IDS.map((id) => (
+              <option key={id} value={id}>
+                {newsCategoryLabel(id, lang)}
+              </option>
+            ))}
+          </select>
+          <input
+            className="input"
+            type="datetime-local"
+            value={editing.publishedAt?.slice(0, 16) || ""}
+            onChange={(e) =>
+              setEditing({
+                ...editing,
+                publishedAt: e.target.value ? new Date(e.target.value).toISOString() : null,
+              })
+            }
+          />
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={Boolean(editing.featured)} onChange={(e) => setEditing({ ...editing, featured: e.target.checked })} />
+            {t("adminDash.featured")}
+          </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={Boolean(editing.published)} onChange={(e) => setEditing({ ...editing, published: e.target.checked })} />
             {t("adminDash.published")}

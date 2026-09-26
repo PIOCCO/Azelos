@@ -16,5 +16,13 @@ export const NEWS_FR = {
   empty: "Aucune actualité disponible pour le moment.",
   notFound: "Cette actualité est introuvable.",
   error: "Impossible de charger les actualités. Veuillez réessayer.",
+  retry: "Réessayer",
   source: "Source",
+  searchPlaceholder: "Rechercher une actualité…",
+  filterAll: "Toutes",
+  latestSection: "Dernières actualités",
+  loadMore: "Charger plus",
+  searchEmpty: "Aucune actualité ne correspond à votre recherche.",
+  relatedArticles: "Articles associés",
+  resultsCount: (n: number) => `${n} article${n !== 1 ? "s" : ""}`,
 } as const;

@@ -16,6 +16,7 @@
     "test:security": "node scripts/test-security.js",
     "test:client-security": "node scripts/test-client-security.js",
     "test:admin-network": "node scripts/test-admin-network.js",
+    "test:news": "node scripts/test-news-public.js",
     "test": "node scripts/test-email-verification.js && node scripts/test-google-client-flow.js && node scripts/test-auth.js && node scripts/test-authorization.js && node scripts/test-security.js && node scripts/test-client-security.js && node scripts/test-admin-network.js && node scripts/test-avatar-sync.js && node scripts/test-e2e-readiness.js",
     "test:e2e": "node scripts/test-e2e-readiness.js"
   },

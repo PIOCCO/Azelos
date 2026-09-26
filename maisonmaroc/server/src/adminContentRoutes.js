@@ -88,6 +88,8 @@ export function registerAdminContentRoutes(app, db, { requireAuth, requireSuperA
       published: validated.data.published !== undefined ? validated.data.published : existing.published,
       publishedAt: validated.data.publishedAt !== undefined ? validated.data.publishedAt : existing.publishedAt,
       archived: validated.data.archived !== undefined ? validated.data.archived : existing.archived,
+      featured: validated.data.featured !== undefined ? validated.data.featured : existing.featured,
+      category: validated.data.category ?? existing.category,
     };
     try {
       adminUpsertNews(db, merged);

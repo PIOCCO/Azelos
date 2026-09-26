@@ -13,7 +13,11 @@ export interface AdminNewsRow {
   author: string | null;
   published: boolean;
   archived: boolean;
+  featured: boolean;
+  category: string;
   publishedAt: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AdminEventRow {

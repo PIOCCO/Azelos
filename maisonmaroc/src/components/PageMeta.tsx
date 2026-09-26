@@ -9,10 +9,11 @@ interface Props {
   path?: string;
   imageUrl?: string | null;
   ogType?: "website" | "article";
+  jsonLd?: Record<string, unknown>;
 }
 
 /** Updates document title and core meta tags for the active route. */
-export default function PageMeta({ title, description, path = "", imageUrl, ogType = "website" }: Props) {
+export default function PageMeta({ title, description, path = "", imageUrl, ogType = "website", jsonLd }: Props) {
   const { lang } = useLocale();
   const fullTitle = title.includes("APIO") ? title : `${title} | APIO`;
   const desc =
@@ -60,7 +61,21 @@ export default function PageMeta({ title, description, path = "", imageUrl, ogTy
       }
       link.href = path ? canonical : window.location.href;
     }
-  }, [fullTitle, desc, path, imageUrl, ogType, lang]);
+
+    const ldId = "page-meta-jsonld";
+    let ld = document.getElementById(ldId) as HTMLScriptElement | null;
+    if (jsonLd) {
+      if (!ld) {
+        ld = document.createElement("script");
+        ld.id = ldId;
+        ld.type = "application/ld+json";
+        document.head.appendChild(ld);
+      }
+      ld.textContent = JSON.stringify(jsonLd);
+    } else if (ld) {
+      ld.remove();
+    }
+  }, [fullTitle, desc, path, imageUrl, ogType, lang, jsonLd]);
 
   return null;
 }

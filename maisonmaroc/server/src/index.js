@@ -50,7 +50,11 @@ import {
   contentDispositionAttachment,
   listPublicDocuments,
   listPublishedEvents,
-  listPublishedNews,
+  queryPublishedNews,
+  getPublishedFeaturedNews,
+  listPublishedNewsCategoriesInUse,
+  listRelatedPublishedNews,
+  newsCategoriesForApi,
   syncApioDocuments,
 } from "./content.js";
 import { validateContactBody } from "./contact.js";
@@ -285,9 +289,33 @@ app.get("/api/listings/project-images/:imageId/file", publicContentLimiter, (req
   fs.createReadStream(abs).pipe(res);
 });
 
+app.get("/api/content/news/categories", publicContentLimiter, (_req, res) => {
+  res.json({
+    categories: newsCategoriesForApi(),
+    inUse: listPublishedNewsCategoriesInUse(db),
+  });
+});
+
 app.get("/api/content/news", publicContentLimiter, (req, res) => {
   const { limit, offset } = clampPagination(req.query);
-  res.json({ articles: listPublishedNews(db, { limit, offset }) });
+  const category = req.query.category ? String(req.query.category).trim() : null;
+  const q = req.query.q ? String(req.query.q).trim() : null;
+  const featured = getPublishedFeaturedNews(db);
+  const excludeId = featured?.id && offset === 0 ? featured.id : null;
+  const { articles, total } = queryPublishedNews(db, {
+    limit,
+    offset,
+    category: category || null,
+    q: q || null,
+    excludeId,
+  });
+  res.json({
+    articles,
+    total,
+    featured,
+    limit,
+    offset,
+  });
 });
 
 app.get("/api/content/news/:slug", publicContentLimiter, (req, res) => {
@@ -295,7 +323,8 @@ app.get("/api/content/news/:slug", publicContentLimiter, (req, res) => {
   if (!slugCheck.ok) return res.status(404).json({ error: "Not found" });
   const article = getNewsBySlug(db, slugCheck.value);
   if (!article) return res.status(404).json({ error: "Not found" });
-  res.json({ article });
+  const related = listRelatedPublishedNews(db, { slug: slugCheck.value, limit: 3 });
+  res.json({ article, related });
 });
 
 app.get("/api/content/events", publicContentLimiter, (req, res) => {
