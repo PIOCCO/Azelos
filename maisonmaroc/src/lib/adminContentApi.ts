@@ -45,6 +45,7 @@ export interface AdminDocumentRow {
   visibility: string;
   published: boolean;
   publishedAt: string | null;
+  availability?: string;
   fileUrl: string | null;
   fileStorage: string | null;
 }

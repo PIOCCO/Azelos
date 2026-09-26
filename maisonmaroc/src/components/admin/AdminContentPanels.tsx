@@ -285,13 +285,14 @@ function AdminDocumentsPanel({ onError }: { onError: (m: string | null) => void 
     onError(null);
     const res = await saveAdminDocument(
       {
-        category: editing.category || "other",
+        category: editing.category || "institutionnel",
         titleFr: editing.titleFr,
         titleAr: editing.titleAr,
         descriptionFr: editing.descriptionFr,
         descriptionAr: editing.descriptionAr,
         visibility: editing.visibility || "public",
         published: Boolean(editing.published),
+        docAvailability: editing.availability || "coming_soon",
       },
       isNew,
       editing.id,
@@ -307,14 +308,14 @@ function AdminDocumentsPanel({ onError }: { onError: (m: string | null) => void 
     <div className="mt-6">
       <div className="flex justify-between">
         <h2 className="text-lg font-bold">{t("adminDash.documentsTitle")}</h2>
-        <button type="button" className="btn-primary btn-sm" onClick={() => { setIsNew(true); setEditing({ category: "publication", titleFr: "", titleAr: "", visibility: "public", published: false }); }}>
+        <button type="button" className="btn-primary btn-sm" onClick={() => { setIsNew(true); setEditing({ category: "institutionnel", titleFr: "", titleAr: "", visibility: "public", published: false, availability: "coming_soon" }); }}>
           <Plus size={16} /> {t("adminDash.createDocument")}
         </button>
       </div>
       {editing && (
         <form onSubmit={save} className="mt-4 grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
-          <select className="input" value={editing.category || "other"} onChange={(e) => setEditing({ ...editing, category: e.target.value })}>
-            {["publication", "report", "association", "sector", "announcement", "form", "press", "other"].map((c) => (
+          <select className="input" value={editing.category || "institutionnel"} onChange={(e) => setEditing({ ...editing, category: e.target.value })}>
+            {["institutionnel", "membres", "professionnel", "administratif", "juridique"].map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
@@ -322,6 +323,12 @@ function AdminDocumentsPanel({ onError }: { onError: (m: string | null) => void 
             <option value="public">public</option>
             <option value="members">members</option>
             <option value="admin">admin</option>
+          </select>
+          <select className="input" value={editing.availability || "coming_soon"} onChange={(e) => setEditing({ ...editing, availability: e.target.value })}>
+            <option value="coming_soon">coming_soon</option>
+            <option value="template">template</option>
+            <option value="online">online</option>
+            <option value="available">available</option>
           </select>
           <input className="input" required value={editing.titleFr || ""} onChange={(e) => setEditing({ ...editing, titleFr: e.target.value })} placeholder={t("adminDash.titleFr")} />
           <input className="input" required value={editing.titleAr || ""} onChange={(e) => setEditing({ ...editing, titleAr: e.target.value })} placeholder={t("adminDash.titleAr")} />

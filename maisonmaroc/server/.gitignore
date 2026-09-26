@@ -1,3 +1,6 @@
 node_modules/
-data/
 .env
+data/*
+!data/uploads/
+data/uploads/*
+!data/uploads/*.pdf

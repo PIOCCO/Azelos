@@ -200,6 +200,10 @@ export function registerAdminContentRoutes(app, db, { requireAuth, requireSuperA
       visibility: validated.data.visibility ?? existing.visibility,
       published: validated.data.published !== undefined ? validated.data.published : existing.published,
       publishedAt: validated.data.publishedAt !== undefined ? validated.data.publishedAt : existing.publishedAt,
+      docAvailability:
+        validated.data.docAvailability !== undefined
+          ? validated.data.docAvailability
+          : existing.availability,
     };
     try {
       adminUpsertDocument(db, merged);

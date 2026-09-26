@@ -4,9 +4,10 @@ import { randomUUID } from "node:crypto";
 import { createHash } from "node:crypto";
 import {
   APIO_DOCUMENT_CATALOG,
-  APIO_DOCUMENT_TEMPLATES,
   DOCUMENT_CATEGORY_ORDER,
 } from "./apioDocumentCatalog.js";
+import { buildPdfBuffer } from "./apioPdfBuilder.js";
+import { getPdfSpec } from "./apioPdfSpecs.js";
 import { deleteStoredFile, UPLOAD_DIR } from "./uploads.js";
 
 function rowToNews(r) {
@@ -385,9 +386,18 @@ export function adminUpsertDocument(db, data) {
       err.status = 404;
       throw err;
     }
-    db.prepare(
-      `UPDATE documents SET category=?, title_fr=?, title_ar=?, description_fr=?, description_ar=?, visibility=?, published=?, published_at=?, updated_at=? WHERE id=?`,
-    ).run(
+    const sets = [
+      "category=?",
+      "title_fr=?",
+      "title_ar=?",
+      "description_fr=?",
+      "description_ar=?",
+      "visibility=?",
+      "published=?",
+      "published_at=?",
+      "updated_at=?",
+    ];
+    const vals = [
       data.category,
       data.titleFr,
       data.titleAr,
@@ -397,8 +407,13 @@ export function adminUpsertDocument(db, data) {
       data.published ? 1 : 0,
       data.published ? data.publishedAt || now : null,
       now,
-      data.id,
-    );
+    ];
+    if (data.docAvailability !== undefined) {
+      sets.push("doc_availability=?");
+      vals.push(data.docAvailability);
+    }
+    vals.push(data.id);
+    db.prepare(`UPDATE documents SET ${sets.join(", ")} WHERE id=?`).run(...vals);
     return data.id;
   }
   const id = randomUUID();
@@ -440,21 +455,23 @@ export function adminDeleteDocument(db, id) {
   return true;
 }
 
-function writeTemplateFile(docId, html) {
-  const storageName = `apio-${docId}.html`;
+async function writeTemplatePdf(docId, templateKey) {
+  const spec = getPdfSpec(templateKey);
+  if (!spec) throw new Error(`Missing PDF spec: ${templateKey}`);
+  const buffer = await buildPdfBuffer(spec);
+  const storageName = `apio-${docId}.pdf`;
   const abs = path.resolve(UPLOAD_DIR, storageName);
   if (!abs.startsWith(UPLOAD_DIR + path.sep)) throw new Error("Invalid template path");
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-  fs.writeFileSync(abs, html, { encoding: "utf8", mode: 0o640 });
+  fs.writeFileSync(abs, buffer, { mode: 0o640 });
   return {
     storageName,
-    mime: "text/html; charset=utf-8",
-    size: Buffer.byteLength(html, "utf8"),
+    mime: "application/pdf",
+    size: buffer.length,
   };
 }
 
-export function seedApioDocuments(db) {
-  const now = new Date().toISOString();
+function insertCatalogRow(db, entry, now, file) {
   const insert = db.prepare(
     `INSERT INTO documents (
       id, category, title_fr, title_ar, description_fr, description_ar,
@@ -463,45 +480,80 @@ export function seedApioDocuments(db) {
       file_storage, file_mime, file_size
     ) VALUES (?, ?, ?, ?, ?, ?, 'public', 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
+  insert.run(
+    entry.id,
+    entry.category,
+    entry.titleFr,
+    entry.titleFr,
+    entry.descriptionFr,
+    entry.descriptionFr,
+    now,
+    now,
+    now,
+    entry.availability,
+    entry.fileFormat,
+    entry.sortOrder,
+    entry.viewUrl || null,
+    file?.storageName ?? null,
+    file?.mime ?? null,
+    file?.size ?? null,
+  );
+}
+
+/** Insert missing catalog rows and refresh template PDFs (idempotent). */
+export async function syncApioDocuments(db) {
+  const now = new Date().toISOString();
 
   for (const entry of APIO_DOCUMENT_CATALOG) {
     const exists = db.prepare(`SELECT id FROM documents WHERE id = ?`).get(entry.id);
-    if (exists) continue;
-
-    let file_storage = null;
-    let file_mime = null;
-    let file_size = null;
-    if (entry.templateKey && APIO_DOCUMENT_TEMPLATES[entry.templateKey]) {
-      const file = writeTemplateFile(entry.id, APIO_DOCUMENT_TEMPLATES[entry.templateKey]);
-      file_storage = file.storageName;
-      file_mime = file.mime;
-      file_size = file.size;
+    if (!exists) {
+      let file = null;
+      if (entry.availability === "template" && entry.templateKey) {
+        file = await writeTemplatePdf(entry.id, entry.templateKey);
+      }
+      insertCatalogRow(db, entry, now, file);
     }
+  }
 
-    const titleAr = entry.titleFr;
-    insert.run(
-      entry.id,
+  const updateMeta = db.prepare(
+    `UPDATE documents SET category=?, title_fr=?, description_fr=?, doc_availability=?, file_format=?, sort_order=?, view_url=?, updated_at=? WHERE id=?`,
+  );
+
+  for (const entry of APIO_DOCUMENT_CATALOG) {
+    updateMeta.run(
       entry.category,
       entry.titleFr,
-      titleAr,
       entry.descriptionFr,
-      entry.descriptionFr,
-      now,
-      now,
-      now,
       entry.availability,
       entry.fileFormat,
       entry.sortOrder,
       entry.viewUrl || null,
-      file_storage,
-      file_mime,
-      file_size,
+      now,
+      entry.id,
     );
+
+    if (entry.availability !== "template" || !entry.templateKey) continue;
+    if (!getPdfSpec(entry.templateKey)) continue;
+
+    const row = db.prepare(`SELECT file_storage FROM documents WHERE id = ?`).get(entry.id);
+    if (row?.file_storage && row.file_storage.endsWith(".html")) {
+      deleteStoredFile(row.file_storage);
+    }
+
+    const file = await writeTemplatePdf(entry.id, entry.templateKey);
+    db.prepare(
+      `UPDATE documents SET file_storage=?, file_mime=?, file_size=?, file_format='PDF', doc_availability='template', published=1, visibility='public', updated_at=? WHERE id=?`,
+    ).run(file.storageName, file.mime, file.size, now, entry.id);
   }
 }
 
-export function seedDemoContent(db) {
-  seedApioDocuments(db);
+/** @deprecated Use syncApioDocuments */
+export function seedApioDocuments(db) {
+  return syncApioDocuments(db);
+}
+
+export async function seedDemoContent(db) {
+  await syncApioDocuments(db);
   const count = db.prepare(`SELECT COUNT(*) AS c FROM news_posts`).get().c;
   if (count > 0) return;
   const now = new Date().toISOString();

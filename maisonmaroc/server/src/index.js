@@ -80,7 +80,6 @@ assertServerConfig();
 
 const db = openDb();
 migrate(db);
-seedDemoContent(db);
 ensureUploadDir();
 
 const app = express();
@@ -684,6 +683,14 @@ app.use((err, _req, res, _next) => {
   console.error(err);
   res.status(500).json({ error: "Internal server error" });
 });
+
+(async () => {
+  try {
+    await seedDemoContent(db);
+  } catch (err) {
+    console.error("[apio-server] Document sync failed:", err.message);
+  }
+})();
 
 const server = app.listen(port, () => {
   console.log(`APIO API listening on http://localhost:${port}`);

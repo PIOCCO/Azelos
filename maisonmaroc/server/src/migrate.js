@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { openDb, migrate } from "./db.js";
-import { seedApioDocuments } from "./content.js";
+import { syncApioDocuments } from "./content.js";
 import {
   createUser,
   findUserByEmail,
@@ -10,7 +10,7 @@ import {
 
 const db = openDb();
 migrate(db);
-seedApioDocuments(db);
+await syncApioDocuments(db);
 
 const adminEmail = process.env.SUPER_ADMIN_EMAIL;
 const adminPassword = process.env.SUPER_ADMIN_PASSWORD;

@@ -9,6 +9,7 @@
     "prestart": "node scripts/ensure-deps.mjs",
     "start": "node src/index.js",
     "migrate": "node src/migrate.js",
+    "documents:generate": "node scripts/generate-apio-pdfs.mjs",
     "test:auth": "node scripts/test-auth.js"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.4.0",
+    "pdfkit": "^0.15.0",
     "uuid": "^10.0.0"
   }
 }

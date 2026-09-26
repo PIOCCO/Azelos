@@ -109,6 +109,7 @@ const DOC_CATEGORIES = new Set([
 ]);
 
 const VISIBILITY = new Set(["public", "members", "admin"]);
+const DOC_AVAILABILITY = new Set(["coming_soon", "template", "online", "available"]);
 
 export function validateDocumentPayload(body, { partial = false } = {}) {
   const errors = [];
@@ -137,6 +138,11 @@ export function validateDocumentPayload(body, { partial = false } = {}) {
   if (body.published !== undefined) out.published = Boolean(body.published);
   if (body.publishedAt !== undefined) {
     out.publishedAt = body.publishedAt ? String(body.publishedAt) : null;
+  }
+  if (body.docAvailability !== undefined) {
+    const a = String(body.docAvailability).trim().toLowerCase();
+    if (!DOC_AVAILABILITY.has(a)) errors.push("Invalid docAvailability");
+    else out.docAvailability = a;
   }
 
   if (errors.length) return { ok: false, errors };
