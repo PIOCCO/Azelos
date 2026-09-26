@@ -66,6 +66,11 @@ import {
 } from "./memberListings.js";
 import { getMemberProfileById, profileToPublicOwner } from "./memberProfiles.js";
 import { getPublicMemberAvatarFile, getPublicMemberProfile } from "./ownerPortal.js";
+
+function publicOwnerForProfileId(db, ownerProfileId) {
+  const profile = getPublicMemberProfile(db, ownerProfileId);
+  return profile ? profileToPublicOwner(profile) : null;
+}
 import { applySecurityMiddleware } from "./security.js";
 import { clampPagination, validateSlug, EMAIL_RE } from "./validateContent.js";
 import { ensureUploadDir, resolveStoredFile } from "./uploads.js";
@@ -210,16 +215,14 @@ app.get("/api/properties/:slugOrId", (req, res) => {
 app.get("/api/listings/member-properties", publicContentLimiter, (_req, res) => {
   const properties = listPublishedMemberProperties(db);
   const ownerIds = [...new Set(properties.map((p) => p.ownerId))];
-  const owners = ownerIds
-    .map((id) => profileToPublicOwner(getMemberProfileById(db, id)))
-    .filter(Boolean);
+  const owners = ownerIds.map((id) => publicOwnerForProfileId(db, id)).filter(Boolean);
   res.json({ properties, owners });
 });
 
 app.get("/api/listings/member-properties/:slugOrId", publicContentLimiter, (req, res) => {
   const property = getPublishedMemberProperty(db, req.params.slugOrId);
   if (!property) return res.status(404).json({ error: "Not found" });
-  const owner = profileToPublicOwner(getMemberProfileById(db, property.ownerId));
+  const owner = publicOwnerForProfileId(db, property.ownerId);
   res.json({ property, owner: owner || null });
 });
 

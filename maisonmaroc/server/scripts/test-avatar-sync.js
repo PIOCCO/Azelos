@@ -94,6 +94,13 @@ async function main() {
   const owner = await login("/api/auth/owner/login", email, pass);
   assert("Avatar sync: owner login", owner.status === 200);
 
+  const proj = await req("/api/owner/projects", {
+    method: "POST",
+    headers: { Cookie: owner.cookie },
+    body: JSON.stringify({ titleFr: "Listing Avatar Test", cityId: "oujda", publish: true, price: 100000 }),
+  });
+  assert("Avatar sync: publish project for listings owner", proj.status === 201);
+
   const up1 = await uploadAvatar(owner.cookie, 1);
   assert("Avatar sync: upload #1", up1.status === 201);
   const url1 = up1.body?.publicProfile?.avatar;
@@ -103,6 +110,13 @@ async function main() {
   assert("Avatar sync: public profile after #1", pub1.status === 200);
   const publicUrl1 = pub1.body?.profile?.avatar;
   assert("Avatar sync: public API matches owner bundle URL", publicUrl1 === url1);
+
+  const listings1 = await req("/api/listings/member-properties");
+  const listingOwner1 = (listings1.body?.owners || []).find((o) => o.id === ownerProfileId);
+  assert(
+    "Avatar sync: listings API owner avatar matches upload #1",
+    listingOwner1?.avatar === url1,
+  );
 
   const img1 = await req(publicUrl1);
   assert("Avatar sync: avatar file #1", img1.status === 200);
@@ -116,6 +130,13 @@ async function main() {
   const pub2 = await req(`/api/public/member-profiles/${ownerProfileId}`);
   const publicUrl2 = pub2.body?.profile?.avatar;
   assert("Avatar sync: public API after #2 matches new URL", publicUrl2 === url2);
+
+  const listings2 = await req("/api/listings/member-properties");
+  const listingOwner2 = (listings2.body?.owners || []).find((o) => o.id === ownerProfileId);
+  assert(
+    "Avatar sync: listings API owner avatar updates to upload #2",
+    listingOwner2?.avatar === url2,
+  );
 
   const img2 = await req(publicUrl2);
   assert("Avatar sync: avatar file #2", img2.status === 200);

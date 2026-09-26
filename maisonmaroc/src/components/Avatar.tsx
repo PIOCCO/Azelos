@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiMediaUrl } from "../lib/api";
 
 interface AvatarProps {
   src: string;
@@ -7,13 +8,14 @@ interface AvatarProps {
 }
 
 export default function Avatar({ src, name, className = "" }: AvatarProps) {
+  const resolvedSrc = apiMediaUrl(src) || src;
   const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(
     name,
   )}&background=1c2e8f&color=fff&bold=true&size=256`;
-  const [current, setCurrent] = useState(src);
+  const [current, setCurrent] = useState(resolvedSrc);
   useEffect(() => {
-    setCurrent(src);
-  }, [src]);
+    setCurrent(resolvedSrc || fallback);
+  }, [resolvedSrc, name]);
   return (
     <img
       src={current}

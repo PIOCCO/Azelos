@@ -35,7 +35,7 @@ export default function OwnerProfilePage() {
 
   if (!owner) return <NotFoundPage />;
 
-  const displayAvatar = apiMediaUrl(publicProfile?.avatar) || owner.avatar;
+  const displayAvatar = apiMediaUrl(publicProfile?.avatar || owner.avatar) || owner.avatar;
 
   const listings = propertiesByOwner(owner.id);
   const city = cityById(owner.cityId);

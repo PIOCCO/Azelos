@@ -2,6 +2,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Trash2, Upload, User } from "lucide-react";
 import { apiFetch, apiMediaUrl } from "../../lib/api";
+import { useListings } from "../../context/ListingsContext";
 import type { OwnerProfileBundle } from "../../lib/ownerPortalTypes";
 import { useLocale } from "../../lib/useLocale";
 import { cityById } from "../../data/cities";
@@ -12,6 +13,7 @@ const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 export default function OwnerMemberProfilePage() {
   const { t, L } = useLocale();
+  const { refreshMemberListings } = useListings();
   const [bundle, setBundle] = useState<OwnerProfileBundle | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -92,6 +94,7 @@ export default function OwnerMemberProfilePage() {
       } else {
         setBundle(body as OwnerProfileBundle);
         setSuccess(t("ownerPortal.avatarUpdated"));
+        await refreshMemberListings();
       }
     } catch {
       setError(t("ownerPortal.uploadFailed"));
@@ -110,6 +113,7 @@ export default function OwnerMemberProfilePage() {
     else {
       setBundle(data ?? null);
       setSuccess(t("ownerPortal.avatarRemoved"));
+      await refreshMemberListings();
     }
   };
 

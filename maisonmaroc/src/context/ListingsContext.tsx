@@ -29,6 +29,7 @@ interface ListingsContextValue {
   propertiesByOwner: (ownerId: string) => Property[];
   ownerById: (id: string) => Owner | undefined;
   publishListing: (input: PublishInput) => Property;
+  refreshMemberListings: () => Promise<void>;
 }
 
 export interface PublishInput {
@@ -70,21 +71,35 @@ export function ListingsProvider({ children }: { children: ReactNode }) {
   const [published, setPublished] = useState<PublishedBundle[]>(loadPublished);
   const [memberPublished, setMemberPublished] = useState<PublishedBundle[]>([]);
 
-  useEffect(() => {
-    apiFetch<{ properties: Property[]; owners: Owner[] }>("/api/listings/member-properties").then(
-      ({ data }) => {
-        if (!data?.properties?.length) return;
-        const bundles: PublishedBundle[] = data.properties
-          .map((property) => {
-            const owner = data.owners?.find((o) => o.id === property.ownerId);
-            if (!owner) return null;
-            return { property, owner };
-          })
-          .filter((b): b is PublishedBundle => b !== null);
-        setMemberPublished(bundles);
-      },
+  const refreshMemberListings = useCallback(async () => {
+    const { data } = await apiFetch<{ properties: Property[]; owners: Owner[] }>(
+      "/api/listings/member-properties",
     );
+    if (!data?.properties?.length) {
+      setMemberPublished([]);
+      return;
+    }
+    const bundles: PublishedBundle[] = data.properties
+      .map((property) => {
+        const owner = data.owners?.find((o) => o.id === property.ownerId);
+        if (!owner) return null;
+        return { property, owner };
+      })
+      .filter((b): b is PublishedBundle => b !== null);
+    setMemberPublished(bundles);
   }, []);
+
+  useEffect(() => {
+    refreshMemberListings();
+  }, [refreshMemberListings]);
+
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === "visible") refreshMemberListings();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [refreshMemberListings]);
 
   const publishedProperties = useMemo(
     () => published.map((b) => b.property),
@@ -111,9 +126,9 @@ export function ListingsProvider({ children }: { children: ReactNode }) {
 
   const owners = useMemo(() => {
     const byId = new Map<string, Owner>();
-    for (const o of [...seedOwners, ...publishedOwners, ...memberOwners]) {
-      if (!byId.has(o.id)) byId.set(o.id, o);
-    }
+    for (const o of seedOwners) byId.set(o.id, o);
+    for (const o of publishedOwners) byId.set(o.id, o);
+    for (const o of memberOwners) byId.set(o.id, o);
     return [...byId.values()];
   }, [publishedOwners, memberOwners]);
 
@@ -212,6 +227,7 @@ export function ListingsProvider({ children }: { children: ReactNode }) {
       propertiesByOwner,
       ownerById,
       publishListing,
+      refreshMemberListings,
     }),
     [
       properties,
@@ -221,6 +237,7 @@ export function ListingsProvider({ children }: { children: ReactNode }) {
       propertiesByOwner,
       ownerById,
       publishListing,
+      refreshMemberListings,
     ],
   );
 
