@@ -39,6 +39,20 @@ export function updateOwner(db, id, fields) {
     err.status = 400;
     throw err;
   }
+  if (normalized.owner_profile_id !== undefined) {
+    const pid = String(normalized.owner_profile_id || "").trim();
+    if (pid.length > 128) {
+      const err = new Error("Invalid owner profile id");
+      err.status = 400;
+      throw err;
+    }
+    normalized.owner_profile_id = pid || null;
+  }
+  if (normalized.name !== undefined && String(normalized.name).length > 200) {
+    const err = new Error("Invalid name");
+    err.status = 400;
+    throw err;
+  }
   for (const key of allowed) {
     if (normalized[key] !== undefined) {
       sets.push(`${key} = ?`);

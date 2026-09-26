@@ -75,6 +75,7 @@ import {
 import { assertServerConfig } from "./startup.js";
 import { frontendRedirect } from "./redirect.js";
 import { validateDocumentId, validateUuid } from "./validateIds.js";
+import { logSecurityEvent } from "./securityLog.js";
 
 assertServerConfig();
 
@@ -270,11 +271,13 @@ app.post("/api/auth/client/login", authLimiter, (req, res) => {
     const { email, password } = req.body || {};
     const row = findUserByEmail(db, email || "");
     if (!row || row.role !== ROLES.CLIENT) {
+      logSecurityEvent("auth_failure", { route: "client_login", ip: req.ip });
       const err = new Error("Invalid credentials");
       err.status = 401;
       throw err;
     }
     if (!verifyPassword(password, row.password_hash)) {
+      logSecurityEvent("auth_failure", { route: "client_login", ip: req.ip });
       const err = new Error("Invalid credentials");
       err.status = 401;
       throw err;
@@ -292,11 +295,13 @@ app.post("/api/auth/owner/login", authLimiter, (req, res) => {
     const { email, password } = req.body || {};
     const row = findUserByEmail(db, email || "");
     if (!row || row.role !== ROLES.REAL_ESTATE_OWNER) {
+      logSecurityEvent("auth_failure", { route: "owner_login", ip: req.ip });
       const err = new Error("Invalid credentials");
       err.status = 401;
       throw err;
     }
     if (!verifyPassword(password, row.password_hash)) {
+      logSecurityEvent("auth_failure", { route: "owner_login", ip: req.ip });
       const err = new Error("Invalid credentials");
       err.status = 401;
       throw err;
@@ -314,16 +319,19 @@ app.post("/api/auth/admin/login", authLimiter, (req, res) => {
     const { email, password } = req.body || {};
     const row = findUserByEmail(db, email || "");
     if (!row || row.role !== ROLES.SUPER_ADMIN) {
+      logSecurityEvent("auth_failure", { route: "admin_login", ip: req.ip });
       const err = new Error("Invalid credentials");
       err.status = 401;
       throw err;
     }
     if (!verifyPassword(password, row.password_hash)) {
+      logSecurityEvent("auth_failure", { route: "admin_login", ip: req.ip });
       const err = new Error("Invalid credentials");
       err.status = 401;
       throw err;
     }
     assertActiveUser(row);
+    logSecurityEvent("admin_login_success", { userId: row.id, ip: req.ip });
     loginUser(db, res, row);
     res.json({ user: sanitizeUser(row) });
   } catch (err) {
@@ -580,7 +588,9 @@ app.get("/api/messages/conversations", requireAuth, (req, res) => {
   if (![ROLES.CLIENT, ROLES.REAL_ESTATE_OWNER].includes(req.user.role)) {
     return res.status(403).json({ error: "Forbidden" });
   }
-  const q = String(req.query.q || "").toLowerCase();
+  const q = String(req.query.q || "")
+    .slice(0, 200)
+    .toLowerCase();
   let rows = listConversationsForUser(db, req.user).map((c) => serializeConversation(db, c));
   if (q) {
     rows = rows.filter(
@@ -626,7 +636,10 @@ app.post("/api/messages/conversations/:id/messages", requireAuth, messageLimiter
   const idCheck = validateUuid(req.params.id);
   if (!idCheck.ok) return res.status(404).json({ error: "Not found" });
   const conv = getConversation(db, idCheck.value);
-  if (!canAccessConversation(conv, req.user)) return res.status(404).json({ error: "Not found" });
+  if (!canAccessConversation(conv, req.user)) {
+    logSecurityEvent("authz_denied", { route: "messages_post", userId: req.user?.id, conversationId: idCheck.value });
+    return res.status(404).json({ error: "Not found" });
+  }
   const validated = validateMessageBody(req.body?.body);
   if (!validated.ok) return res.status(400).json({ error: validated.error });
   const msg = addMessage(db, {

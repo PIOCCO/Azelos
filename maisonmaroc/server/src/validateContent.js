@@ -1,5 +1,14 @@
+import { validateExternalMediaUrl } from "./validateUrls.js";
+
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function applyImageUrl(body, errors, out) {
+  if (body.imageUrl === undefined) return;
+  const check = validateExternalMediaUrl(body.imageUrl);
+  if (!check.ok) errors.push(check.error || "Invalid imageUrl");
+  else out.imageUrl = check.value;
+}
 
 export function validateSlug(slug) {
   const s = String(slug || "").trim().toLowerCase();
@@ -36,11 +45,7 @@ export function validateNewsPayload(body, { partial = false } = {}) {
     out.bodyAr = String(body.bodyAr ?? "");
     if (!out.bodyAr.trim() || out.bodyAr.length > 50000) errors.push("Invalid bodyAr");
   }
-  if (body.imageUrl !== undefined) {
-    const url = body.imageUrl ? String(body.imageUrl).trim() : "";
-    if (url && url.length > 2000) errors.push("Invalid imageUrl");
-    else out.imageUrl = url || null;
-  }
+  applyImageUrl(body, errors, out);
   if (body.author !== undefined) {
     out.author = body.author ? String(body.author).slice(0, 200) : null;
   }
@@ -90,10 +95,7 @@ export function validateEventPayload(body, { partial = false } = {}) {
   if (body.contactInfo !== undefined) {
     out.contactInfo = body.contactInfo ? String(body.contactInfo).slice(0, 1000) : null;
   }
-  if (body.imageUrl !== undefined) {
-    const url = body.imageUrl ? String(body.imageUrl).trim() : "";
-    out.imageUrl = url && url.length <= 2000 ? url : null;
-  }
+  applyImageUrl(body, errors, out);
   if (body.published !== undefined) out.published = Boolean(body.published);
 
   if (errors.length) return { ok: false, errors };

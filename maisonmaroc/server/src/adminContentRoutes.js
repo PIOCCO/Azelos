@@ -15,7 +15,8 @@ import {
   adminUpsertNews,
 } from "./content.js";
 import { validateDocumentPayload, validateEventPayload, validateNewsPayload } from "./validateContent.js";
-import { documentUploadMiddleware, persistValidatedUpload } from "./uploads.js";
+import { documentUploadMiddleware, persistValidatedPdfUpload } from "./uploads.js";
+import { logSecurityEvent } from "./securityLog.js";
 import { validateDocumentId, validateUuid } from "./validateIds.js";
 
 function paramUuid(req, res) {
@@ -224,16 +225,27 @@ export function registerAdminContentRoutes(app, db, { requireAuth, requireSuperA
       documentUploadMiddleware(req, res, (err) => {
         if (err) {
           const status = err.code === "LIMIT_FILE_SIZE" ? 413 : 400;
+          logSecurityEvent("upload_rejected", {
+            reason: err.message || err.code,
+            userId: req.user?.id,
+            documentId: id,
+          });
           return res.status(status).json({ error: err.message || "Upload failed" });
         }
         if (!req.file) return res.status(400).json({ error: "File is required" });
         const doc = adminGetDocument(db, id);
         if (!doc) return res.status(404).json({ error: "Not found" });
         try {
-          const stored = persistValidatedUpload(req.file.buffer, req.file.mimetype);
+          const stored = persistValidatedPdfUpload(req.file.buffer);
           adminSetDocumentFile(db, id, stored);
+          logSecurityEvent("document_upload", { userId: req.user?.id, documentId: id, size: stored.size });
           res.json({ document: adminGetDocument(db, id) });
         } catch (e) {
+          logSecurityEvent("upload_rejected", {
+            reason: e.message,
+            userId: req.user?.id,
+            documentId: id,
+          });
           sendContentError(e, res);
         }
       });

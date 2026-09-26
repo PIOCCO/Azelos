@@ -10,7 +10,9 @@
     "start": "node src/index.js",
     "migrate": "node src/migrate.js",
     "documents:generate": "node scripts/generate-apio-pdfs.mjs",
-    "test:auth": "node scripts/test-auth.js"
+    "test:auth": "node scripts/test-auth.js",
+    "test:security": "node scripts/test-security.js",
+    "test": "node scripts/test-auth.js && node scripts/test-security.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
