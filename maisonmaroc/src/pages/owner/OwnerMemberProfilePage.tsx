@@ -23,7 +23,6 @@ export default function OwnerMemberProfilePage() {
     whatsapp: "",
     emailPublic: "",
     website: "",
-    avatarUrl: "",
   });
 
   const load = useCallback(async () => {
@@ -40,7 +39,6 @@ export default function OwnerMemberProfilePage() {
         whatsapp: o?.whatsapp ?? data.publicProfile.whatsapp ?? "",
         emailPublic: o?.emailPublic ?? data.publicProfile.email ?? "",
         website: o?.website ?? data.publicProfile.website ?? "",
-        avatarUrl: o?.avatarUrl ?? data.publicProfile.avatar ?? "",
       });
     }
   }, []);
@@ -50,8 +48,8 @@ export default function OwnerMemberProfilePage() {
   }, [load]);
 
   const previewAvatar = useMemo(
-    () => apiMediaUrl(bundle?.publicProfile.avatar || form.avatarUrl),
-    [bundle?.publicProfile.avatar, form.avatarUrl],
+    () => apiMediaUrl(bundle?.publicProfile.avatar),
+    [bundle?.publicProfile.avatar],
   );
 
   const savePublic = async (e: FormEvent) => {
@@ -66,7 +64,6 @@ export default function OwnerMemberProfilePage() {
         whatsapp: form.whatsapp,
         emailPublic: form.emailPublic,
         website: form.website || null,
-        avatarUrl: form.avatarUrl || null,
       }),
     });
     if (err) setError(err);
@@ -94,7 +91,6 @@ export default function OwnerMemberProfilePage() {
         setError(typeof body.error === "string" ? body.error : t("ownerPortal.uploadFailed"));
       } else {
         setBundle(body as OwnerProfileBundle);
-        setForm((f) => ({ ...f, avatarUrl: (body as OwnerProfileBundle).publicProfile.avatar || "" }));
         setSuccess(t("ownerPortal.avatarUpdated"));
       }
     } catch {
@@ -113,7 +109,6 @@ export default function OwnerMemberProfilePage() {
     if (err) setError(err);
     else {
       setBundle(data ?? null);
-      setForm((f) => ({ ...f, avatarUrl: "" }));
       setSuccess(t("ownerPortal.avatarRemoved"));
     }
   };
@@ -189,7 +184,7 @@ export default function OwnerMemberProfilePage() {
           <div className="flex flex-wrap gap-2">
             <label className="btn-primary inline-flex cursor-pointer items-center gap-2">
               <Upload size={16} aria-hidden />
-              {avatarUploading ? t("common.loading") : t("ownerPortal.uploadAvatar")}
+              {avatarUploading ? t("common.loading") : t("ownerPortal.chooseImage")}
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -213,18 +208,6 @@ export default function OwnerMemberProfilePage() {
         <p className="mt-2 text-xs text-ink-500">{t("ownerPortal.avatarHint")}</p>
 
         <form onSubmit={savePublic} className="mt-6 grid gap-4">
-          <details className="text-sm">
-            <summary className="cursor-pointer font-semibold text-ink-600">{t("ownerPortal.avatarUrlOptional")}</summary>
-            <label className="mt-2 block">
-              <input
-                dir="ltr"
-                className="input mt-1"
-                value={form.avatarUrl.startsWith("/api/") ? "" : form.avatarUrl}
-                placeholder="https://…"
-                onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })}
-              />
-            </label>
-          </details>
           <label className="block text-sm">
             <span className="font-semibold text-ink-700">{t("ownerPortal.descriptionFr")}</span>
             <textarea className="input mt-1 min-h-[100px]" value={form.bioFr} onChange={(e) => setForm({ ...form, bioFr: e.target.value })} />

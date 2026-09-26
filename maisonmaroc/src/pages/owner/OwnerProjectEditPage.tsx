@@ -253,7 +253,7 @@ export default function OwnerProjectEditPage() {
           <p className="mt-1 text-xs text-ink-500">{t("ownerPortal.projectImagesHint")}</p>
           <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-ink-300 px-4 py-3 text-sm font-semibold text-navy hover:border-navy">
             <Upload size={18} aria-hidden />
-            {uploading ? t("common.loading") : t("ownerPortal.uploadImage")}
+            {uploading ? t("common.loading") : t("ownerPortal.chooseImage")}
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"

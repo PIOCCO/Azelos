@@ -49,6 +49,10 @@ export const PRIVILEGED_PROFILE_OVERRIDE_FIELDS = [
   "avatar_mime",
   "avatarStorage",
   "avatarMime",
+  "avatarUrl",
+  "avatar_url",
+  "logoUrl",
+  "logo_url",
   ...PRIVILEGED_USER_FIELDS,
 ];
 

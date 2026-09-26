@@ -7,8 +7,11 @@ import { listMemberDocuments } from "./content.js";
 
 import { PRIVILEGED_ESCALATION_FIELDS, rejectForbiddenBodyFields } from "./securityFields.js";
 
+const MEMBER_IMAGE_URL_FIELDS = ["logoUrl", "logo_url", "avatarUrl", "avatar_url"];
+
 function rejectMemberEscalation(body) {
   rejectForbiddenBodyFields(body, PRIVILEGED_ESCALATION_FIELDS);
+  rejectForbiddenBodyFields(body, MEMBER_IMAGE_URL_FIELDS, "Profile images must be uploaded as files");
 }
 
 export function listMembersForAdmin(db, { q = "", status = "", sort = "created_desc" } = {}) {
@@ -92,7 +95,6 @@ export function createMemberWithAccount(db, adminUser, body) {
       bioFr: profileFields.descriptionFr,
       bioAr: profileFields.descriptionAr,
       website: profileFields.website,
-      avatarUrl: profileFields.logoUrl,
       contactName: name,
       contactPosition: profileFields.contactPosition,
       contactPhone: profileFields.contactPhone || phone,

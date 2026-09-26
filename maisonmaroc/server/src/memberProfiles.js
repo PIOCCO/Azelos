@@ -84,6 +84,11 @@ export function createMemberProfile(db, data) {
 export function updateMemberProfile(db, ownerProfileId, data) {
   const existing = db.prepare(`SELECT id FROM apio_member_profiles WHERE id = ?`).get(ownerProfileId);
   if (!existing) return null;
+  if (data.avatarUrl !== undefined) {
+    const err = new Error("Profile image must be uploaded as a file");
+    err.status = 400;
+    throw err;
+  }
   const fields = {
     name_fr: data.nameFr,
     name_ar: data.nameAr,
@@ -94,7 +99,6 @@ export function updateMemberProfile(db, ownerProfileId, data) {
     phone: data.phone,
     whatsapp: data.whatsapp,
     email: data.email,
-    avatar_url: data.avatarUrl,
     bio_fr: data.bioFr,
     bio_ar: data.bioAr,
     website: data.website,

@@ -14,15 +14,7 @@ import {
   rejectForbiddenBodyFields,
 } from "./securityFields.js";
 
-const PROFILE_PATCH_KEYS = [
-  "bioFr",
-  "bioAr",
-  "phone",
-  "whatsapp",
-  "emailPublic",
-  "website",
-  "avatarUrl",
-];
+const PROFILE_PATCH_KEYS = ["bioFr", "bioAr", "phone", "whatsapp", "emailPublic", "website"];
 
 const ME_PATCH_KEYS = ["name", "phone", "password"];
 
@@ -206,29 +198,11 @@ export function patchOwnerProfile(db, user, body) {
       data.website = check.value;
     } else data.website = null;
   }
-  if (body.avatarUrl !== undefined) {
-    const a = body.avatarUrl ? String(body.avatarUrl).trim() : "";
-    if (a) {
-      const check = validateExternalMediaUrl(a);
-      if (!check.ok) {
-        const err = new Error(check.error || "Invalid avatar URL");
-        err.status = 400;
-        throw err;
-      }
-      data.avatar_url = check.value;
-    } else data.avatar_url = null;
-    data.avatar_storage = null;
-    data.avatar_mime = null;
-  }
-
   const keys = Object.keys(data);
   if (!keys.length) return getOwnerProfileBundle(db, user);
 
   const existing = getOverrides(db, ownerProfileId);
   let removeStorage = null;
-  if (data.avatar_storage === null && existing?.avatar_storage) {
-    removeStorage = existing.avatar_storage;
-  }
   const now = new Date().toISOString();
   if (!existing) {
     db.prepare(

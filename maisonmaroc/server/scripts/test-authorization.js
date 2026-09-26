@@ -98,6 +98,13 @@ async function main() {
     });
     assert("Profile patch rejects avatar_storage", avatarHack.status === 400);
 
+    const avatarUrlHack = await req("/api/owner/profile", {
+      method: "PATCH",
+      headers: { Cookie: ownerA.cookie },
+      body: JSON.stringify({ avatarUrl: "https://example.com/photo.jpg" }),
+    });
+    assert("Profile patch rejects avatarUrl", avatarUrlHack.status === 400);
+
     const adminAsOwner = await req("/api/admin/members", { headers: { Cookie: ownerA.cookie } });
     assert("Owner cannot list admin members", adminAsOwner.status === 403);
 
