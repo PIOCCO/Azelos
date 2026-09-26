@@ -53,7 +53,7 @@ import {
   listPublicDocuments,
   listPublishedEvents,
   listPublishedNews,
-  seedDemoContent,
+  syncApioDocuments,
 } from "./content.js";
 import { validateContactBody } from "./contact.js";
 import { registerAdminContentRoutes } from "./adminContentRoutes.js";
@@ -800,7 +800,7 @@ app.use((err, _req, res, _next) => {
 
 (async () => {
   try {
-    await seedDemoContent(db);
+    await syncApioDocuments(db);
   } catch (err) {
     console.error("[apio-server] Document sync failed:", err.message);
   }
