@@ -5,12 +5,10 @@ import { listPublishedMemberProperties, rowToPublicProperty } from "./memberList
 import { logAdminAction } from "./adminAudit.js";
 import { listMemberDocuments } from "./content.js";
 
-function rejectRoleInBody(body) {
-  if (body?.role !== undefined) {
-    const err = new Error("Role cannot be set via this endpoint");
-    err.status = 400;
-    throw err;
-  }
+import { PRIVILEGED_ESCALATION_FIELDS, rejectForbiddenBodyFields } from "./securityFields.js";
+
+function rejectMemberEscalation(body) {
+  rejectForbiddenBodyFields(body, PRIVILEGED_ESCALATION_FIELDS);
 }
 
 export function listMembersForAdmin(db, { q = "", status = "", sort = "created_desc" } = {}) {
@@ -63,7 +61,7 @@ export function listMembersForAdmin(db, { q = "", status = "", sort = "created_d
 }
 
 export function createMemberWithAccount(db, adminUser, body) {
-  rejectRoleInBody(body);
+  rejectMemberEscalation(body);
   const { email, password, name, phone, status, linkExistingProfileId, ...profileFields } = body || {};
   if (!email || !password || !name) {
     const err = new Error("Email, password, and contact name are required");
@@ -158,7 +156,7 @@ export function getMemberDetailForAdmin(db, userId) {
 }
 
 export function patchMemberByAdmin(db, adminUser, userId, body) {
-  rejectRoleInBody(body);
+  rejectMemberEscalation(body);
   const user = db.prepare(`SELECT * FROM users WHERE id = ? AND role = 'REAL_ESTATE_OWNER'`).get(userId);
   if (!user) {
     const err = new Error("Not found");

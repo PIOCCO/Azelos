@@ -12,7 +12,7 @@
     "documents:generate": "node scripts/generate-apio-pdfs.mjs",
     "test:auth": "node scripts/test-auth.js",
     "test:security": "node scripts/test-security.js",
-    "test": "node scripts/test-auth.js && node scripts/test-security.js"
+    "test": "node scripts/test-auth.js && node scripts/test-authorization.js && node scripts/test-security.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

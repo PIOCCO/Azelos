@@ -7,6 +7,12 @@ import { listMemberDocuments, getMemberDocumentForDownload } from "./content.js"
 import { unreadCountForUser } from "./messages.js";
 import { validateExternalMediaUrl } from "./validateUrls.js";
 import { deleteStoredFile } from "./uploads.js";
+import {
+  PRIVILEGED_PROFILE_OVERRIDE_FIELDS,
+  PRIVILEGED_PROJECT_FIELDS,
+  PRIVILEGED_USER_FIELDS,
+  rejectForbiddenBodyFields,
+} from "./securityFields.js";
 
 const PROFILE_PATCH_KEYS = [
   "bioFr",
@@ -165,6 +171,7 @@ export function getOwnerProfileBundle(db, user) {
 }
 
 export function patchOwnerProfile(db, user, body) {
+  rejectForbiddenBodyFields(body, PRIVILEGED_PROFILE_OVERRIDE_FIELDS);
   const ownerProfileId = requireOwnerProfile(user);
   if (!getMemberProfileById(db, ownerProfileId)) {
     const err = new Error("Unknown member profile id");
@@ -332,14 +339,7 @@ export function patchOwnerMe(db, user, body) {
 }
 
 function rejectPrivilegedFields(body) {
-  const forbidden = ["role", "status", "ownerProfileId", "owner_profile_id", "isAdmin", "approved"];
-  for (const k of forbidden) {
-    if (body && body[k] !== undefined) {
-      const err = new Error("Field cannot be modified");
-      err.status = 400;
-      throw err;
-    }
-  }
+  rejectForbiddenBodyFields(body, PRIVILEGED_USER_FIELDS);
 }
 
 export function listOwnerProjects(db, user, { q = "", status = "" } = {}) {
@@ -434,23 +434,7 @@ export function getOwnerProject(db, user, projectId) {
 }
 
 function rejectPrivilegedProjectFields(body) {
-  const forbidden = [
-    "role",
-    "ownerProfileId",
-    "owner_profile_id",
-    "isAdmin",
-    "approved",
-    "hidden",
-    "ownerId",
-    "owner_id",
-  ];
-  for (const k of forbidden) {
-    if (body && body[k] !== undefined) {
-      const err = new Error("Field cannot be modified");
-      err.status = 400;
-      throw err;
-    }
-  }
+  rejectForbiddenBodyFields(body, PRIVILEGED_PROJECT_FIELDS);
 }
 
 export function createOwnerProject(db, user, body) {
@@ -636,6 +620,14 @@ export function reorderProjectImages(db, user, projectId, body) {
   }
   if (body?.primaryId) {
     const primaryId = String(body.primaryId).slice(0, 36);
+    const belongs = db
+      .prepare(`SELECT 1 FROM owner_project_images WHERE id = ? AND project_id = ?`)
+      .get(primaryId, projectId);
+    if (!belongs) {
+      const err = new Error("Not found");
+      err.status = 404;
+      throw err;
+    }
     db.prepare(`UPDATE owner_project_images SET is_primary = 0 WHERE project_id = ?`).run(projectId);
     db.prepare(
       `UPDATE owner_project_images SET is_primary = 1 WHERE id = ? AND project_id = ?`,

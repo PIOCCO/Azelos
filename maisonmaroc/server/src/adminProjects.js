@@ -1,4 +1,5 @@
 import { logAdminAction } from "./adminAudit.js";
+import { ADMIN_PROJECT_PATCH_FIELDS, rejectForbiddenBodyFields } from "./securityFields.js";
 import { rowToPublicProperty } from "./memberListings.js";
 import { getMemberProfileById } from "./memberProfiles.js";
 
@@ -30,6 +31,8 @@ export function listMemberProjectsForAdmin(db, { q = "", ownerProfileId = "", st
 }
 
 export function adminUpdateMemberProject(db, adminUser, projectId, body) {
+  const extra = Object.keys(body || {}).filter((k) => !ADMIN_PROJECT_PATCH_FIELDS.includes(k));
+  rejectForbiddenBodyFields(body, extra, "Unexpected field in request");
   const row = db.prepare(`SELECT * FROM owner_project_drafts WHERE id = ?`).get(projectId);
   if (!row) {
     const err = new Error("Not found");
