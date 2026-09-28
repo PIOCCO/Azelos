@@ -9,25 +9,33 @@ PostgreSQL source-of-truth for ICT third-party / supplier risk under DORA — **
 - Alembic migrations
 - pytest integration tests
 
-FastAPI, React, GraphQL, Azure, and Terraform are **out of scope** until the data model is stable.
+FastAPI, React, GraphQL, and Terraform are **out of scope** here. **PostgreSQL hosting** and **object storage** are configuration-only (no cloud SDK in the core path).
+
+## Portability
+
+- **Database:** client-provided PostgreSQL 16+ via `DATABASE_URL` only ([database contract](docs/DATABASE-CONTRACT.md)).
+- **Storage:** pluggable `EvidenceStorage` — `local` today; Azure/S3/MinIO adapters stubbed ([storage architecture](docs/STORAGE-ARCHITECTURE.md)).
+- **Deploy:** [DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ## Quick start
 
 ```bash
-# PostgreSQL (Docker — port 5433)
+# Optional: local PostgreSQL in Docker (dev/test only)
 cd Azelos_DORA_BP
 docker compose up -d
 
-# Or local PostgreSQL on port 5432 — adjust DATABASE_URL
-cp .env.example backend/.env
+cp .env.example .env   # edit DATABASE_URL for your Postgres
 
 cd backend
 pip install -e ".[dev]"
-export DATABASE_URL=postgresql+psycopg://dora:dora@localhost:5433/dora_supplier_risk
+set -a && source ../.env && set +a   # or export DATABASE_URL manually
 alembic upgrade head
+python3 scripts/check_database.py
 python3 scripts/seed_dev.py
 pytest
 ```
+
+`DATABASE_URL` (or `TEST_DATABASE_URL` for pytest) is **required** — nothing in code hard-codes host or cloud.
 
 ## Migrations
 
@@ -35,11 +43,15 @@ pytest
 |----------|---------|
 | `774dec1bcf90` | Core schema, constraints, indexes |
 | `002_reference_data` | DORA control catalogue, document types, service classifications |
+| `003_evidence_storage_neutral` | Provider-neutral evidence storage metadata |
 
 ## Documentation
 
 - [Phase 0 analysis](docs/PHASE0-ANALYSIS.md)
 - [DORA RoI mapping strategy](docs/dora-roi-mapping.md)
+- [Deployment](docs/DEPLOYMENT.md)
+- [Database contract](docs/DATABASE-CONTRACT.md)
+- [Storage architecture](docs/STORAGE-ARCHITECTURE.md)
 
 ## Entity relationship (Mermaid)
 
@@ -101,7 +113,7 @@ erDiagram
 
 - Row-Level Security policies on `financial_entity_id`
 - FastAPI service + audit emitters on mutations
-- Azure Blob Storage adapter for `evidence.blob_uri`
+- Full Azure Blob / S3 / MinIO SDK adapters (stubs exist; optional dependencies)
 - RoI export service reading this schema
 - GraphQL (Strawberry) read models
 - Materialized views for concentration analytics (“functions depending on provider X”)

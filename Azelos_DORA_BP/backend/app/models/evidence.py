@@ -1,8 +1,9 @@
 import uuid
 from datetime import date, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
+    BigInteger,
     Date,
     DateTime,
     ForeignKey,
@@ -10,7 +11,7 @@ from sqlalchemy import (
     Index,
     String,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -38,6 +39,8 @@ class DocumentType(Base):
 
 
 class Evidence(Base):
+    """Evidence metadata — file bytes live in object storage, not PostgreSQL."""
+
     __tablename__ = "evidence"
     __table_args__ = (
         ForeignKeyConstraint(
@@ -55,6 +58,7 @@ class Evidence(Base):
         Index("ix_evidence_financial_entity_id", "financial_entity_id"),
         Index("ix_evidence_expiry_date", "expiry_date"),
         Index("ix_evidence_provider_id", "provider_id"),
+        Index("ix_evidence_storage_provider", "storage_provider"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -72,9 +76,19 @@ class Evidence(Base):
         ForeignKey("document_types.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    blob_uri: Mapped[str] = mapped_column(String(2048), nullable=False)
+
+    storage_provider: Mapped[str] = mapped_column(String(64), nullable=False)
+    storage_object_key: Mapped[str] = mapped_column(String(2048), nullable=False)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    content_type: Mapped[str | None] = mapped_column(String(256))
+    size_bytes: Mapped[int | None] = mapped_column(BigInteger)
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB)
+
     file_name: Mapped[str] = mapped_column(String(512), nullable=False)
-    sha256_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    blob_uri: Mapped[str | None] = mapped_column(
+        String(2048),
+        doc="Deprecated legacy URI; prefer storage_provider + storage_object_key.",
+    )
     issue_date: Mapped[date | None] = mapped_column(Date)
     expiry_date: Mapped[date | None] = mapped_column(Date)
     uploaded_by: Mapped[str] = mapped_column(String(256), nullable=False)

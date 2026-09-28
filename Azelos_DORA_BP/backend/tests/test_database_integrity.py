@@ -173,9 +173,11 @@ def test_create_evidence(db_session):
         provider_id=provider.id,
         contract_id=contract.id,
         document_type_id=doc_type.id,
-        blob_uri="https://blob/example.pdf",
+        storage_provider="local",
+        storage_object_key="evidence/2026/example.pdf",
         file_name="example.pdf",
-        sha256_hash="b" * 64,
+        content_hash="b" * 64,
+        content_type="application/pdf",
         uploaded_by="user@bank",
         verification_status=VerificationStatus.UNVERIFIED,
     )

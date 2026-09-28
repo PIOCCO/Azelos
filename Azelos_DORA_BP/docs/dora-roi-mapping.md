@@ -22,7 +22,7 @@ Do not duplicate RoI JSON/XML shapes inside PostgreSQL. Store facts once; map on
 | `function_service_mappings` | `function_id`, `service_id` | Function ↔ ICT dependency | Supported functions per service |
 | `subcontractors` | recursive chain, `lei`, `processing_location`, `depth_rank` | Subcontracting chain | Nth-party disclosure |
 | `risk_assessments` | dimension inputs + `resulting_risk_level`, `calculated_at` | Risk assessment | Historical risk profile (derived on export) |
-| `evidence` | metadata + `blob_uri`, `sha256_hash`, `expiry_date` | Evidence / audit trail | Supporting documentation references |
+| `evidence` | `storage_provider`, `storage_object_key`, `content_hash`, dates | Evidence / audit trail | Supporting documentation references (URI built at export if needed) |
 | `contract_dora_controls` | `compliance_status`, `approved_by`, `approved_at` | Contractual provisions | Control compliance (human-approved) |
 | `exit_strategies` | `rto_hours`, `rpo_hours`, `migration_strategy`, `test_result` | Exit plans | Exit & transition planning |
 | `audit_records` | `entity_type`, `entity_id`, `action`, `old_value`, `new_value` | Governance | Change history for RoI regeneration |

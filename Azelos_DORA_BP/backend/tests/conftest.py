@@ -4,18 +4,22 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import Session, sessionmaker
 
-from app.database.base import Base
-from app.models import *  # noqa: F401, F403
+from app.database.engine import reset_engine
 
-TEST_DATABASE_URL = os.getenv(
-    "TEST_DATABASE_URL",
-    os.getenv(
-        "DATABASE_URL",
-        "postgresql+psycopg://dora:dora@localhost:5432/dora_supplier_risk_test",
-    ),
-)
+# Tests require DATABASE_URL (or TEST_DATABASE_URL which is copied to DATABASE_URL).
+if not os.getenv("DATABASE_URL"):
+    test_url = os.getenv("TEST_DATABASE_URL")
+    if test_url:
+        os.environ["DATABASE_URL"] = test_url
+
+
+TEST_DATABASE_URL = os.getenv("DATABASE_URL")
+if not TEST_DATABASE_URL:
+    raise RuntimeError(
+        "Set DATABASE_URL or TEST_DATABASE_URL before running pytest "
+        "(see Azelos_DORA_BP/.env.example)."
+    )
 
 
 @pytest.fixture(scope="session")
@@ -32,17 +36,23 @@ def engine():
             conn.execute(text(f'CREATE DATABASE "{db_name}"'))
     admin_engine.dispose()
 
-    eng = create_engine(TEST_DATABASE_URL, pool_pre_ping=True)
+    reset_engine()
     os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+    from app.config.database import load_database_settings, create_engine_kwargs
+
+    eng = create_engine(**create_engine_kwargs(load_database_settings()))
     alembic_cfg = Config("alembic.ini")
     alembic_cfg.set_main_option("script_location", "alembic")
     command.upgrade(alembic_cfg, "head")
     yield eng
     eng.dispose()
+    reset_engine()
 
 
 @pytest.fixture
-def db_session(engine) -> Session:
+def db_session(engine):
+    from sqlalchemy.orm import Session, sessionmaker
+
     connection = engine.connect()
     transaction = connection.begin()
     session = sessionmaker(bind=connection, autocommit=False, autoflush=False)()
