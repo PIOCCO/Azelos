@@ -19,6 +19,8 @@ FastAPI, React, GraphQL, and Terraform are **out of scope** here. **PostgreSQL h
 
 ## Quick start
 
+Use a **virtual environment** so Alembic/SQLAlchemy come from this project (SQLAlchemy **2.x**), not the OS packages (`/usr/bin/alembic` often pulls SQLAlchemy 1.x and breaks with `DeclarativeBase`).
+
 ```bash
 # Optional: local PostgreSQL in Docker (dev/test only)
 cd Azelos_DORA_BP
@@ -27,12 +29,25 @@ docker compose up -d
 cp .env.example .env   # edit DATABASE_URL for your Postgres
 
 cd backend
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+
+pip install -U pip
 pip install -e ".[dev]"
+
 set -a && source ../.env && set +a   # or export DATABASE_URL manually
-alembic upgrade head
-python3 scripts/check_database.py
-python3 scripts/seed_dev.py
+
+python -m alembic upgrade head
+python scripts/check_database.py
+python scripts/seed_dev.py
 pytest
+```
+
+Verify versions (should be SQLAlchemy 2.x):
+
+```bash
+python -c "import sqlalchemy; print(sqlalchemy.__version__)"
+which alembic   # should be .../backend/.venv/bin/alembic
 ```
 
 `DATABASE_URL` (or `TEST_DATABASE_URL` for pytest) is **required** — nothing in code hard-codes host or cloud.
@@ -101,6 +116,24 @@ erDiagram
 | `ix_risk_assessments_provider_id`, `calculated_at` | Latest vs historical assessments |
 | `ix_evidence_expiry_date` | Compliance monitoring |
 | `ix_audit_records_entity` | Audit trail by business object |
+
+## Troubleshooting
+
+### `ImportError: cannot import name 'DeclarativeBase'`
+
+You ran **system** Alembic (`/usr/bin/alembic`) against **Debian/Ubuntu SQLAlchemy 1.x**.
+
+Fix:
+
+1. `cd Azelos_DORA_BP/backend && python3 -m venv .venv && source .venv/bin/activate`
+2. `pip install -e ".[dev]"`
+3. Run migrations with **`python -m alembic upgrade head`** (inside the venv), not `/usr/bin/alembic`.
+
+Do **not** downgrade the codebase to `declarative_base`; the BP targets SQLAlchemy 2.x.
+
+### `DATABASE_URL is required`
+
+Export `DATABASE_URL` or `source ../.env` before Alembic or pytest.
 
 ## Assumptions
 
