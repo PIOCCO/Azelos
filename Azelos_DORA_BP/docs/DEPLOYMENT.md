@@ -18,16 +18,34 @@ DATABASE_URL=postgresql+psycopg://dora:change-me@HOST:5432/dora_supplier_risk
 DB_SSL_MODE=require
 ```
 
+## Python environment
+
+Install dependencies in a **venv** (or container image). Required stack:
+
+- Python 3.11+
+- SQLAlchemy **2.x** (not distro SQLAlchemy 1.x)
+- Alembic 1.13+
+- psycopg 3
+
+```bash
+cd Azelos_DORA_BP/backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+```
+
+Always run Alembic as `python -m alembic ...` from that environment.
+
 ## Schema setup
 
 On the target database (once per environment):
 
 ```bash
 cd Azelos_DORA_BP/backend
+source .venv/bin/activate
 export DATABASE_URL=...
-alembic upgrade head
-python3 scripts/seed_dev.py   # optional dev/demo only
-python3 scripts/check_database.py
+python -m alembic upgrade head
+python scripts/seed_dev.py   # optional dev/demo only
+python scripts/check_database.py
 ```
 
 ## Application modes
