@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: dora
+      POSTGRES_PASSWORD: dora
+      POSTGRES_DB: dora_supplier_risk
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dora -d dora_supplier_risk"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - dora_pg_data:/var/lib/postgresql/data
+
+volumes:
+  dora_pg_data:
