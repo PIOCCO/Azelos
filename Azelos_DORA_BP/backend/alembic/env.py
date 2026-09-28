@@ -10,6 +10,10 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# Single source of truth: DATABASE_URL (never a hard-coded host in alembic.ini).
+_settings = load_database_settings()
+config.set_main_option("sqlalchemy.url", _settings.url)
+
 target_metadata = Base.metadata
 
 

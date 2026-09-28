@@ -34,6 +34,8 @@ DB_SSL_MODE=require
 
 No hostname, cloud vendor, or credentials are hard-coded in application code.
 
+`backend/alembic.ini` leaves `sqlalchemy.url` **empty** on purpose; `alembic/env.py` sets it from `DATABASE_URL` at runtime so migrations stay as pluggable as the application.
+
 ## Installation flow
 
 ```text
