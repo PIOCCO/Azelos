@@ -29,10 +29,3 @@ class OrganizationProfileUpdate(BaseModel):
     art16_eligible: bool | None = None
     has_critical_functions: bool | None = None
     tlpt_applicable: bool | None = None
-
-
-class ApplicabilityOut(BaseModel):
-    flags: dict[str, bool]
-    module_keys: list[str]
-    matched_rules: list[str]
-    enabled_modules: list[str]

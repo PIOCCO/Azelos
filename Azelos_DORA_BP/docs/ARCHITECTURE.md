@@ -58,7 +58,9 @@ Criticality: `ict_assets.inherent_criticality` is independent of `business_funct
 - `/api/v1/*` — JWT + RBAC, tenant from token
 - `/api/config/*` — legacy header auth (backward compatible)
 
-Key endpoints: organization profile, applicability, requirements, config modules/custom-fields/settings, ICT assets.
+Key endpoints: organization profile, applicability, modules (available/enabled/applicable/required), requirements, config modules/custom-fields/settings, ICT assets, contracts, ICT services, sub-outsourcing.
+
+FastAPI layering: `app/api/v1` → `app/services` → `app/repositories` → models. Rule matching in `app/rules/applicability_engine.py`. Organization path access via `app/core/org_context.py`.
 
 ## Migrations
 

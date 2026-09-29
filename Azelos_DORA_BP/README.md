@@ -124,6 +124,10 @@ erDiagram
 | `ix_evidence_expiry_date` | Compliance monitoring |
 | `ix_audit_records_entity` | Audit trail by business object |
 
+## Architecture
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the normalized core + organization profile + applicability rules model (single PostgreSQL database, no sector-specific schemas).
+
 ## Troubleshooting
 
 ### `ImportError: cannot import name 'DeclarativeBase'`

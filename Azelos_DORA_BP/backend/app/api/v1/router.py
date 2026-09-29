@@ -1,34 +1,48 @@
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    applicability,
     auth,
     business_functions,
     configuration,
+    contracts,
     controls,
     database,
     evidence,
     extensions,
     ict_assets,
-    organization_profile,
+    ict_services,
+    information_assets,
+    modules,
     organizations,
+    profiles,
+    providers,
+    regulatory_requirements,
+    requirements,
     risks,
-    regulatory,
     stubs,
-    suppliers,
+    sub_outsourcing,
 )
 
 api_v1_router = APIRouter()
 api_v1_router.include_router(auth.router)
 api_v1_router.include_router(organizations.router)
-api_v1_router.include_router(organization_profile.router)
-api_v1_router.include_router(ict_assets.router)
+api_v1_router.include_router(profiles.router)
+api_v1_router.include_router(applicability.router)
+api_v1_router.include_router(modules.router)
+api_v1_router.include_router(requirements.router)
+api_v1_router.include_router(providers.router)
+api_v1_router.include_router(contracts.router)
+api_v1_router.include_router(ict_services.router)
+api_v1_router.include_router(sub_outsourcing.router)
+api_v1_router.include_router(information_assets.router)
 api_v1_router.include_router(business_functions.router)
-api_v1_router.include_router(suppliers.router)
+api_v1_router.include_router(ict_assets.router)
 api_v1_router.include_router(controls.router)
 api_v1_router.include_router(risks.router)
 api_v1_router.include_router(evidence.router)
 api_v1_router.include_router(configuration.router)
 api_v1_router.include_router(extensions.router)
-api_v1_router.include_router(regulatory.router)
+api_v1_router.include_router(regulatory_requirements.router)
 api_v1_router.include_router(database.router)
 api_v1_router.include_router(stubs.router)

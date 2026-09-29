@@ -44,6 +44,24 @@ def test_applicability_payment_art16(db_session, org):
     assert result.flags.get("simplified_rmf") is True
 
 
+def test_applicability_build_response(db_session, org):
+    from app.models.enums_profile import OrganizationType
+    from app.models.organization_profile import OrganizationProfile
+    from app.services.applicability import ApplicabilityService
+
+    db_session.add(
+        OrganizationProfile(
+            financial_entity_id=org.id,
+            organization_type=OrganizationType.PAYMENT_INSTITUTION,
+            art16_eligible=True,
+        )
+    )
+    db_session.flush()
+    out = ApplicabilityService(db_session, org.id).build_response()
+    assert out.organization_id == org.id
+    assert any(m.key for m in out.modules)
+
+
 def test_applicability_respects_disabled_module(db_session, org):
     from app.models.platform_config import OrganizationModule, PlatformModule
 
@@ -52,7 +70,9 @@ def test_applicability_respects_disabled_module(db_session, org):
         tlpt_applicable=True,
     )
     db_session.add(profile)
-    module = db_session.query(PlatformModule).first()
+    from sqlalchemy import select
+
+    module = db_session.scalars(select(PlatformModule).limit(1)).first()
     if module is None:
         pytest.skip("No platform modules seeded")
     db_session.add(

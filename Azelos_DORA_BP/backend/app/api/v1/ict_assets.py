@@ -16,10 +16,10 @@ from app.schemas.ict_assets import (
 )
 from app.services.ict_assets import ICTAssetService
 
-router = APIRouter(prefix="/ict-assets", tags=["ICT Assets"])
+router = APIRouter(tags=["ICT Assets"])
 
 
-@router.get("", response_model=PaginatedResponse)
+@router.get("/ict-assets", response_model=PaginatedResponse)
 def list_ict_assets(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
@@ -36,7 +36,7 @@ def list_ict_assets(
     )
 
 
-@router.get("/{asset_id}", response_model=ICTAssetOut)
+@router.get("/ict-assets/{asset_id}", response_model=ICTAssetOut)
 def get_ict_asset(
     asset_id: UUID,
     ctx: AuthContext = Depends(get_auth_context),
@@ -46,7 +46,7 @@ def get_ict_asset(
     return ICTAssetOut.model_validate(service.get(asset_id))
 
 
-@router.post("", response_model=ICTAssetOut, status_code=201)
+@router.post("/ict-assets", response_model=ICTAssetOut, status_code=201)
 def create_ict_asset(
     body: ICTAssetCreate,
     ctx: AuthContext = Depends(require_role(Role.SECURITY_MANAGER)),
@@ -59,7 +59,7 @@ def create_ict_asset(
     return ICTAssetOut.model_validate(row)
 
 
-@router.patch("/{asset_id}", response_model=ICTAssetOut)
+@router.patch("/ict-assets/{asset_id}", response_model=ICTAssetOut)
 def update_ict_asset(
     asset_id: UUID,
     body: ICTAssetUpdate,
@@ -73,7 +73,7 @@ def update_ict_asset(
     return ICTAssetOut.model_validate(row)
 
 
-@router.post("/function-maps", response_model=AssetFunctionMapOut, status_code=201)
+@router.post("/asset-function-maps", response_model=AssetFunctionMapOut, status_code=201)
 def create_function_map(
     body: AssetFunctionMapCreate,
     ctx: AuthContext = Depends(require_role(Role.SECURITY_MANAGER)),

@@ -1,5 +1,5 @@
 from app.models.business_function import BusinessFunction
-from app.models.enums import CriticalOrImportant
+from app.models.enums import BusinessFunctionStatus, CriticalOrImportant
 from app.models.financial_entity import FinancialEntity
 from app.models.ict_assets import ICTAsset
 from app.schemas.ict_assets import AssetFunctionMapCreate, ICTAssetCreate
@@ -15,6 +15,7 @@ def test_mapping_does_not_overwrite_inherent_criticality(db_session):
         name="Payments",
         function_identifier="PAY-01",
         critical_or_important=CriticalOrImportant.CRITICAL,
+        status=BusinessFunctionStatus.ACTIVE,
     )
     db_session.add(fn)
     db_session.flush()

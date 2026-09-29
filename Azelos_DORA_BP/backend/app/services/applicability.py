@@ -10,8 +10,10 @@ from sqlalchemy.orm import Session
 from app.models.business_function import BusinessFunction
 from app.models.enums import CriticalOrImportant
 from app.models.organization_profile import OrganizationProfile
-from app.models.platform_config import OrganizationModule, PlatformModule
 from app.models.profile_rules import ProfileRule
+from app.repositories.modules import ModuleRepository
+from app.rules.applicability_engine import conditions_match, merge_outcomes
+from app.schemas.applicability import ApplicabilityOut, ModuleApplicabilityOut
 from app.services.profile_service import ProfileService
 
 
@@ -35,6 +37,7 @@ class ApplicabilityService:
     def __init__(self, db: Session, organization_id: UUID) -> None:
         self.db = db
         self.organization_id = organization_id
+        self._modules = ModuleRepository(db, organization_id)
 
     def _profile_payload(self, profile: OrganizationProfile) -> dict[str, Any]:
         return {
@@ -58,13 +61,6 @@ class ApplicabilityService:
         )
         return {"any_critical_business_function": any_critical is not None}
 
-    @staticmethod
-    def _conditions_match(conditions: dict[str, Any], env: dict[str, Any]) -> bool:
-        for key, expected in conditions.items():
-            if env.get(key) != expected:
-                return False
-        return True
-
     def evaluate(self) -> ApplicabilityResult:
         profile = ProfileService(self.db, self.organization_id).get_or_create()
         env = {**self._profile_payload(profile), **self._context()}
@@ -74,26 +70,55 @@ class ApplicabilityService:
             select(ProfileRule).where(ProfileRule.active.is_(True)).order_by(ProfileRule.rule_key)
         ).all()
         for rule in rules:
-            if self._conditions_match(rule.conditions, env):
+            if conditions_match(rule.conditions, env):
                 result.matched_rules.append(rule.rule_key)
-                for key, val in rule.outcomes.items():
-                    if key == "module_keys" and isinstance(val, list):
-                        result.module_keys.update(str(v) for v in val)
-                    elif isinstance(val, bool):
-                        result.flags[key] = val
-                    elif key not in ("module_keys",):
-                        result.flags[key] = bool(val)
+                merge_outcomes(rule.outcomes, flags=result.flags, module_keys=result.module_keys)
 
-        enabled = self.db.scalars(
-            select(PlatformModule.key)
-            .join(OrganizationModule, OrganizationModule.platform_module_id == PlatformModule.id)
-            .where(
-                OrganizationModule.financial_entity_id == self.organization_id,
-                OrganizationModule.enabled.is_(True),
-            )
-        ).all()
-        result.enabled_modules = list(enabled)
+        enabled_ids = self._modules.enabled_module_ids()
+        catalogue = self._modules.list_catalogue()
+        result.enabled_modules = [m.key for m in catalogue if m.id in enabled_ids]
+
         for key in result.module_keys:
             if key not in result.enabled_modules:
                 result.flags.setdefault(f"module_{key.lower()}_recommended", True)
         return result
+
+    def build_response(self) -> ApplicabilityOut:
+        raw = self.evaluate()
+        catalogue = self._modules.list_catalogue()
+        assignments = self._modules.assignment_map()
+        applicable_keys = raw.module_keys
+
+        modules_out: list[ModuleApplicabilityOut] = []
+        for module in catalogue:
+            enabled = assignments.get(module.id, False)
+            applicable = not applicable_keys or module.key in applicable_keys
+            required = module.key in applicable_keys
+            modules_out.append(
+                ModuleApplicabilityOut(
+                    key=module.key,
+                    name=module.name,
+                    description=module.description,
+                    available=True,
+                    enabled=enabled,
+                    applicable=applicable,
+                    required=required,
+                    disabled=not enabled,
+                )
+            )
+
+        hints: list[str] = []
+        if raw.flags.get("simplified_rmf"):
+            hints.append("SIMPLIFIED_RMF")
+        if raw.flags.get("enhanced_resilience_requirements"):
+            hints.append("ENHANCED_RESILIENCE")
+        if raw.flags.get("tlpt_enabled"):
+            hints.append("TLPT")
+
+        return ApplicabilityOut(
+            organization_id=self.organization_id,
+            features=raw.flags,
+            modules=modules_out,
+            rules=raw.matched_rules,
+            requirements_hint=hints,
+        )

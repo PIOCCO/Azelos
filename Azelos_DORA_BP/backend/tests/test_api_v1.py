@@ -91,7 +91,7 @@ def test_login_and_tenant_isolation(client, user_a, org_a, org_b, db_session):
 
     token = _token(client, "user-a@example.com", "secret123", org_a.id)
     headers = {"Authorization": f"Bearer {token}"}
-    r = client.get(f"/api/v1/suppliers/{supplier_b.id}", headers=headers)
+    r = client.get(f"/api/v1/ict-providers/{supplier_b.id}", headers=headers)
     assert r.status_code == 404
 
 
