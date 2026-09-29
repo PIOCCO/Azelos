@@ -12,11 +12,6 @@ def _not_implemented(name: str):
     )
 
 
-@router.get("/ict-assets")
-def list_ict_assets():
-    _not_implemented("ICT assets")
-
-
 @router.get("/incidents")
 def list_incidents():
     _not_implemented("Incidents")

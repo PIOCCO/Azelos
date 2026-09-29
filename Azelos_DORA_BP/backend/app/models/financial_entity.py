@@ -13,6 +13,8 @@ if TYPE_CHECKING:
     from app.models.contract import Contract
     from app.models.evidence import Evidence
     from app.models.exit_strategy import ExitStrategy
+    from app.models.ict_assets import ICTAsset, InformationAsset
+    from app.models.organization_profile import OrganizationProfile
     from app.models.provider import ICTProvider
     from app.models.risk import RiskAssessment
 
@@ -48,3 +50,10 @@ class FinancialEntity(Base, TimestampMixin):
         back_populates="financial_entity",
         overlaps="contract,exit_strategies,provider",
     )
+    profile: Mapped["OrganizationProfile | None"] = relationship(
+        back_populates="financial_entity", uselist=False
+    )
+    information_assets: Mapped[list["InformationAsset"]] = relationship(
+        back_populates="financial_entity"
+    )
+    ict_assets: Mapped[list["ICTAsset"]] = relationship(back_populates="financial_entity")

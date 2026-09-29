@@ -24,6 +24,7 @@ from app.models.mixins import TimestampMixin
 if TYPE_CHECKING:
     from app.models.exit_strategy import ExitStrategy
     from app.models.financial_entity import FinancialEntity
+    from app.models.ict_assets import AssetFunctionMap
     from app.models.service import ICTService
 
 business_function_status_enum = pg_enum(
@@ -71,6 +72,9 @@ class BusinessFunction(Base, TimestampMixin):
         back_populates="business_function"
     )
     exit_strategies: Mapped[list["ExitStrategy"]] = relationship(
+        back_populates="business_function"
+    )
+    asset_maps: Mapped[list["AssetFunctionMap"]] = relationship(
         back_populates="business_function"
     )
 

@@ -21,6 +21,9 @@ from app.models.dora_baseline import DoraDomain, DoraRequirement, OrganizationRe
 from app.models.configuration_audit import ConfigurationAuditLog
 from app.models.auth import OrganizationMembership, User
 from app.models.extensions import ExtensionRegistration
+from app.models.organization_profile import OrganizationProfile
+from app.models.profile_rules import ProfileRule
+from app.models.ict_assets import AssetFunctionMap, ICTAsset, InformationAsset
 
 __all__ = [
     "AuditRecord",
@@ -51,4 +54,9 @@ __all__ = [
     "User",
     "OrganizationMembership",
     "ExtensionRegistration",
+    "OrganizationProfile",
+    "ProfileRule",
+    "InformationAsset",
+    "ICTAsset",
+    "AssetFunctionMap",
 ]

@@ -142,6 +142,19 @@ Do **not** downgrade the codebase to `declarative_base`; the BP targets SQLAlche
 
 Export `DATABASE_URL` or `source ../.env` before Alembic or pytest.
 
+### `ModuleNotFoundError: No module named 'jose'` (or `passlib`, `fastapi`)
+
+The FastAPI layer adds dependencies (`python-jose`, `passlib`, etc.). Reinstall the project **inside the venv**:
+
+```bash
+cd Azelos_DORA_BP/backend
+source .venv/bin/activate
+pip install -e ".[dev]"
+python scripts/seed_api_user.py
+```
+
+`seed_api_user.py` only needs `passlib`; running **`uvicorn app.main:app`** requires the full install above.
+
 ### `ModuleNotFoundError: No module named 'app'`
 
 Run scripts from **`backend/`** with the venv active:

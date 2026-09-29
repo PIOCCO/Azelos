@@ -8,6 +8,8 @@ from app.api.v1 import (
     database,
     evidence,
     extensions,
+    ict_assets,
+    organization_profile,
     organizations,
     risks,
     regulatory,
@@ -18,6 +20,8 @@ from app.api.v1 import (
 api_v1_router = APIRouter()
 api_v1_router.include_router(auth.router)
 api_v1_router.include_router(organizations.router)
+api_v1_router.include_router(organization_profile.router)
+api_v1_router.include_router(ict_assets.router)
 api_v1_router.include_router(business_functions.router)
 api_v1_router.include_router(suppliers.router)
 api_v1_router.include_router(controls.router)
