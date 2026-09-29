@@ -26,7 +26,8 @@ $PY scripts/seed_dev.py 2>/dev/null || true
 $PY scripts/seed_api_user.py 2>/dev/null || true
 
 cd "$FRONTEND"
-if [[ ! -d node_modules ]]; then npm install; fi
+echo "Installing frontend dependencies (includes lucide-react icons)…"
+if [[ -f package-lock.json ]]; then npm ci; else npm install; fi
 npm run build
 
 echo ""

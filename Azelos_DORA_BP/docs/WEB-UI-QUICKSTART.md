@@ -14,8 +14,15 @@ Works after a production build; API and UI share port **8000**.
 
 ```bash
 cd Azelos_DORA_BP
+git pull   # ensure package.json includes lucide-react
 chmod +x scripts/start-web-one-port.sh
 ./scripts/start-web-one-port.sh
+```
+
+If you see `Cannot find module 'lucide-react'`, run once:
+
+```bash
+cd Azelos_DORA_BP/frontend && npm install && cd .. && ./scripts/start-web-one-port.sh
 ```
 
 ### Windows (PowerShell)

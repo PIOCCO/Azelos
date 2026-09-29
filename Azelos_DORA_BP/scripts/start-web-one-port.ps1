@@ -35,7 +35,8 @@ if (-not (Test-Path $py)) { $py = "python" }
 & $py scripts/seed_api_user.py
 
 Set-Location $Frontend
-if (-not (Test-Path "node_modules")) { npm install }
+Write-Host "Installing frontend dependencies (includes lucide-react icons)…"
+if (Test-Path "package-lock.json") { npm ci } else { npm install }
 npm run build
 
 Write-Host ""

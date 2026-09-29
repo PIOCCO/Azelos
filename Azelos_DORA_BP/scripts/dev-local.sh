@@ -34,5 +34,5 @@ echo "Press Ctrl+C to stop both."
 trap 'kill 0' EXIT
 $UV app.main:app --host 0.0.0.0 --port 8000 &
 cd "$FRONTEND"
-[[ -d node_modules ]] || npm install
+if [[ -f package-lock.json ]]; then npm ci; else npm install; fi
 npm run dev
