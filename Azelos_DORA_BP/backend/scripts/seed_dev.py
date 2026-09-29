@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+# Run from backend/: python scripts/seed_dev.py (or python3 with venv active)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from datetime import date, datetime, timezone
 
 from sqlalchemy import select

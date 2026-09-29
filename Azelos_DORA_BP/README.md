@@ -135,6 +135,19 @@ Do **not** downgrade the codebase to `declarative_base`; the BP targets SQLAlche
 
 Export `DATABASE_URL` or `source ../.env` before Alembic or pytest.
 
+### `ModuleNotFoundError: No module named 'app'`
+
+Run scripts from **`backend/`** with the venv active:
+
+```bash
+cd Azelos_DORA_BP/backend
+source .venv/bin/activate
+set -a && source ../.env && set +a
+python scripts/seed_dev.py
+```
+
+Or install the package: `pip install -e ".[dev]"` and use the venv’s `python` (`which python` → `.venv/bin/python`), not system `/usr/bin/python3` without the venv.
+
 ## Assumptions
 
 - Single deployment may start with one `financial_entities` row; schema still carries `financial_entity_id` everywhere for future RLS.
