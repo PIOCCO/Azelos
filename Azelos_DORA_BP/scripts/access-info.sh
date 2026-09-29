@@ -54,8 +54,16 @@ else
 fi
 
 HOST_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+TS_IP=""
+if command -v tailscale >/dev/null 2>&1; then
+  TS_IP="$(tailscale ip -4 2>/dev/null | head -1)"
+fi
 SSH_USER="$(whoami)"
 HOST_NAME="$(hostname -f 2>/dev/null || hostname)"
+TS_NAME=""
+if command -v tailscale >/dev/null 2>&1; then
+  TS_NAME="$(tailscale status --self 2>/dev/null | head -1 | awk '{print $2}')"
+fi
 
 echo ""
 echo "----------------------------------------------"
