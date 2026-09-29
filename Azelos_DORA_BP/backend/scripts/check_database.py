@@ -75,15 +75,24 @@ def main() -> int:
                 "CREATE privilege: OK" if can_create else "CREATE privilege: not granted (may be OK for app role)"
             )
 
-            alembic_row = conn.execute(
-                text(
-                    "SELECT version_num FROM alembic_version ORDER BY version_num DESC LIMIT 1"
-                )
-            ).first()
+            try:
+                alembic_row = conn.execute(
+                    text(
+                        "SELECT version_num FROM alembic_version "
+                        "ORDER BY version_num DESC LIMIT 1"
+                    )
+                ).first()
+            except Exception as alembic_exc:
+                if "alembic_version" in str(alembic_exc).lower():
+                    alembic_row = None
+                else:
+                    raise
             if alembic_row:
                 lines.append(f"Migration state: OK (revision {alembic_row[0]})")
             else:
-                lines.append("Migration state: no alembic_version row (run alembic upgrade head)")
+                lines.append(
+                    "Migration state: not initialized (run: python -m alembic upgrade head)"
+                )
 
     except Exception as exc:
         print(f"Database connection: FAIL ({type(exc).__name__})")
@@ -105,6 +114,10 @@ def main() -> int:
         lines.append("SSL: not configured via DB_SSL_MODE")
 
     lines.append(f"Connection target: {settings.masked_url()}")
+    if any("Migration state: not initialized" in line for line in lines):
+        lines.append("Database preflight: PASS (connection OK — migrations pending)")
+        print("\n".join(lines))
+        return 0
     lines.append("Database preflight: PASS")
     print("\n".join(lines))
     return 0
