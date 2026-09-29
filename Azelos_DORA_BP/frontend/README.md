@@ -4,16 +4,25 @@ React + Vite frontend for the DORA Business Resilience Blueprint API.
 
 ## Development
 
-1. Start PostgreSQL and the API (see `../backend/README.md`).
-2. Copy `.env.example` to `.env` if needed (empty `VITE_API_BASE_URL` uses the Vite dev proxy).
-3. Install and run:
+**If the browser says “This site can’t be reached”**, the dev server is not running (or the API/DB is down). Start all three:
 
 ```bash
-npm install
-npm run dev
+# From Azelos_DORA_BP/
+docker compose up -d postgres          # OR use local Postgres on :5432
+chmod +x scripts/dev-local.sh
+./scripts/dev-local.sh                 # migrations + API :8000 + UI :5173
 ```
 
-Open http://localhost:5173 — API requests are proxied to http://127.0.0.1:8000.
+Manual steps:
+
+1. `backend/.env` with `DATABASE_URL` (Docker Compose uses **5433**; many local installs use **5432**).
+2. `cd backend && alembic upgrade head && python scripts/seed_api_user.py`
+3. `uvicorn app.main:app --reload --port 8000`
+4. `cd frontend && npm install && npm run dev`
+
+Open **http://127.0.0.1:5173** (not https). The UI proxies `/api` to **http://127.0.0.1:8000**.
+
+Copy `frontend/.env.example` to `.env` only if you need a non-proxy API URL (`VITE_API_BASE_URL`).
 
 ## Scripts
 

@@ -1,3 +1,6 @@
+from pathlib import Path
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -10,6 +13,7 @@ from app.core.logging import RequestLoggingMiddleware
 
 
 def create_app() -> FastAPI:
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env")
     settings = get_settings()
     app = FastAPI(
         title=settings.app_name,
