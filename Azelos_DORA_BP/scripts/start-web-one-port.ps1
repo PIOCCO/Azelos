@@ -61,4 +61,4 @@ Write-Host ""
 $env:SERVE_FRONTEND = "1"
 $uv = Join-Path $Backend ".venv\Scripts\uvicorn.exe"
 if (-not (Test-Path $uv)) { $uv = "uvicorn" }
-& $uv app.main:app --host 127.0.0.1 --port 8000
+& $uv app.main:app --host 0.0.0.0 --port 8000
