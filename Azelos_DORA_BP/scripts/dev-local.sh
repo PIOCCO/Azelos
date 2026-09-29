@@ -24,12 +24,15 @@ fi
 cd "$BACKEND"
 if [[ -d .venv ]]; then PY=".venv/bin/python"; UV=".venv/bin/uvicorn"; else PY=python3; UV=uvicorn; fi
 $PY -m alembic upgrade head
+$PY scripts/seed_dev.py 2>/dev/null || true
 $PY scripts/seed_api_user.py 2>/dev/null || true
 
 echo "API: http://127.0.0.1:8000  |  UI: http://127.0.0.1:5173"
+echo "Easier: ./scripts/start-web-one-port.sh  →  only http://127.0.0.1:8000"
 echo "Press Ctrl+C to stop both."
 
 trap 'kill 0' EXIT
-$UV app.main:app --host 127.0.0.1 --port 8000 &
+$UV app.main:app --host 0.0.0.0 --port 8000 &
 cd "$FRONTEND"
-npm run dev -- --host 127.0.0.1 --port 5173
+[[ -d node_modules ]] || npm install
+npm run dev

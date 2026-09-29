@@ -1,8 +1,10 @@
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routes.config import router as legacy_config_router
 from app.api.v1.router import api_v1_router
@@ -43,7 +45,22 @@ def create_app() -> FastAPI:
         ok = check_database_connectivity()
         return {"status": "ready" if ok else "degraded", "database": ok}
 
+    _maybe_mount_frontend(app)
     return app
+
+
+def _maybe_mount_frontend(app: FastAPI) -> None:
+    """Optional: serve built React app from ../frontend/dist (one URL, port 8000)."""
+    flag = os.getenv("SERVE_FRONTEND", "").strip().lower()
+    if flag not in ("1", "true", "yes", "on"):
+        return
+    dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+    if not dist.is_dir():
+        return
+    assets = dist / "assets"
+    if assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=assets), name="frontend-assets")
+    app.mount("/", StaticFiles(directory=dist, html=True), name="frontend")
 
 
 app = create_app()

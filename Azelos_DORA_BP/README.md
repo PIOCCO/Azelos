@@ -17,7 +17,22 @@ FastAPI, React, GraphQL, and Terraform are **out of scope** here. **PostgreSQL h
 - **Storage:** pluggable `EvidenceStorage` — `local` today; Azure/S3/MinIO adapters stubbed ([storage architecture](docs/STORAGE-ARCHITECTURE.md)).
 - **Deploy:** [DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
-## Quick start
+## Web UI (fix “site can’t be reached”)
+
+The React app runs **on your machine**, not on GitHub or Cursor Cloud.
+
+**Easiest:** one URL → **[docs/WEB-UI-QUICKSTART.md](docs/WEB-UI-QUICKSTART.md)**
+
+```bash
+cd Azelos_DORA_BP
+chmod +x scripts/start-web-one-port.sh
+./scripts/start-web-one-port.sh
+# Browser: http://127.0.0.1:8000
+```
+
+Windows: `.\scripts\start-web-one-port.ps1`
+
+## Quick start (backend / DB)
 
 Use a **virtual environment** so Alembic/SQLAlchemy come from this project (SQLAlchemy **2.x**), not the OS packages (`/usr/bin/alembic` often pulls SQLAlchemy 1.x and breaks with `DeclarativeBase`).
 
