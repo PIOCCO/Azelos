@@ -106,12 +106,17 @@ class RiskAssessment(Base):
     rationale: Mapped[str | None] = mapped_column(Text)
 
     financial_entity: Mapped["FinancialEntity"] = relationship(
-        back_populates="risk_assessments"
+        back_populates="risk_assessments",
+        overlaps="risk_assessments,risk_assessments",
     )
     provider: Mapped["ICTProvider | None"] = relationship(
-        back_populates="risk_assessments"
+        back_populates="risk_assessments",
+        overlaps="financial_entity,risk_assessments,risk_assessments",
     )
-    contract: Mapped["Contract | None"] = relationship(back_populates="risk_assessments")
+    contract: Mapped["Contract | None"] = relationship(
+        back_populates="risk_assessments",
+        overlaps="financial_entity,provider,risk_assessments,risk_assessments",
+    )
     service: Mapped["ICTService | None"] = relationship(
         back_populates="risk_assessments"
     )

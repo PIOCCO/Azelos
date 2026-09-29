@@ -70,11 +70,18 @@ class ICTProvider(Base, TimestampMixin):
     website: Mapped[str | None] = mapped_column(String(2048))
 
     financial_entity: Mapped["FinancialEntity"] = relationship(back_populates="providers")
-    contracts: Mapped[list["Contract"]] = relationship(back_populates="provider")
+    contracts: Mapped[list["Contract"]] = relationship(
+        back_populates="provider",
+        overlaps="contracts,financial_entity",
+    )
     subcontractors: Mapped[list["Subcontractor"]] = relationship(
         back_populates="provider", foreign_keys="Subcontractor.provider_id"
     )
     risk_assessments: Mapped[list["RiskAssessment"]] = relationship(
-        back_populates="provider"
+        back_populates="provider",
+        overlaps="risk_assessments,risk_assessments",
     )
-    evidence_items: Mapped[list["Evidence"]] = relationship(back_populates="provider")
+    evidence_items: Mapped[list["Evidence"]] = relationship(
+        back_populates="provider",
+        overlaps="contract,evidence_items,evidence_items,financial_entity",
+    )

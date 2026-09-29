@@ -102,10 +102,17 @@ class Evidence(Base):
     )
 
     financial_entity: Mapped["FinancialEntity"] = relationship(
-        back_populates="evidence_items"
+        back_populates="evidence_items",
+        overlaps="evidence_items",
     )
-    provider: Mapped["ICTProvider | None"] = relationship(back_populates="evidence_items")
-    contract: Mapped["Contract | None"] = relationship(back_populates="evidence_items")
+    provider: Mapped["ICTProvider | None"] = relationship(
+        back_populates="evidence_items",
+        overlaps="evidence_items,financial_entity",
+    )
+    contract: Mapped["Contract | None"] = relationship(
+        back_populates="evidence_items",
+        overlaps="financial_entity,provider",
+    )
     document_type: Mapped[DocumentType] = relationship()
     control_links: Mapped[list["EvidenceControlLink"]] = relationship(
         back_populates="evidence"

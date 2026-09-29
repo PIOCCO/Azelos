@@ -84,15 +84,21 @@ class Contract(Base, TimestampMixin):
     provider: Mapped["ICTProvider"] = relationship(
         back_populates="contracts",
         foreign_keys=[provider_id],
+        overlaps="contracts,financial_entity",
     )
     ict_services: Mapped[list["ICTService"]] = relationship(back_populates="contract")
     dora_controls: Mapped[list["ContractDoraControl"]] = relationship(
         back_populates="contract"
     )
-    evidence_items: Mapped[list["Evidence"]] = relationship(back_populates="contract")
+    evidence_items: Mapped[list["Evidence"]] = relationship(
+        back_populates="contract",
+        overlaps="contract,evidence_items,financial_entity,provider",
+    )
     risk_assessments: Mapped[list["RiskAssessment"]] = relationship(
-        back_populates="contract"
+        back_populates="contract",
+        overlaps="financial_entity,provider,risk_assessments,risk_assessments",
     )
     exit_strategies: Mapped[list["ExitStrategy"]] = relationship(
-        back_populates="contract"
+        back_populates="contract",
+        overlaps="contract,exit_strategies,financial_entity,provider",
     )

@@ -37,9 +37,14 @@ class FinancialEntity(Base, TimestampMixin):
         back_populates="financial_entity"
     )
     risk_assessments: Mapped[list["RiskAssessment"]] = relationship(
-        back_populates="financial_entity"
+        back_populates="financial_entity",
+        overlaps="risk_assessments",
     )
-    evidence_items: Mapped[list["Evidence"]] = relationship(back_populates="financial_entity")
+    evidence_items: Mapped[list["Evidence"]] = relationship(
+        back_populates="financial_entity",
+        overlaps="contract,evidence_items,provider",
+    )
     exit_strategies: Mapped[list["ExitStrategy"]] = relationship(
-        back_populates="financial_entity"
+        back_populates="financial_entity",
+        overlaps="contract,exit_strategies,provider",
     )

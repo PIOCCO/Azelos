@@ -91,12 +91,18 @@ class ExitStrategy(Base, TimestampMixin):
     )
 
     financial_entity: Mapped["FinancialEntity"] = relationship(
-        back_populates="exit_strategies"
+        back_populates="exit_strategies",
+        overlaps="exit_strategies",
     )
     business_function: Mapped["BusinessFunction"] = relationship(
         back_populates="exit_strategies"
     )
     service: Mapped["ICTService"] = relationship(back_populates="exit_strategies")
-    contract: Mapped["Contract"] = relationship(back_populates="exit_strategies")
-    provider: Mapped["ICTProvider"] = relationship()
+    contract: Mapped["Contract"] = relationship(
+        back_populates="exit_strategies",
+        overlaps="financial_entity",
+    )
+    provider: Mapped["ICTProvider"] = relationship(
+        overlaps="contract,exit_strategies,financial_entity",
+    )
     primary_evidence: Mapped["Evidence | None"] = relationship()
