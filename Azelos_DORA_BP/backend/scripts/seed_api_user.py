@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from sqlalchemy import select
 
 from app.core.rbac import Role
-from app.core.security import hash_password
+from app.core.passwords import hash_password
 from app.database.session import SessionLocal
 from app.models.auth import OrganizationMembership, User
 from app.models.financial_entity import FinancialEntity
@@ -19,7 +19,19 @@ DEFAULT_EMAIL = "admin@demo.bank"
 DEFAULT_PASSWORD = "ChangeMeNow!"
 
 
+def _ensure_deps() -> None:
+    try:
+        import passlib  # noqa: F401
+    except ModuleNotFoundError as exc:
+        raise SystemExit(
+            "Missing Python dependencies. From Azelos_DORA_BP/backend run:\n"
+            "  python3 -m venv .venv && source .venv/bin/activate\n"
+            '  pip install -e ".[dev]"'
+        ) from exc
+
+
 def main() -> None:
+    _ensure_deps()
     session = SessionLocal()
     try:
         entity = session.scalar(

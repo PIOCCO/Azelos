@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.rbac import Role
-from app.core.security import hash_password
+from app.core.passwords import hash_password
 from app.models.auth import OrganizationMembership, User
 from app.models.financial_entity import FinancialEntity
 from app.models.provider import ICTProvider
