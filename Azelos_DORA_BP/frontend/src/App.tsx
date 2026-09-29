@@ -11,6 +11,9 @@ import { BusinessFunctionsPage } from "./pages/entity/BusinessFunctionsPage";
 import { ICTAssetsPage } from "./pages/entity/ICTAssetsPage";
 import { SimpleListPage } from "./pages/entity/SimpleListPage";
 import { ControlsPage } from "./pages/entity/ControlsPage";
+import { ProvidersPage } from "./pages/entity/ProvidersPage";
+import { RisksPage } from "./pages/entity/RisksPage";
+import { RiskDetailPage } from "./pages/entity/RiskDetailPage";
 import { ModulesConfigPage } from "./pages/config/ModulesConfigPage";
 import { CustomFieldsPage } from "./pages/config/CustomFieldsPage";
 import type {
@@ -18,9 +21,7 @@ import type {
   Evidence,
   ICTService,
   InformationAsset,
-  Risk,
   SubOutsourcing,
-  Supplier,
 } from "./api/types";
 
 export default function App() {
@@ -50,22 +51,7 @@ export default function App() {
             }
           />
           <Route path="ict-assets" element={<ICTAssetsPage />} />
-          <Route
-            path="ict-providers"
-            element={
-              <SimpleListPage<Supplier>
-                title="ICT providers"
-                path="/api/v1/ict-providers"
-                queryKey="ict-providers"
-                moduleItem={{ label: "ICT providers", moduleKey: "THIRD_PARTY_RISK" }}
-                columns={[
-                  { key: "name", header: "Legal name", render: (r) => r.legal_name },
-                  { key: "country", header: "Country", render: (r) => r.country_code },
-                  { key: "lei", header: "LEI", render: (r) => r.lei ?? "—" },
-                ]}
-              />
-            }
-          />
+          <Route path="ict-providers" element={<ProvidersPage />} />
           <Route
             path="contracts"
             element={
@@ -114,22 +100,8 @@ export default function App() {
               />
             }
           />
-          <Route
-            path="risks"
-            element={
-              <SimpleListPage<Risk>
-                title="Risks"
-                path="/api/v1/risks"
-                queryKey="risks"
-                moduleItem={{ label: "Risks", moduleKey: "ICT_RISK" }}
-                columns={[
-                  { key: "level", header: "Resulting level", render: (r) => r.resulting_risk_level },
-                  { key: "assessor", header: "Assessor", render: (r) => r.assessor },
-                  { key: "at", header: "Calculated", render: (r) => new Date(r.calculated_at).toLocaleString() },
-                ]}
-              />
-            }
-          />
+          <Route path="risks" element={<RisksPage />} />
+          <Route path="risks/:riskId" element={<RiskDetailPage />} />
           <Route path="controls" element={<ControlsPage />} />
           <Route
             path="evidence"

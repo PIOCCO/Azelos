@@ -1,9 +1,8 @@
-import type { ReactNode } from "react";
-import { ModuleGate } from "../../components/auth/ModuleGate";
-import { PaginatedTable } from "../../components/ui/PaginatedTable";
-import { usePaginatedResource } from "../../hooks/usePaginatedResource";
+import { EntityListPage } from "./EntityListPage";
 import type { NavItem } from "../../lib/nav";
+import type { Column } from "../../components/ui/DataTable";
 
+/** @deprecated Prefer EntityListPage directly */
 export function SimpleListPage<T>({
   title,
   path,
@@ -16,24 +15,17 @@ export function SimpleListPage<T>({
   path: string;
   queryKey: string;
   moduleItem: Pick<NavItem, "label" | "moduleKey">;
-  columns: { key: string; header: string; render: (row: T) => ReactNode }[];
+  columns: Column<T>[];
   headerNote?: string;
 }) {
-  const { data, page, setPage, isLoading } = usePaginatedResource<T>(queryKey, path);
-
   return (
-    <ModuleGate item={moduleItem}>
-      <h1 className="text-2xl font-semibold">{title}</h1>
-      {headerNote ? <p className="mt-1 text-sm text-slate-600">{headerNote}</p> : null}
-      <div className="mt-4">
-        <PaginatedTable
-          data={data}
-          page={page}
-          onPageChange={setPage}
-          isLoading={isLoading}
-          columns={columns}
-        />
-      </div>
-    </ModuleGate>
+    <EntityListPage<T>
+      pageTitle={title}
+      path={path}
+      queryKey={queryKey}
+      moduleItem={moduleItem}
+      columns={columns}
+      emptyDescription={headerNote}
+    />
   );
 }

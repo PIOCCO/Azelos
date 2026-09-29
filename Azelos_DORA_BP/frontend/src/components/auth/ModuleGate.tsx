@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useModuleNav } from "../../contexts/OrgContext";
 import { moduleAllowsAccess, type NavItem } from "../../lib/nav";
-import { EmptyPanel } from "../ui/StatePanel";
+import { EmptyState } from "../ui/States";
 
 export function ModuleGate({
   item,
@@ -15,19 +15,16 @@ export function ModuleGate({
   const allowed = moduleAllowsAccess(modules, item.moduleKey);
   if (!allowed) {
     return (
-      <EmptyPanel
-        message={`${item.label} is not enabled or not applicable for your organization profile. Review applicability or module configuration.`}
+      <EmptyState
+        title={`${item.label} is not available`}
+        description="This module is disabled or not applicable for your organization. Review applicability or module configuration."
+        action={
+          <Link to="/onboarding/applicability" className="text-sm font-medium text-primary hover:underline">
+            View applicability
+          </Link>
+        }
       />
     );
   }
-  return (
-    <>
-      {children}
-      <p className="mt-4 text-xs text-slate-500">
-        <Link to="/onboarding/applicability" className="underline">
-          View applicability
-        </Link>
-      </p>
-    </>
-  );
+  return <>{children}</>;
 }

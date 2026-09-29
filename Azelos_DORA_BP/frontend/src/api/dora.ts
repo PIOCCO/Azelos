@@ -27,6 +27,12 @@ export function login(email: string, password: string, organizationId?: string) 
   });
 }
 
+export function getOrganization(orgId: string) {
+  return apiRequest<{ id: string; legal_name: string; short_name: string | null }>(
+    `/api/v1/organizations/${orgId}`,
+  );
+}
+
 export function getProfile(orgId: string) {
   return apiRequest<OrganizationProfile>(`/api/v1/organizations/${orgId}/profile`);
 }

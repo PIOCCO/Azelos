@@ -8,6 +8,7 @@ import {
 } from "react";
 import {
   getApplicability,
+  getOrganization,
   getOrgModules,
   getProfile,
 } from "../api/dora";
@@ -16,6 +17,7 @@ import { useAuth } from "./AuthContext";
 
 interface OrgContextValue {
   organizationId: string | null;
+  organizationName: string | undefined;
   profile: OrganizationProfile | undefined;
   applicability: ApplicabilityResult | undefined;
   modules: ApplicabilityResult["modules"] | undefined;
@@ -32,6 +34,12 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
 
   const enabled = !!orgId && !!session?.token;
+
+  const orgQ = useQuery({
+    queryKey: ["org", orgId, "entity"],
+    queryFn: () => getOrganization(orgId!),
+    enabled,
+  });
 
   const profileQ = useQuery({
     queryKey: ["org", orgId, "profile"],
@@ -58,18 +66,21 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     (): OrgContextValue => ({
       organizationId: orgId,
+      organizationName: orgQ.data?.short_name ?? orgQ.data?.legal_name,
       profile: profileQ.data,
       applicability: applQ.data,
       modules: modulesQ.data,
-      isLoading: profileQ.isLoading || applQ.isLoading,
+      isLoading: orgQ.isLoading || profileQ.isLoading || applQ.isLoading,
       error: (profileQ.error ?? applQ.error) as Error | null,
       refreshOrg,
     }),
     [
       orgId,
+      orgQ.data,
       profileQ.data,
       applQ.data,
       modulesQ.data,
+      orgQ.isLoading,
       profileQ.isLoading,
       applQ.isLoading,
       profileQ.error,

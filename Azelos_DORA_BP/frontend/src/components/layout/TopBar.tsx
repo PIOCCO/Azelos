@@ -1,0 +1,103 @@
+import { Bell, ChevronDown, HelpCircle, LogOut, Search } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useOrg } from "../../contexts/OrgContext";
+import { useState } from "react";
+
+export function TopBar() {
+  const { session, logout } = useAuth();
+  const { organizationName, isLoading } = useOrg();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const displayName = session?.email?.split("@")[0] ?? "User";
+
+  return (
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-gray-200 bg-surface px-4 md:px-6">
+      <div className="flex min-w-0 items-center gap-2 pl-10 md:pl-0">
+        <button
+          type="button"
+          className="flex max-w-[200px] items-center gap-1 truncate rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-800"
+          aria-haspopup="listbox"
+          aria-label="Organization"
+          disabled
+          title="Organization is determined by your login; switching requires backend support."
+        >
+          <span className="truncate">{isLoading ? "Loading…" : organizationName ?? "Organization"}</span>
+          <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
+        </button>
+      </div>
+      <div className="hidden flex-1 md:block">
+        <label className="relative block max-w-xl mx-auto">
+          <span className="sr-only">Search</span>
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+            aria-hidden
+          />
+          <input
+            type="search"
+            disabled
+            placeholder="Search assets, risks, providers… (API not available)"
+            className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-3 text-sm text-gray-500"
+          />
+        </label>
+      </div>
+      <div className="ml-auto flex items-center gap-2">
+        <button
+          type="button"
+          className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+          aria-label="Notifications (not configured)"
+          disabled
+        >
+          <Bell className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+          aria-label="Help"
+          disabled
+        >
+          <HelpCircle className="h-5 w-5" />
+        </button>
+        <div className="relative">
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 hover:bg-gray-100"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+          >
+            <span
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-sm font-semibold text-primary"
+              aria-hidden
+            >
+              {displayName.slice(0, 2).toUpperCase()}
+            </span>
+            <span className="hidden text-sm font-medium text-gray-800 sm:inline capitalize">
+              {displayName.replace(/\./g, " ")}
+            </span>
+            <ChevronDown className="h-4 w-4 text-gray-400" aria-hidden />
+          </button>
+          {menuOpen ? (
+            <div
+              role="menu"
+              className="absolute right-0 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+            >
+              <p className="px-3 py-2 text-xs text-gray-500">{session?.email}</p>
+              <p className="px-3 pb-2 text-xs text-gray-500">Role: {session?.role}</p>
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                onClick={() => {
+                  setMenuOpen(false);
+                  logout();
+                }}
+              >
+                <LogOut className="h-4 w-4" aria-hidden />
+                Sign out
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </header>
+  );
+}
