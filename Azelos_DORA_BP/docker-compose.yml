@@ -15,5 +15,29 @@ services:
     volumes:
       - dora_pg_data:/var/lib/postgresql/data
 
+  backend:
+    profiles: ["full"]
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://dora:dora@postgres:5432/dora_supplier_risk
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    profiles: ["full"]
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ""
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
 volumes:
   dora_pg_data:
