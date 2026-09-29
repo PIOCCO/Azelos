@@ -59,6 +59,8 @@ which alembic   # should be .../backend/.venv/bin/alembic
 | `774dec1bcf90` | Core schema, constraints, indexes |
 | `002_reference_data` | DORA control catalogue, document types, service classifications |
 | `003_evidence_storage_neutral` | Provider-neutral evidence storage metadata |
+| `3919f2be7fdd` | Configuration/metadata layer (modules, custom fields, baseline) |
+| `005_config_reference_data` | Seed platform modules + DORA baseline requirements |
 
 ## Documentation
 

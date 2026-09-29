@@ -15,6 +15,10 @@ from app.models.provider import ICTProvider
 from app.models.risk import RiskAssessment
 from app.models.service import ICTService, ServiceClassification
 from app.models.subcontractor import Subcontractor
+from app.models.platform_config import OrganizationModule, OrganizationSetting, PlatformModule
+from app.models.custom_fields import CustomFieldDefinition, CustomFieldValue
+from app.models.dora_baseline import DoraDomain, DoraRequirement, OrganizationRequirement
+from app.models.configuration_audit import ConfigurationAuditLog
 
 __all__ = [
     "AuditRecord",
@@ -33,4 +37,13 @@ __all__ = [
     "RiskAssessment",
     "ServiceClassification",
     "Subcontractor",
+    "PlatformModule",
+    "OrganizationModule",
+    "OrganizationSetting",
+    "CustomFieldDefinition",
+    "CustomFieldValue",
+    "DoraDomain",
+    "DoraRequirement",
+    "OrganizationRequirement",
+    "ConfigurationAuditLog",
 ]
