@@ -4,6 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes.config import router as legacy_config_router
@@ -45,22 +46,54 @@ def create_app() -> FastAPI:
         ok = check_database_connectivity()
         return {"status": "ready" if ok else "degraded", "database": ok}
 
-    _maybe_mount_frontend(app)
+    if not _maybe_mount_frontend(app):
+        @app.get("/", include_in_schema=False)
+        def root_api_only():
+            return PlainTextResponse(
+                "DORA Blueprint API is running.\n\n"
+                "The web UI is not mounted. Build the frontend and restart with the startup script:\n"
+                "  ./scripts/start-web-one-port.sh\n\n"
+                "Or export SERVE_FRONTEND=1 after: cd frontend && npm run build\n\n"
+                "API docs: /docs\n"
+                "Health: /health\n",
+            )
+
     return app
 
 
-def _maybe_mount_frontend(app: FastAPI) -> None:
-    """Optional: serve built React app from ../frontend/dist (one URL, port 8000)."""
+def _frontend_dist_dir() -> Path:
+    return Path(__file__).resolve().parents[2] / "frontend" / "dist"
+
+
+def _maybe_mount_frontend(app: FastAPI) -> bool:
+    """Serve built React app from ../frontend/dist when enabled or build is present."""
     flag = os.getenv("SERVE_FRONTEND", "").strip().lower()
-    if flag not in ("1", "true", "yes", "on"):
-        return
-    dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
-    if not dist.is_dir():
-        return
+    dist = _frontend_dist_dir()
+    index = dist / "index.html"
+
+    if flag in ("0", "false", "no", "off"):
+        return False
+
+    explicit = flag in ("1", "true", "yes", "on")
+    if not index.is_file():
+        if explicit:
+            import logging
+
+            logging.getLogger("app.main").warning(
+                "SERVE_FRONTEND is set but %s is missing — run: cd frontend && npm run build",
+                index,
+            )
+        return False
+
+    # Explicit SERVE_FRONTEND=1 or auto-serve when dist exists (one-port local dev)
     assets = dist / "assets"
     if assets.is_dir():
         app.mount("/assets", StaticFiles(directory=assets), name="frontend-assets")
     app.mount("/", StaticFiles(directory=dist, html=True), name="frontend")
+    import logging
+
+    logging.getLogger("app.main").info("Serving web UI from %s", dist)
+    return True
 
 
 app = create_app()

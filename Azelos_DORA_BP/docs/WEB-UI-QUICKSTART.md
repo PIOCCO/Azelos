@@ -68,6 +68,15 @@ curl -s http://127.0.0.1:8000/health
 
 Should print `{"status":"alive"}`. If `curl` fails, the browser will too.
 
+If `/health` works but the browser shows **Not Found** or plain text about "API is running":
+
+```bash
+cd Azelos_DORA_BP/frontend && npm install && npm run build
+cd .. && ./scripts/run-server.sh
+```
+
+Then open **http://127.0.0.1:8000** again (should load the React login page).
+
 ---
 
 ## Option B — Dev mode: UI **5173** + API **8000**

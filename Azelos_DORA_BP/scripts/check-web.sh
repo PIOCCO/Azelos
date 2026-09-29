@@ -13,8 +13,15 @@ echo -n "API /health: "
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8000/health 2>/dev/null || echo "failed (curl)"
 echo -n "Vite /: "
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:5173/ 2>/dev/null || echo "failed (curl)"
-echo -n "UI on :8000 (SERVE_FRONTEND): "
-curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8000/ 2>/dev/null || echo "failed"
+echo -n "UI on :8000 (/ should be 200 HTML): "
+body=$(curl -s http://127.0.0.1:8000/ 2>/dev/null | head -c 40)
+if echo "$body" | grep -q "<!doctype html"; then
+  echo "OK (HTML)"
+elif echo "$body" | grep -q "DORA Blueprint API"; then
+  echo "API-only (build frontend or SERVE_FRONTEND=1)"
+else
+  echo "unexpected: $body"
+fi
 if [[ -f "$(dirname "$0")/../backend/.env" ]]; then
   echo "backend/.env exists"
 else
