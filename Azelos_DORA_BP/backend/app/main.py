@@ -62,7 +62,15 @@ def create_app() -> FastAPI:
 
 
 def _frontend_dist_dir() -> Path:
-    return Path(__file__).resolve().parents[2] / "frontend" / "dist"
+    here = Path(__file__).resolve()
+    candidates = [
+        here.parents[2] / "frontend" / "dist",  # repo: Azelos_DORA_BP/frontend/dist
+        here.parents[1] / "frontend" / "dist",  # Docker: /app/frontend/dist
+    ]
+    for path in candidates:
+        if (path / "index.html").is_file():
+            return path
+    return candidates[0]
 
 
 def _maybe_mount_frontend(app: FastAPI) -> bool:
@@ -72,6 +80,8 @@ def _maybe_mount_frontend(app: FastAPI) -> bool:
     index = dist / "index.html"
 
     if flag in ("0", "false", "no", "off"):
+        return False
+    if os.getenv("DISABLE_FRONTEND_STATIC", "").strip().lower() in ("1", "true", "yes", "on"):
         return False
 
     explicit = flag in ("1", "true", "yes", "on")

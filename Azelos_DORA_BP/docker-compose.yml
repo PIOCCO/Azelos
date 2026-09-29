@@ -18,12 +18,14 @@ services:
   backend:
     profiles: ["full"]
     build:
-      context: ./backend
+      context: .
+      dockerfile: Dockerfile.app
     environment:
       DATABASE_URL: postgresql+psycopg://dora:dora@postgres:5432/dora_supplier_risk
-      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000
+      SERVE_FRONTEND: "1"
     ports:
-      - "8000:8000"
+      - "0.0.0.0:8000:8000"
     depends_on:
       postgres:
         condition: service_healthy

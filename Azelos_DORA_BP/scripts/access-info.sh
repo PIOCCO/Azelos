@@ -85,11 +85,21 @@ fi
 echo ""
 echo "     Then on the laptop browser: http://localhost:8000"
 echo ""
-echo "C) Browser on LAN (no SSH) — firewall must allow 8000:"
+echo "C) Browser on LAN — firewall must allow 8000:"
 if [[ -n "$HOST_IP" ]]; then
   echo "     http://${HOST_IP}:8000"
+fi
+echo ""
+echo "D) Tailscale (no SSH tunnel) — laptop + Ubuntu on same tailnet:"
+if [[ -n "$TS_IP" ]]; then
+  echo "     http://${TS_IP}:8000"
+  if [[ -n "$TS_NAME" ]]; then
+    echo "     http://${TS_NAME}:8000   (MagicDNS, if enabled)"
+  fi
+  echo "     Server must listen on 0.0.0.0:8000 (run-server.sh does)."
+  echo "     If refused: sudo ufw allow in on tailscale0 to any port 8000"
 else
-  echo "     http://<this-server-ip>:8000"
+  echo "     Install/connect Tailscale on Ubuntu, then: tailscale ip -4"
 fi
 echo ""
 echo "Login: admin@demo.bank / ChangeMeNow!"

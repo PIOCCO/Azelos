@@ -1,5 +1,8 @@
 import os
 
+# Prevent StaticFiles mount from intercepting API routes during pytest (405 on POST).
+os.environ.setdefault("DISABLE_FRONTEND_STATIC", "1")
+
 import pytest
 from alembic import command
 from alembic.config import Config

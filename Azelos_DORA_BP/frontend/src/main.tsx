@@ -3,6 +3,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
+import { AuthSessionSync } from "./components/auth/AuthSessionSync";
 import { AuthProvider } from "./contexts/AuthContext";
 import { OrgProvider } from "./contexts/OrgContext";
 import "./index.css";
@@ -19,6 +20,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <AuthProvider>
           <OrgProvider>
+            <AuthSessionSync />
             <App />
           </OrgProvider>
         </AuthProvider>
