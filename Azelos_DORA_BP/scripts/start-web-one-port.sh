@@ -27,14 +27,24 @@ $PY scripts/seed_api_user.py 2>/dev/null || true
 
 cd "$FRONTEND"
 echo "Installing frontend dependencies (includes lucide-react icons)…"
-if [[ -f package-lock.json ]]; then npm ci; else npm install; fi
+if [[ -f package-lock.json ]]; then npm ci || npm install; else npm install; fi
 npm run build
 
-echo ""
-echo "Open in browser:  http://127.0.0.1:8000"
-echo "Login: admin@demo.bank / ChangeMeNow!"
-echo ""
+if [[ ! -f dist/index.html ]]; then
+  echo "ERROR: frontend build did not produce dist/index.html"
+  exit 1
+fi
 
 cd "$BACKEND"
+echo ""
+echo "=============================================="
+echo "  Starting server — http://127.0.0.1:8000"
+echo "  Login: admin@demo.bank / ChangeMeNow!"
+echo ""
+echo "  IMPORTANT: Keep this terminal OPEN."
+echo "  Closing it stops the site (ERR_CONNECTION_REFUSED)."
+echo "=============================================="
+echo ""
+
 export SERVE_FRONTEND=1
-exec $UV app.main:app --host 0.0.0.0 --port 8000
+exec $UV app.main:app --host 127.0.0.1 --port 8000

@@ -36,16 +36,29 @@ if (-not (Test-Path $py)) { $py = "python" }
 
 Set-Location $Frontend
 Write-Host "Installing frontend dependencies (includes lucide-react icons)…"
-if (Test-Path "package-lock.json") { npm ci } else { npm install }
+if (Test-Path "package-lock.json") {
+  npm ci
+  if ($LASTEXITCODE -ne 0) { npm install }
+} else {
+  npm install
+}
 npm run build
-
-Write-Host ""
-Write-Host "Open: http://127.0.0.1:8000"
-Write-Host "Login: admin@demo.bank / ChangeMeNow!"
-Write-Host ""
+if (-not (Test-Path "dist\index.html")) {
+  Write-Host "ERROR: frontend build failed (no dist\index.html)"
+  exit 1
+}
 
 Set-Location $Backend
+Write-Host ""
+Write-Host "=============================================="
+Write-Host "  Starting server — http://127.0.0.1:8000"
+Write-Host "  Login: admin@demo.bank / ChangeMeNow!"
+Write-Host ""
+Write-Host "  Keep this PowerShell window OPEN while browsing."
+Write-Host "=============================================="
+Write-Host ""
+
 $env:SERVE_FRONTEND = "1"
 $uv = Join-Path $Backend ".venv\Scripts\uvicorn.exe"
 if (-not (Test-Path $uv)) { $uv = "uvicorn" }
-& $uv app.main:app --host 0.0.0.0 --port 8000
+& $uv app.main:app --host 127.0.0.1 --port 8000
