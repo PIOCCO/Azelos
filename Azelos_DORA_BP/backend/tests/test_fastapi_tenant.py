@@ -26,7 +26,9 @@ def user_org_a(db_session, two_orgs):
     db_session.flush()
     db_session.add(
         OrganizationMembership(
-            user_id=user.id, financial_entity_id=org_a.id, role=Role.USER
+            user_id=user.id,
+            financial_entity_id=org_a.id,
+            role=Role.SECURITY_MANAGER,
         )
     )
     db_session.flush()
