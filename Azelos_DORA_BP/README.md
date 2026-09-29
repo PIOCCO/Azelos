@@ -69,6 +69,11 @@ which alembic   # should be .../backend/.venv/bin/alembic
 - [Deployment](docs/DEPLOYMENT.md)
 - [Database contract](docs/DATABASE-CONTRACT.md)
 - [Storage architecture](docs/STORAGE-ARCHITECTURE.md)
+- [Config layer assessment](docs/CONFIG-LAYER-ASSESSMENT.md)
+- [Config architecture](docs/CONFIG-ARCHITECTURE.md)
+- [Regulatory baseline vs org config](docs/REGULATORY-BASELINE.md)
+- [Configurable modules](docs/CONFIGURABLE-MODULES.md)
+- [Configurable fields](docs/CONFIGURABLE-FIELDS.md)
 
 ## Entity relationship (Mermaid)
 

@@ -56,13 +56,34 @@ python scripts/check_database.py
 Docker PostgreSQL (optional) → DATABASE_URL → backend scripts/tests
 ```
 
-### Client production
+### Client production (FastAPI)
 
-```text
-Client PostgreSQL → DATABASE_URL → future FastAPI layer / workers
+```bash
+cd Azelos_DORA_BP/backend
+source .venv/bin/activate
+export DATABASE_URL=postgresql+psycopg://USER:PASS@HOST:5432/dora_supplier_risk
+export DB_SSL_MODE=require
+export JWT_SECRET_KEY=$(openssl rand -hex 32)
+python -m alembic upgrade head
+python scripts/seed_api_user.py   # once per environment
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+curl -s http://localhost:8000/health
+curl -s http://localhost:8000/ready
+curl -s http://localhost:8000/api/v1/database/status
 ```
 
-The code path is identical; only configuration changes.
+Azure checklist:
+
+1. Create Azure Database for PostgreSQL (Flexible Server) 16+.
+2. Configure firewall / private endpoint.
+3. Create database and application role with `CONNECT`, `USAGE` on schemas `public`, `dora_core`, `dora_config`, `client_extensions`, and rights to run Alembic migrations.
+4. Set `DATABASE_URL` and `JWT_SECRET_KEY` in the app host (Key Vault / App Service settings).
+5. Run migrations from CI or a one-off job — **never** `Base.metadata.create_all()` at startup.
+6. Verify `/ready` and OpenAPI at `/docs`.
+
+Logical schema separation: core domain tables remain in `public` by default (`DORA_CORE_SCHEMA` / `DORA_CONFIG_SCHEMA` env overrides). `client_extensions.extension_registrations` stores extension metadata only; customers manage extension DDL directly in PostgreSQL.
+
+The code path is identical across hosts; only configuration changes.
 
 ## Object storage
 

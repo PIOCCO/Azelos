@@ -19,6 +19,8 @@ from app.models.platform_config import OrganizationModule, OrganizationSetting, 
 from app.models.custom_fields import CustomFieldDefinition, CustomFieldValue
 from app.models.dora_baseline import DoraDomain, DoraRequirement, OrganizationRequirement
 from app.models.configuration_audit import ConfigurationAuditLog
+from app.models.auth import OrganizationMembership, User
+from app.models.extensions import ExtensionRegistration
 
 __all__ = [
     "AuditRecord",
@@ -46,4 +48,7 @@ __all__ = [
     "DoraRequirement",
     "OrganizationRequirement",
     "ConfigurationAuditLog",
+    "User",
+    "OrganizationMembership",
+    "ExtensionRegistration",
 ]

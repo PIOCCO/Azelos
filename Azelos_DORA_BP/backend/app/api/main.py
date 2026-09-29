@@ -1,11 +1,5 @@
-from fastapi import FastAPI
+"""Legacy entrypoint — prefer `app.main:app`."""
 
-from app.api.routes.config import router as config_router
+from app.main import app
 
-app = FastAPI(title="Azelos DORA Blueprint — Configuration API", version="0.2.0")
-app.include_router(config_router)
-
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+__all__ = ["app"]
