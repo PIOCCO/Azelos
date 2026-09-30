@@ -8,7 +8,9 @@ from app.core.dependencies import AuthContext, get_auth_context, require_role
 from app.core.rbac import Role
 from app.schemas.common import PaginatedResponse
 from app.schemas.contracts import ContractCreate, ContractOut, ContractUpdate
+from app.models.enums import AuditAction
 from app.services.contracts import ContractService
+from app.services.platform_audit import record_platform_audit
 
 router = APIRouter(prefix="/contracts", tags=["Contracts"])
 
@@ -48,6 +50,15 @@ def create_contract(
     service = ContractService(db, ctx.organization_id)
     row = service.create(body)
     db.flush()
+    record_platform_audit(
+        db,
+        organization_id=ctx.organization_id,
+        actor=ctx.user.email,
+        entity_type="Contract",
+        entity_id=row.id,
+        action=AuditAction.CREATE,
+        new_value={"reference_number": body.reference_number},
+    )
     db.refresh(row)
     return ContractOut.model_validate(row)
 

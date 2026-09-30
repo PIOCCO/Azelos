@@ -9,6 +9,7 @@ from app.models.enums_operational import IncidentSeverity, IncidentStatus
 from app.models.operational import ICTIncident, IncidentEntityLink, IncidentTimelineEvent
 from app.repositories.incidents import IncidentRepository
 from app.schemas.incidents import IncidentCreate, IncidentTimelineIn, IncidentUpdate
+from app.services.incident_link_validation import validate_incident_link
 from app.services.platform_audit import record_platform_audit
 
 
@@ -44,6 +45,9 @@ class IncidentService:
         )
         self.repo.save(row)
         for link in data.links:
+            validate_incident_link(
+                self.db, self.organization_id, link.link_kind, link.linked_entity_id
+            )
             row.links.append(
                 IncidentEntityLink(
                     link_kind=link.link_kind,
