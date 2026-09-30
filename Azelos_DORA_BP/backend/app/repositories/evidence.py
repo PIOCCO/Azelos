@@ -25,7 +25,7 @@ class EvidenceRepository(OrgScopedRepository):
         rows = self.db.scalars(
             select(Evidence)
             .where(Evidence.financial_entity_id == self.organization_id)
-            .order_by(Evidence.created_at.desc())
+            .order_by(Evidence.uploaded_at.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         ).all()
