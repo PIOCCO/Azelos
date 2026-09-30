@@ -3,6 +3,7 @@ import { useModuleNav } from "../../contexts/OrgContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { can } from "../../lib/permissions";
 import { filterNavSections, NAV_SECTIONS } from "../../lib/navigation";
+import { isNavItemActive } from "../../lib/navActive";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
@@ -12,6 +13,7 @@ export function Sidebar() {
   const location = useLocation();
   const isAdmin = can(session?.role, "org.admin");
   const sections = filterNavSections(NAV_SECTIONS, modules, isAdmin);
+  const allNavPaths = sections.flatMap((s) => s.items.map((i) => i.path));
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navBody = (
@@ -30,9 +32,7 @@ export function Sidebar() {
             </p>
             <ul className="space-y-0.5">
               {section.items.map((item) => {
-                const active =
-                  location.pathname === item.path ||
-                  (item.path !== "/" && location.pathname.startsWith(item.path));
+                const active = isNavItemActive(location.pathname, item.path, allNavPaths);
                 const Icon = item.icon;
                 return (
                   <li key={item.path}>

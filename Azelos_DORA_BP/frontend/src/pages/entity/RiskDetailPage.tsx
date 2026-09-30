@@ -5,6 +5,7 @@ import type { Risk } from "../../api/types";
 import { ModuleGate } from "../../components/auth/ModuleGate";
 import { EntityDetailPage } from "./EntityDetailPage";
 import { toneFromLevel } from "../../components/ui/Badge";
+import { EntityRelationshipsPanel } from "../../components/dora/EntityRelationshipsPanel";
 
 export function RiskDetailPage() {
   const { riskId } = useParams();
@@ -35,10 +36,21 @@ export function RiskDetailPage() {
                 { label: "Resulting risk level", value: q.data.resulting_risk_level },
                 { label: "Calculated at", value: new Date(q.data.calculated_at).toLocaleString() },
                 { label: "Provider ID", value: q.data.provider_id ?? "—" },
+                { label: "Contract ID", value: q.data.contract_id ?? "—" },
+                { label: "Service ID", value: q.data.service_id ?? "—" },
               ]
             : []
         }
       />
+      {riskId ? (
+        <div className="mt-6">
+          <EntityRelationshipsPanel
+            entityTypeGql="RISK_ASSESSMENT"
+            entityId={riskId}
+            entityNodeId={`RiskAssessment:${riskId}`}
+          />
+        </div>
+      ) : null}
     </ModuleGate>
   );
 }

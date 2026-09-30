@@ -1,65 +1,148 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { getResilienceDashboard } from "../../api/resilience";
+import { getDoraOverview } from "../../api/doraOverview";
+import { useAuth } from "../../contexts/AuthContext";
+import { useOrg } from "../../contexts/OrgContext";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { Card, KpiCard } from "../../components/ui/Card";
 import { LoadingSkeleton, ErrorState } from "../../components/ui/States";
 
+function ModuleLink({
+  to,
+  label,
+  detail,
+}: {
+  to: string;
+  label: string;
+  detail: string;
+}) {
+  return (
+    <li className="rounded-lg border border-gray-100 px-3 py-2 hover:border-primary/30">
+      <Link to={to} className="font-medium text-primary hover:underline">
+        {label}
+      </Link>
+      <p className="mt-0.5 text-xs text-gray-600">{detail}</p>
+    </li>
+  );
+}
+
 export function DoraHubPage() {
-  const q = useQuery({ queryKey: ["resilience-dash"], queryFn: getResilienceDashboard });
-  if (q.isLoading) return <LoadingSkeleton rows={5} />;
+  const { session } = useAuth();
+  const { profile } = useOrg();
+  const q = useQuery({
+    queryKey: ["dora-overview"],
+    queryFn: getDoraOverview,
+    enabled: !!session?.token,
+  });
+
+  if (q.isLoading) return <LoadingSkeleton rows={8} />;
   if (q.error) return <ErrorState message={(q.error as Error).message} onRetry={() => q.refetch()} />;
-  const d = q.data!;
+
+  const o = q.data!;
+  const r = o.resilience;
 
   return (
     <div>
       <PageHeader
-        title="DORA"
-        subtitle="Factual control states per service — not an automatic compliance determination."
+        title="DORA Overview"
+        subtitle="Operational resilience posture from live tenant data — trace dependencies in the Relationship Map."
       />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <KpiCard label="Implemented" value={d.dora_implemented} tone="primary" />
-        <KpiCard label="Partial" value={d.dora_partial} tone="warning" />
-        <KpiCard label="Not implemented" value={d.dora_not_implemented} tone="danger" />
-        <KpiCard label="Insufficient evidence" value={d.dora_insufficient_evidence} />
-        <KpiCard label="Not assessed" value={d.dora_not_assessed} />
+
+      <section className="mb-2">
+        <h2 className="text-sm font-semibold text-gray-900">ICT risk & dependencies</h2>
+      </section>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard label="Critical business functions" value={o.business_functions_critical} tone="primary" />
+        <KpiCard label="High/critical ICT assets" value={o.ict_assets_high_criticality} />
+        <KpiCard label="Critical ICT services" value={o.ict_services_critical} />
+        <KpiCard
+          label="High/critical risk assessments"
+          value={o.risk_assessments_high_or_critical}
+          tone="warning"
+        />
       </div>
-      <Card title="Sections" className="mt-6">
-        <ul className="text-sm space-y-2 text-gray-700">
-          <li>
-            <Link to="/dora/relationship-map" className="text-primary font-medium hover:underline">
-              Relationship Map
-            </Link>{" "}
-            — explore entity dependencies via GraphQL (live database relationships)
-          </li>
-          <li>
-            <Link to="/requirements" className="text-primary hover:underline">
-              Requirements
-            </Link>{" "}
-            — organization baseline from regulatory catalogue
-          </li>
-          <li>
-            <Link to="/controls" className="text-primary hover:underline">
-              Controls
-            </Link>{" "}
-            — contractual control definitions
-          </li>
-          <li>
-            <Link to="/evidence" className="text-primary hover:underline">
-              Evidence
-            </Link>{" "}
-            — uploads and{" "}
-            <Link to="/resilience-evidence" className="text-primary hover:underline">
-              resilience evidence
-            </Link>
-          </li>
-          <li>
-            <Link to="/findings" className="text-primary hover:underline">
-              Findings & remediation
-            </Link>
-          </li>
-        </ul>
-      </Card>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard label="ICT providers" value={o.ict_providers_total} />
+        <KpiCard label="Total risk assessments" value={o.risk_assessments_total} />
+        <KpiCard label="Business functions (all)" value={o.business_functions_total} />
+        <KpiCard label="ICT assets (all)" value={o.ict_assets_total} />
+      </div>
+
+      <section className="mb-2 mt-8">
+        <h2 className="text-sm font-semibold text-gray-900">Incidents & resilience operations</h2>
+      </section>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          label="Open findings"
+          value={r.open_findings}
+          tone={r.open_findings > 0 ? "warning" : "default"}
+        />
+        <KpiCard label="High/critical findings" value={r.high_findings} tone="danger" />
+        <KpiCard label="Open remediations" value={r.open_remediations} />
+        <KpiCard
+          label="ICT incidents"
+          value={o.incidents_module_available ? "—" : "Not modelled"}
+          tone="default"
+        />
+      </div>
+
+      <section className="mb-2 mt-8">
+        <h2 className="text-sm font-semibold text-gray-900">Testing & continuity</h2>
+      </section>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <KpiCard label="Recovery tests passed" value={r.recovery_tests_passed} tone="primary" />
+        <KpiCard label="Recovery tests failed" value={r.recovery_tests_failed} tone="danger" />
+        <KpiCard label="Recovery tests not run" value={r.recovery_tests_not_run} />
+        <KpiCard label="Services with resilience gaps" value={r.services_with_gaps} tone="warning" />
+        <KpiCard label="Critical business services" value={r.critical_business_services} />
+      </div>
+
+      <section className="mb-2 mt-8">
+        <h2 className="text-sm font-semibold text-gray-900">Compliance & evidence</h2>
+      </section>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <KpiCard label="Evidence items" value={o.evidence_items_total} />
+        <KpiCard label="DORA controls implemented" value={r.dora_implemented} tone="primary" />
+        <KpiCard label="Partial" value={r.dora_partial} tone="warning" />
+        <KpiCard label="Not implemented" value={r.dora_not_implemented} tone="danger" />
+        <KpiCard label="Insufficient evidence" value={r.dora_insufficient_evidence} />
+      </div>
+
+      {profile?.tlpt_applicable ? (
+        <p className="mt-4 text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+          TLPT is applicable for this organization. Structured TLPT workflow data is not yet persisted in{" "}
+          <code className="text-xs">dora_core</code> — use Resilience Testing and Findings until the TLPT module ships.
+        </p>
+      ) : null}
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <Card title="Navigate the dependency chain">
+          <ul className="space-y-2 text-sm">
+            <ModuleLink
+              to="/dora/relationship-map"
+              label="Relationship Map"
+              detail="Business functions → assets → suppliers → risks → findings (live graph)"
+            />
+            <ModuleLink
+              to="/business-functions"
+              label="Business functions"
+              detail="Critical functions and ICT mappings"
+            />
+            <ModuleLink to="/ict-assets" label="ICT assets" detail="Inventory linked to functions and suppliers" />
+            <ModuleLink to="/ict-providers" label="Third-party providers" detail="Concentration and contract context" />
+            <ModuleLink to="/risks" label="ICT risk register" detail="Assessments with supplier and service traceability" />
+          </ul>
+        </Card>
+        <Card title="Remediation & assurance">
+          <ul className="space-y-2 text-sm">
+            <ModuleLink to="/findings" label="Findings" detail={`${r.open_findings} open from API`} />
+            <ModuleLink to="/remediation" label="Remediation" detail={`${r.open_remediations} open actions`} />
+            <ModuleLink to="/recovery-tests" label="Recovery tests" detail="DR/BCP test outcomes vs RTO/RPO" />
+            <ModuleLink to="/requirements" label="Regulatory requirements" detail="Organization baseline" />
+            <ModuleLink to="/evidence" label="Evidence" detail={`${o.evidence_items_total} uploaded items`} />
+          </ul>
+        </Card>
+      </div>
     </div>
   );
 }

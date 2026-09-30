@@ -95,6 +95,8 @@ export interface SubOutsourcing {
 export interface Risk {
   id: string;
   provider_id: string | null;
+  contract_id?: string | null;
+  service_id?: string | null;
   resulting_risk_level: string;
   calculated_at: string;
   assessor: string;

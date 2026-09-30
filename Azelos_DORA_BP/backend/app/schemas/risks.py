@@ -31,6 +31,8 @@ class RiskCreate(BaseModel):
 class RiskOut(BaseModel):
     id: uuid.UUID
     provider_id: uuid.UUID | None
+    contract_id: uuid.UUID | None = None
+    service_id: uuid.UUID | None = None
     resulting_risk_level: RiskLevel
     calculated_at: datetime
     assessor: str

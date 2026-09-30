@@ -50,6 +50,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "DORA",
     items: [
+      { label: "DORA Overview", path: "/dora/overview", icon: LayoutDashboard },
       { label: "Relationship Map", path: "/dora/relationship-map", icon: Link2 },
       { label: "ICT Risk Management", path: "/risks", icon: ShieldAlert, moduleKey: "ICT_RISK" },
       { label: "ICT Third-Party Providers", path: "/ict-providers", icon: Link2, moduleKey: "THIRD_PARTY_RISK" },
@@ -82,7 +83,6 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Business Services", path: "/business-services", icon: Activity },
       { label: "Cloud Environment", path: "/cloud-environment", icon: Cloud },
       { label: "Resilience", path: "/resilience", icon: ShieldAlert },
-      { label: "DORA overview", path: "/dora", icon: Shield },
       { label: "Findings", path: "/findings", icon: AlertTriangle },
       { label: "Remediation", path: "/remediation", icon: CheckSquare },
       { label: "Resilience Evidence", path: "/resilience-evidence", icon: FileStack },
@@ -98,7 +98,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Modules", path: "/configuration/modules", icon: Sliders, adminOnly: true },
       { label: "Custom Fields", path: "/configuration/custom-fields", icon: Wrench, adminOnly: true },
-      { label: "Settings", path: "/onboarding/applicability", icon: Settings },
+      { label: "Settings", path: "/onboarding/profile", icon: Settings },
     ],
   },
 ];

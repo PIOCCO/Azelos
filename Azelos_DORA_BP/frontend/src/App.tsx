@@ -41,7 +41,8 @@ export default function App() {
           <Route path="business-services" element={<BusinessServicesPage />} />
           <Route path="cloud-environment" element={<CloudEnvironmentPage />} />
           <Route path="resilience" element={<ResilienceHubPage />} />
-          <Route path="dora" element={<DoraHubPage />} />
+          <Route path="dora" element={<Navigate to="/dora/overview" replace />} />
+          <Route path="dora/overview" element={<DoraHubPage />} />
           <Route path="dora/relationship-map" element={<RelationshipMapPage />} />
           <Route
             path="findings"

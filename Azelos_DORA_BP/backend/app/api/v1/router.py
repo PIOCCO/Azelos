@@ -26,6 +26,7 @@ from app.api.v1 import (
     cloud_resources,
     business_services,
     resilience_ops,
+    dora_overview,
 )
 
 api_v1_router = APIRouter()
@@ -54,3 +55,4 @@ api_v1_router.include_router(cloud_accounts.router)
 api_v1_router.include_router(cloud_resources.router)
 api_v1_router.include_router(business_services.router)
 api_v1_router.include_router(resilience_ops.router)
+api_v1_router.include_router(dora_overview.router)
