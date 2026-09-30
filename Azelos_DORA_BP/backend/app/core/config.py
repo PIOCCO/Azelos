@@ -12,10 +12,13 @@ class Settings(BaseSettings):
 
     app_name: str = "Azelos DORA Blueprint API"
     api_v1_prefix: str = "/api/v1"
+    app_env: str = "development"
     jwt_secret_key: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
     cors_origins: str = "*"
+    graphql_introspection_enabled: bool = True
+    expose_error_details: bool = False
 
 
 @lru_cache

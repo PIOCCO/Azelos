@@ -14,6 +14,7 @@ from app.core.config import get_settings
 from app.core.database import check_database_connectivity
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import RequestLoggingMiddleware
+from app.core.security_headers import SecurityHeadersMiddleware
 
 
 def create_app() -> FastAPI:
@@ -25,6 +26,7 @@ def create_app() -> FastAPI:
         description="DORA Blueprint — core + configuration API over PostgreSQL",
     )
     register_exception_handlers(app)
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestLoggingMiddleware)
     origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
     app.add_middleware(

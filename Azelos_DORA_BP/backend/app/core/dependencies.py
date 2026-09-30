@@ -49,7 +49,6 @@ def get_auth_context(
     except JWTError as exc:
         raise HTTPException(status_code=401, detail="Invalid token") from exc
     org_raw = payload.get("org_id")
-    role_raw = payload.get("role", Role.USER.value)
     if not org_raw:
         raise HTTPException(status_code=403, detail="Organization context required")
     org_id = UUID(org_raw)

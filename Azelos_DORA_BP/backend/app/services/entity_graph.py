@@ -79,4 +79,10 @@ class EntityGraphService:
         )
 
     def search(self, query: str, limit: int = 20) -> list[GraphNodeDTO]:
-        return self.repo.search_entities(query, limit=min(limit, 50))
+        q = (query or "").strip()
+        if len(q) < 2:
+            raise AppError("INVALID_QUERY", "Search query must be at least 2 characters", 400)
+        if len(q) > 128:
+            raise AppError("INVALID_QUERY", "Search query too long", 400)
+        safe_limit = max(1, min(limit, 50))
+        return self.repo.search_entities(q, limit=safe_limit)

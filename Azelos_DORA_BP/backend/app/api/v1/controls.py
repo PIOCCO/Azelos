@@ -15,7 +15,8 @@ router = APIRouter(prefix="/controls", tags=["Controls"])
 class ControlDefinitionOut(BaseModel):
     id: UUID
     code: str
-    title: str
+    name: str
+    category: str
     description: str | None
 
     model_config = {"from_attributes": True}

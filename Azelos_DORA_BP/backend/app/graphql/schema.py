@@ -116,9 +116,14 @@ class Query:
     ) -> list[GraphNode]:
         gctx = _require_auth(info)
         service = EntityGraphService(gctx.db, gctx.auth.organization_id)
+        safe_limit = max(1, min(limit, 50))
+        try:
+            nodes = service.search(query, limit=safe_limit)
+        except AppError as exc:
+            raise Exception(exc.message) from exc
         return [
             GraphNode(id=n.id, type=n.type, label=n.label, metadata=n.metadata or {})
-            for n in service.search(query, limit=limit)
+            for n in nodes
         ]
 
 

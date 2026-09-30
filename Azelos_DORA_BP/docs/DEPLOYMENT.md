@@ -69,8 +69,10 @@ python scripts/seed_api_user.py   # once per environment
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 curl -s http://localhost:8000/health
 curl -s http://localhost:8000/ready
-curl -s http://localhost:8000/api/v1/database/status
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8000/api/v1/database/status
 ```
+
+(`ORG_ADMIN` or higher; unauthenticated calls return 401.)
 
 Azure checklist:
 

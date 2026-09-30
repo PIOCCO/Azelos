@@ -3,6 +3,8 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.database import check_database_connectivity, get_db
+from app.core.dependencies import AuthContext, get_auth_context, require_role
+from app.core.rbac import Role
 from app.core.schemas_pg import CLIENT_EXTENSIONS_SCHEMA, DORA_CONFIG_SCHEMA, DORA_CORE_SCHEMA
 from app.core.version import (
     APPLICATION_VERSION,
@@ -20,7 +22,10 @@ def database_health():
 
 
 @router.get("/status", summary="Safe database status (no secrets)")
-def database_status(db: Session = Depends(get_db)):
+def database_status(
+    db: Session = Depends(get_db),
+    _ctx: AuthContext = Depends(require_role(Role.ORG_ADMIN)),
+):
     rev = db.execute(text("SELECT version_num FROM alembic_version LIMIT 1")).scalar()
     ext_exists = db.execute(
         text(
