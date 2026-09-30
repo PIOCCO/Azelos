@@ -1,84 +1,45 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   Background,
   Controls,
   MiniMap,
   ReactFlow,
-  type Edge,
-  type Node,
+  ReactFlowProvider,
   useEdgesState,
   useNodesState,
+  useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
-  GQL_ENTITY_TYPES,
   detailPathForNode,
   fetchEntityGraph,
+  fetchOrganizationGraph,
   graphNodeEntityUuid,
   graphNodeToEntityTypeGql,
   graphSearch,
+  type GraphEdge,
   type GraphNode,
+  type EntityGraphResult,
 } from "../../api/graphql";
+import { useAuth } from "../../contexts/AuthContext";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { Button } from "../../components/ui/Button";
 import { ErrorState, LoadingSkeleton } from "../../components/ui/States";
-import { Link } from "react-router-dom";
-
-const TYPE_STYLES: Record<string, { border: string; bg: string }> = {
-  BusinessFunction: { border: "border-blue-600", bg: "bg-blue-50" },
-  ICTAsset: { border: "border-violet-600", bg: "bg-violet-50" },
-  InformationAsset: { border: "border-indigo-500", bg: "bg-indigo-50" },
-  ICTService: { border: "border-cyan-600", bg: "bg-cyan-50" },
-  ICTProvider: { border: "border-amber-600", bg: "bg-amber-50" },
-  Contract: { border: "border-orange-600", bg: "bg-orange-50" },
-  RiskAssessment: { border: "border-red-600", bg: "bg-red-50" },
-  Evidence: { border: "border-green-600", bg: "bg-green-50" },
-  BusinessService: { border: "border-teal-600", bg: "bg-teal-50" },
-  CloudResource: { border: "border-slate-600", bg: "bg-slate-50" },
-  ResilienceFinding: { border: "border-rose-600", bg: "bg-rose-50" },
-  RemediationAction: { border: "border-pink-600", bg: "bg-pink-50" },
-};
-
-function layoutNodes(nodes: GraphNode[], edges: { source: string; target: string }[]): Node[] {
-  const depth = new Map<string, number>();
-  const root = nodes[0]?.id;
-  if (root) depth.set(root, 0);
-  for (let i = 0; i < 8; i++) {
-    for (const e of edges) {
-      if (depth.has(e.source) && !depth.has(e.target)) depth.set(e.target, (depth.get(e.source) ?? 0) + 1);
-      if (depth.has(e.target) && !depth.has(e.source)) depth.set(e.source, (depth.get(e.target) ?? 0) + 1);
-    }
-  }
-  const byLevel = new Map<number, GraphNode[]>();
-  for (const n of nodes) {
-    const lv = depth.get(n.id) ?? 0;
-    if (!byLevel.has(lv)) byLevel.set(lv, []);
-    byLevel.get(lv)!.push(n);
-  }
-  const result: Node[] = [];
-  for (const [lv, group] of byLevel) {
-    group.forEach((n, idx) => {
-      const style = TYPE_STYLES[n.type] ?? { border: "border-gray-400", bg: "bg-white" };
-      result.push({
-        id: n.id,
-        position: { x: idx * 220, y: lv * 120 },
-        data: { label: n.label, node: n },
-        type: "default",
-        style: {
-          borderWidth: 2,
-          borderRadius: 8,
-          padding: 8,
-          minWidth: 160,
-          fontSize: 12,
-        },
-        className: `${style.border} ${style.bg}`,
-      });
-    });
-  }
-  return result;
-}
+import {
+  TYPE_STYLES,
+  RELATIONSHIP_COLORS,
+  RELATIONSHIP_PRESETS,
+  applyGraphFilters,
+  edgesForNode,
+  layoutNodes,
+  mergeGraphs,
+  neighborSets,
+  relationshipTypesInGraph,
+  toFlowEdges,
+  toFlowNodes,
+} from "./relationshipMapUtils";
 
 type MapLocationState = {
   gqlType?: string;
@@ -87,46 +48,192 @@ type MapLocationState = {
   autoLoad?: boolean;
 };
 
-export function RelationshipMapPage() {
-  const location = useLocation();
-  const [search, setSearch] = useState("");
-  const [depth, setDepth] = useState(2);
-  const [view, setView] = useState<"ALL" | "RISK" | "RESILIENCE">("ALL");
-  const [entityType, setEntityType] = useState<string>("ICT_ASSET");
-  const [entityId, setEntityId] = useState("");
-  const [selected, setSelected] = useState<GraphNode | null>(null);
-  const [typeFilter, setTypeFilter] = useState<string>("");
-  const [relFilter, setRelFilter] = useState<string>("");
+function GraphCanvas(props: {
+  rawGraph: EntityGraphResult;
+  depth: number;
+  hiddenRelationships: Set<string>;
+  nodeTypeFilter: Set<string>;
+  filterSource: string;
+  filterTarget: string;
+  selectedNode: GraphNode | null;
+  selectedEdge: GraphEdge | null;
+  onSelectNode: (n: GraphNode | null) => void;
+  onSelectEdge: (e: GraphEdge | null) => void;
+}) {
+  const { fitView } = useReactFlow();
+  const {
+    rawGraph,
+    hiddenRelationships,
+    nodeTypeFilter,
+    filterSource,
+    filterTarget,
+    selectedNode,
+    selectedEdge,
+  } = props;
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-
-  const loadGraph = useMutation({
-    mutationFn: (override?: { entityType: string; entityId: string }) =>
-      fetchEntityGraph({
-        entityType: override?.entityType ?? entityType,
-        entityId: override?.entityId ?? entityId,
-        depth,
-        view,
+  const filtered = useMemo(
+    () =>
+      applyGraphFilters({
+        nodes: rawGraph.nodes,
+        edges: rawGraph.edges,
+        hiddenRelationships,
+        nodeTypes: nodeTypeFilter,
+        sourceId: filterSource,
+        targetId: filterTarget,
       }),
+    [rawGraph, hiddenRelationships, nodeTypeFilter, filterSource, filterTarget],
+  );
+
+  const highlight = useMemo(() => {
+    if (selectedEdge) {
+      return {
+        nodes: new Set([selectedEdge.source, selectedEdge.target]),
+        edges: new Set([selectedEdge.id]),
+        dim: true,
+      };
+    }
+    if (selectedNode) {
+      const n = neighborSets(selectedNode.id, filtered.edges);
+      return { nodes: n.nodes, edges: n.edges, dim: true };
+    }
+    return { nodes: new Set<string>(), edges: new Set<string>(), dim: false };
+  }, [selectedEdge, selectedNode, filtered.edges]);
+
+  const flowNodes = useMemo(() => {
+    const laid = layoutNodes(filtered.nodes, filtered.edges);
+    return toFlowNodes(laid, {
+      highlightNodeIds: highlight.nodes,
+      dimUnrelated: highlight.dim,
+      selectedId: selectedNode?.id ?? null,
+    });
+  }, [filtered, highlight, selectedNode?.id]);
+
+  const flowEdges = useMemo(
+    () =>
+      toFlowEdges(filtered.edges, {
+        highlightEdgeId: selectedEdge?.id ?? null,
+        highlightEdgeIds: highlight.edges,
+        hiddenRelationships,
+        dimUnrelated: highlight.dim,
+        activeEdgeIds: highlight.edges,
+      }),
+    [filtered.edges, selectedEdge, highlight, hiddenRelationships],
+  );
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(flowNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
+
+  useEffect(() => {
+    setNodes(flowNodes);
+    setEdges(flowEdges);
+  }, [flowNodes, flowEdges, setNodes, setEdges]);
+
+  useEffect(() => {
+    if (rawGraph.nodes.length) {
+      requestAnimationFrame(() => fitView({ padding: 0.15, duration: 200 }));
+    }
+  }, [rawGraph.nodes.length, fitView]);
+
+  return (
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      onNodeClick={(_, n) => {
+        props.onSelectEdge(null);
+        props.onSelectNode((n.data as { node: GraphNode }).node);
+      }}
+      onEdgeClick={(_, e) => {
+        const raw = rawGraph.edges.find((x) => x.id === e.id);
+        props.onSelectNode(null);
+        props.onSelectEdge(raw ?? null);
+      }}
+      onPaneClick={() => {
+        props.onSelectNode(null);
+        props.onSelectEdge(null);
+      }}
+      fitView
+    >
+      <MiniMap />
+      <Controls showInteractive={false} />
+      <Background />
+    </ReactFlow>
+  );
+}
+
+export function RelationshipMapPage() {
+  return (
+    <ReactFlowProvider>
+      <RelationshipMapInner />
+    </ReactFlowProvider>
+  );
+}
+
+function RelationshipMapInner() {
+  const { session } = useAuth();
+  const location = useLocation();
+  const { fitView } = useReactFlow();
+  const [rawGraph, setRawGraph] = useState<EntityGraphResult | null>(null);
+  const [search, setSearch] = useState("");
+  const [depth, setDepth] = useState(1);
+  const [view, setView] = useState<"ALL" | "RISK" | "RESILIENCE">("ALL");
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [selectedEdge, setSelectedEdge] = useState<GraphEdge | null>(null);
+  const [hiddenRelationships, setHiddenRelationships] = useState<Set<string>>(new Set());
+  const [nodeTypeFilter, setNodeTypeFilter] = useState<Set<string>>(new Set());
+  const [filterSource, setFilterSource] = useState("");
+  const [filterTarget, setFilterTarget] = useState("");
+  const [activePreset, setActivePreset] = useState<string>("all");
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const initialLoaded = useRef(false);
+
+  const overviewQ = useQuery({
+    queryKey: ["org-graph", depth, view],
+    queryFn: () => fetchOrganizationGraph({ depth, maxNodes: 80, view }),
+    enabled: !!session?.token,
+  });
+
+  useEffect(() => {
+    if (overviewQ.data && !initialLoaded.current) {
+      setRawGraph(overviewQ.data);
+      setSelectedNode(overviewQ.data.nodes[0] ?? null);
+      initialLoaded.current = true;
+    }
+  }, [overviewQ.data]);
+
+  useEffect(() => {
+    if (initialLoaded.current && overviewQ.data) {
+      setRawGraph(overviewQ.data);
+    }
+  }, [overviewQ.data, depth, view]);
+
+  const expandNode = useMutation({
+    mutationFn: async (node: GraphNode) => {
+      const gqlType = graphNodeToEntityTypeGql(node.type);
+      const entityId = graphNodeEntityUuid(node);
+      const sub = await fetchEntityGraph({
+        entityType: gqlType,
+        entityId,
+        depth: 1,
+        view,
+      });
+      return sub;
+    },
+    onSuccess: (sub) => {
+      setRawGraph((prev) => (prev ? mergeGraphs(prev, sub) : sub));
+    },
+  });
+
+  const focusNode = useMutation({
+    mutationFn: async (node: GraphNode) => {
+      const gqlType = graphNodeToEntityTypeGql(node.type);
+      const entityId = graphNodeEntityUuid(node);
+      return fetchEntityGraph({ entityType: gqlType, entityId, depth, view });
+    },
     onSuccess: (data) => {
-      let fnodes = data.nodes;
-      let fedges = data.edges;
-      if (typeFilter) fnodes = fnodes.filter((n) => n.type === typeFilter);
-      if (relFilter) fedges = fedges.filter((e) => e.relationship === relFilter);
-      const allowed = new Set(fnodes.map((n) => n.id));
-      fedges = fedges.filter((e) => allowed.has(e.source) && allowed.has(e.target));
-      setNodes(layoutNodes(fnodes, fedges));
-      setEdges(
-        fedges.map((e) => ({
-          id: e.id,
-          source: e.source,
-          target: e.target,
-          label: e.relationship,
-          animated: e.relationship === "SUPPORTS",
-        })),
-      );
-      setSelected(fnodes[0] ?? null);
+      setRawGraph(data);
+      setSelectedNode(data.nodes[0] ?? null);
     },
   });
 
@@ -134,194 +241,352 @@ export function RelationshipMapPage() {
     mutationFn: () => graphSearch(search, 15),
   });
 
-  const legend = useMemo(
-    () => Object.keys(TYPE_STYLES).sort(),
-    [],
+  const presentRelTypes = useMemo(
+    () => (rawGraph ? relationshipTypesInGraph(rawGraph.edges) : []),
+    [rawGraph],
   );
 
-  const onPickSearchResult = useCallback(
-    (n: GraphNode, load = true) => {
-      const enumVal = graphNodeToEntityTypeGql(n.type);
-      const id = graphNodeEntityUuid(n);
-      setEntityType(enumVal);
-      setEntityId(id);
-      setSearch(n.label);
-      if (load) loadGraph.mutate({ entityType: enumVal, entityId: id });
-    },
-    [loadGraph],
-  );
+  const availablePresets = useMemo(() => {
+    return Object.entries(RELATIONSHIP_PRESETS).filter(([key, preset]) => {
+      if (key === "all") return true;
+      return preset.relationships.some((r) => presentRelTypes.includes(r));
+    });
+  }, [presentRelTypes]);
+
+  const toggleRelationship = (rel: string) => {
+    setHiddenRelationships((prev) => {
+      const next = new Set(prev);
+      if (next.has(rel)) next.delete(rel);
+      else next.add(rel);
+      return next;
+    });
+  };
+
+  const showAllRelationships = () => setHiddenRelationships(new Set());
+  const hideAllRelationships = () => setHiddenRelationships(new Set(presentRelTypes));
+
+  const applyPreset = (key: string) => {
+    setActivePreset(key);
+    const preset = RELATIONSHIP_PRESETS[key];
+    if (!preset || key === "all") {
+      showAllRelationships();
+      return;
+    }
+    const hide = presentRelTypes.filter((r) => !preset.relationships.includes(r));
+    setHiddenRelationships(new Set(hide));
+  };
+
+  const toggleNodeType = (t: string) => {
+    setNodeTypeFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(t)) next.delete(t);
+      else next.add(t);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const st = location.state as MapLocationState | null;
     if (!st?.entityId || !st.gqlType) return;
-    setEntityType(st.gqlType);
-    setEntityId(st.entityId);
-    if (st.label) setSearch(st.label);
-    if (st.autoLoad) {
-      loadGraph.mutate({ entityType: st.gqlType, entityId: st.entityId });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once when arriving from global search
+    initialLoaded.current = true;
+    const gqlToType: Record<string, string> = {
+      BUSINESS_FUNCTION: "BusinessFunction",
+      ICT_ASSET: "ICTAsset",
+      ICT_SERVICE: "ICTService",
+      ICT_PROVIDER: "ICTProvider",
+      CONTRACT: "Contract",
+      RISK_ASSESSMENT: "RiskAssessment",
+      BUSINESS_SERVICE: "BusinessService",
+    };
+    const nodeType = gqlToType[st.gqlType!] ?? "ICTAsset";
+    focusNode.mutate({
+      id: `${nodeType}:${st.entityId}`,
+      type: nodeType,
+      label: st.label ?? st.entityId,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
-  const detailPath = selected ? detailPathForNode(selected) : null;
+  const nodeOptions = rawGraph?.nodes ?? [];
+  const detailPath = selectedNode ? detailPathForNode(selectedNode) : null;
+  const nodeEdges = selectedNode && rawGraph ? edgesForNode(selectedNode.id, rawGraph.edges) : null;
+
+  const loading = overviewQ.isLoading && !rawGraph;
+  const error = overviewQ.error as Error | null;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col">
+    <div className="flex h-[calc(100vh-4rem)] flex-col gap-2">
       <PageHeader
         title="Relationship map"
-        subtitle="DORA and resilience dependencies from PostgreSQL via GraphQL — not demo data."
+        subtitle="Explore DORA dependencies from live data — graph loads automatically."
       />
 
-      <div className="mb-3 flex flex-wrap items-end gap-3 rounded-lg border bg-surface p-4 shadow-card">
-        <label className="text-sm">
-          Search
-          <input
-            className="ml-2 rounded border px-2 py-1"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && search.length >= 2) searchMut.mutate();
-            }}
-            placeholder="Payment API, provider…"
-          />
-        </label>
-        <Button
-          type="button"
-          onClick={() => searchMut.mutate()}
-          disabled={searchMut.isPending || search.length < 2}
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-surface px-3 py-2 text-sm shadow-card">
+        <span className="text-gray-500">Depth</span>
+        {[1, 2, 3].map((d) => (
+          <button
+            key={d}
+            type="button"
+            className={`rounded px-2 py-1 ${depth === d ? "bg-primary text-white" : "bg-gray-100"}`}
+            onClick={() => setDepth(d)}
+          >
+            {d} hop{d > 1 ? "s" : ""}
+          </button>
+        ))}
+        <span className="mx-1 text-gray-300">|</span>
+        {availablePresets.map(([key, preset]) => (
+          <button
+            key={key}
+            type="button"
+            className={`rounded px-2 py-1 ${activePreset === key ? "bg-primary text-white" : "bg-gray-100"}`}
+            onClick={() => applyPreset(key)}
+          >
+            {preset.label}
+          </button>
+        ))}
+        <span className="mx-1 text-gray-300">|</span>
+        <select
+          className="rounded border px-2 py-1"
+          value={view}
+          onChange={(e) => setView(e.target.value as typeof view)}
         >
-          Find
+          <option value="ALL">All</option>
+          <option value="RISK">Risk view</option>
+          <option value="RESILIENCE">Resilience view</option>
+        </select>
+        <Button type="button" variant="secondary" onClick={() => fitView({ padding: 0.15 })}>
+          Fit view
         </Button>
-        {searchMut.data?.length ? (
-          <ul className="max-h-24 overflow-auto text-sm">
-            {searchMut.data.map((n) => (
-              <li key={n.id}>
-                <button type="button" className="text-primary hover:underline" onClick={() => onPickSearchResult(n, true)}>
-                  {n.type}: {n.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-
-        <label className="text-sm">
-          Entity type
-          <select className="ml-2 rounded border px-2 py-1" value={entityType} onChange={(e) => setEntityType(e.target.value)}>
-            {GQL_ENTITY_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm">
-          Entity ID
-          <input
-            className="ml-2 w-64 rounded border px-2 py-1 font-mono text-xs"
-            value={entityId}
-            onChange={(e) => setEntityId(e.target.value)}
-          />
-        </label>
-        <label className="text-sm">
-          Depth
-          <select className="ml-2 rounded border px-2 py-1" value={depth} onChange={(e) => setDepth(Number(e.target.value))}>
-            {[1, 2, 3].map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm">
-          View
-          <select className="ml-2 rounded border px-2 py-1" value={view} onChange={(e) => setView(e.target.value as typeof view)}>
-            <option value="ALL">All</option>
-            <option value="RISK">ICT risk</option>
-            <option value="RESILIENCE">Resilience</option>
-          </select>
-        </label>
-        <label className="text-sm">
-          Filter type
-          <select className="ml-2 rounded border px-2 py-1" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-            <option value="">All</option>
-            {legend.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm">
-          Filter relationship
-          <input className="ml-2 rounded border px-2 py-1" value={relFilter} onChange={(e) => setRelFilter(e.target.value)} placeholder="SUPPORTS" />
-        </label>
-        <Button
+        <Button type="button" variant="secondary" onClick={() => overviewQ.refetch()}>
+          Reset graph
+        </Button>
+        <button
           type="button"
-          onClick={() => loadGraph.mutate()}
-          disabled={!entityId || loadGraph.isPending}
+          className="text-primary underline"
+          onClick={() => setShowAdvancedSearch((v) => !v)}
         >
-          Load graph
-        </Button>
+          {showAdvancedSearch ? "Hide search" : "Search (optional)"}
+        </button>
       </div>
 
-      <div className="flex min-h-0 flex-1 gap-4">
-        <div className="min-w-0 flex-1 rounded-lg border bg-white">
-          {loadGraph.isPending ? (
-            <LoadingSkeleton rows={8} />
-          ) : loadGraph.error ? (
-            <ErrorState message={(loadGraph.error as Error).message} onRetry={() => loadGraph.mutate()} />
-          ) : nodes.length === 0 ? (
-            <p className="p-6 text-sm text-gray-500">Search for an entity or enter an ID, then load the graph.</p>
-          ) : (
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onNodeClick={(_, n) => setSelected((n.data as { node: GraphNode }).node)}
-              fitView
+      {showAdvancedSearch ? (
+        <div className="flex flex-wrap items-end gap-2 rounded-lg border bg-white px-3 py-2 text-sm">
+          <input
+            className="min-w-[200px] rounded border px-2 py-1"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && search.length >= 2 && searchMut.mutate()}
+            placeholder="Optional search…"
+          />
+          <Button type="button" onClick={() => searchMut.mutate()} disabled={search.length < 2}>
+            Find
+          </Button>
+          {searchMut.data?.map((n) => (
+            <button
+              key={n.id}
+              type="button"
+              className="text-primary hover:underline"
+              onClick={() => {
+                setSelectedNode(n);
+                focusNode.mutate(n);
+              }}
             >
-              <MiniMap />
-              <Controls />
-              <Background />
-            </ReactFlow>
+              {n.type}: {n.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="flex min-h-0 flex-1 gap-3">
+        <div className="min-w-0 flex-[3] rounded-lg border bg-white">
+          {loading ? (
+            <LoadingSkeleton rows={8} />
+          ) : error ? (
+            <ErrorState message={error.message} onRetry={() => overviewQ.refetch()} />
+          ) : !rawGraph?.nodes.length ? (
+            <p className="p-6 text-sm text-gray-500">
+              No relationship data yet. Add business functions, ICT assets, or providers in DORA modules, then
+              refresh.
+            </p>
+          ) : (
+            <GraphCanvas
+              rawGraph={rawGraph}
+              depth={depth}
+              hiddenRelationships={hiddenRelationships}
+              nodeTypeFilter={nodeTypeFilter}
+              filterSource={filterSource}
+              filterTarget={filterTarget}
+              selectedNode={selectedNode}
+              selectedEdge={selectedEdge}
+              onSelectNode={setSelectedNode}
+              onSelectEdge={setSelectedEdge}
+            />
           )}
         </div>
 
-        <aside className="w-72 shrink-0 space-y-4 overflow-auto rounded-lg border bg-surface p-4 text-sm shadow-card">
-          <div>
-            <h3 className="font-semibold text-gray-900">Legend</h3>
+        <aside className="flex w-80 shrink-0 flex-col gap-3 overflow-auto text-sm">
+          <section className="rounded-lg border bg-surface p-3 shadow-card">
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="font-semibold text-gray-900">Relationship legend</h3>
+              <div className="flex gap-1 text-xs">
+                <button type="button" className="text-primary" onClick={showAllRelationships}>
+                  Show all
+                </button>
+                <span className="text-gray-300">·</span>
+                <button type="button" className="text-primary" onClick={hideAllRelationships}>
+                  Hide all
+                </button>
+              </div>
+            </div>
+            <ul className="max-h-40 space-y-1 overflow-auto">
+              {presentRelTypes.map((rel) => {
+                const on = !hiddenRelationships.has(rel);
+                const color = RELATIONSHIP_COLORS[rel] ?? "#64748b";
+                return (
+                  <li key={rel}>
+                    <button
+                      type="button"
+                      className={`flex w-full items-center gap-2 rounded px-1 py-0.5 text-left ${on ? "" : "opacity-40 line-through"}`}
+                      onClick={() => toggleRelationship(rel)}
+                    >
+                      <span className="h-0.5 w-6 shrink-0" style={{ backgroundColor: color }} />
+                      {rel}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+
+          <section className="rounded-lg border bg-surface p-3 shadow-card">
+            <h3 className="font-semibold text-gray-900">Filters</h3>
+            <label className="mt-2 block text-xs text-gray-600">
+              Source node
+              <select
+                className="mt-1 w-full rounded border px-2 py-1"
+                value={filterSource}
+                onChange={(e) => setFilterSource(e.target.value)}
+              >
+                <option value="">Any</option>
+                {nodeOptions.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="mt-2 block text-xs text-gray-600">
+              Target node
+              <select
+                className="mt-1 w-full rounded border px-2 py-1"
+                value={filterTarget}
+                onChange={(e) => setFilterTarget(e.target.value)}
+              >
+                <option value="">Any</option>
+                {nodeOptions.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="mt-2 text-xs font-medium text-gray-700">Entity types</p>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {[...new Set(rawGraph?.nodes.map((n) => n.type) ?? [])].sort().map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className={`rounded border px-1.5 py-0.5 text-xs ${
+                    nodeTypeFilter.size === 0 || nodeTypeFilter.has(t)
+                      ? TYPE_STYLES[t]?.bg ?? "bg-gray-50"
+                      : "opacity-40"
+                  }`}
+                  onClick={() => toggleNodeType(t)}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-lg border bg-surface p-3 shadow-card">
+            <h3 className="font-semibold text-gray-900">Node types</h3>
             <ul className="mt-2 space-y-1">
-              {legend.map((t) => (
-                <li key={t} className="flex items-center gap-2">
+              {Object.keys(TYPE_STYLES).map((t) => (
+                <li key={t} className="flex items-center gap-2 text-xs text-gray-600">
                   <span className={`h-3 w-3 rounded border ${TYPE_STYLES[t]?.border ?? "border-gray-400"}`} />
                   {t}
                 </li>
               ))}
             </ul>
-          </div>
-          {selected ? (
-            <div>
-              <h3 className="font-semibold text-gray-900">Selection</h3>
-              <p className="mt-1 font-medium">{selected.label}</p>
-              <p className="text-gray-600">{selected.type}</p>
-              {selected.metadata?.inherent_criticality ? (
-                <p className="mt-1 text-xs">Inherent criticality: {String(selected.metadata.inherent_criticality)}</p>
+          </section>
+
+          {selectedEdge ? (
+            <section className="rounded-lg border bg-surface p-3 shadow-card">
+              <h3 className="font-semibold text-gray-900">Relationship</h3>
+              <p className="mt-1 font-medium">{selectedEdge.relationship}</p>
+              <p className="text-xs text-gray-600">From: {selectedEdge.source}</p>
+              <p className="text-xs text-gray-600">To: {selectedEdge.target}</p>
+              {selectedEdge.metadata && Object.keys(selectedEdge.metadata).length > 0 ? (
+                <pre className="mt-2 max-h-24 overflow-auto rounded bg-gray-50 p-2 text-[10px]">
+                  {JSON.stringify(selectedEdge.metadata, null, 2)}
+                </pre>
               ) : null}
-              {selected.metadata?.critical_or_important ? (
-                <p className="mt-1 text-xs">Function C/I: {String(selected.metadata.critical_or_important)}</p>
+            </section>
+          ) : null}
+
+          {selectedNode ? (
+            <section className="rounded-lg border bg-surface p-3 shadow-card">
+              <h3 className="font-semibold text-gray-900">{selectedNode.label}</h3>
+              <p className="text-gray-600">{selectedNode.type}</p>
+              {selectedNode.metadata && Object.keys(selectedNode.metadata).length > 0 ? (
+                <ul className="mt-2 space-y-0.5 text-xs text-gray-600">
+                  {Object.entries(selectedNode.metadata).map(([k, v]) => (
+                    <li key={k}>
+                      {k}: {String(v)}
+                    </li>
+                  ))}
+                </ul>
               ) : null}
-              {selected.metadata?.supports_critical_function != null ? (
-                <p className="mt-1 text-xs text-amber-800">Supports critical function (relationship flag)</p>
+              {nodeEdges ? (
+                <>
+                  <p className="mt-2 font-medium text-gray-800">Outgoing ({nodeEdges.outgoing.length})</p>
+                  <ul className="max-h-20 overflow-auto text-xs">
+                    {nodeEdges.outgoing.map((e) => (
+                      <li key={e.id}>
+                        {e.relationship} → {e.target.split(":")[1]?.slice(0, 8)}…
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 font-medium text-gray-800">Incoming ({nodeEdges.incoming.length})</p>
+                  <ul className="max-h-20 overflow-auto text-xs">
+                    {nodeEdges.incoming.map((e) => (
+                      <li key={e.id}>
+                        {e.relationship} ← {e.source.split(":")[1]?.slice(0, 8)}…
+                      </li>
+                    ))}
+                  </ul>
+                </>
               ) : null}
-              {detailPath ? (
-                <Link to={detailPath} className="mt-3 inline-block text-primary font-medium hover:underline">
-                  Open details
-                </Link>
-              ) : (
-                <p className="mt-2 text-xs text-gray-500">No dedicated detail route for this type.</p>
-              )}
-            </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button type="button" className="px-2 py-1 text-xs" onClick={() => expandNode.mutate(selectedNode)}>
+                  Expand +1 hop
+                </Button>
+                <Button
+                  type="button"
+                  className="px-2 py-1 text-xs"
+                  variant="secondary"
+                  onClick={() => focusNode.mutate(selectedNode)}
+                >
+                  Center graph here
+                </Button>
+                {detailPath ? (
+                  <Link to={detailPath} className="text-sm text-primary font-medium hover:underline">
+                    Open details
+                  </Link>
+                ) : null}
+              </div>
+            </section>
           ) : null}
         </aside>
       </div>

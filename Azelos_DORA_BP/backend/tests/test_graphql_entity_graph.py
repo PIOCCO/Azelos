@@ -136,6 +136,29 @@ def test_graphql_expands_supports_edge(client, graph_setup):
     assert any(str(asset_a.id) in i for i in asset_ids)
 
 
+ORG_GRAPH_QUERY = """
+query($depth: Int!) {
+  organizationGraph(depth: $depth, maxNodes: 80) {
+    nodes { id type label }
+    edges { id relationship source target }
+  }
+}
+"""
+
+
+def test_organization_graph_loads_without_entity_id(client, graph_setup):
+    user, org_a, _, bf_a, _, asset_a = graph_setup
+    token = _login(client, user.email, "pass", org_a.id).json()["access_token"]
+    r = client.post(
+        "/graphql",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"query": ORG_GRAPH_QUERY, "variables": {"depth": 1}},
+    )
+    data = r.json()["data"]["organizationGraph"]
+    assert len(data["nodes"]) >= 2
+    assert any(e["relationship"] == "SUPPORTS" for e in data["edges"])
+
+
 def test_graphql_depth_limit(client, graph_setup):
     user, org_a, _, bf_a, _, _ = graph_setup
     token = _login(client, user.email, "pass", org_a.id).json()["access_token"]

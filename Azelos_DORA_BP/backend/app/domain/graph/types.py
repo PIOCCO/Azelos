@@ -46,6 +46,8 @@ class GraphView(str, Enum):
 
 MAX_GRAPH_DEPTH = 3
 MAX_GRAPH_NODES = 250
+DEFAULT_OVERVIEW_MAX_NODES = 120
+DEFAULT_OVERVIEW_ANCHORS = 6
 
 
 def node_key(entity_type: EntityType, entity_id: str) -> str:

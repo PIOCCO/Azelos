@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.domain.graph.types import EntityType, GraphEdgeDTO, GraphNodeDTO, RelationshipType, node_key
 from app.models.business_function import BusinessFunction, FunctionServiceMapping
+from app.models.enums import CriticalOrImportant
 from app.models.cloud_resilience import (
     BusinessService,
     CloudResource,
@@ -30,6 +31,74 @@ class EntityGraphRepository:
     def __init__(self, db: Session, organization_id: UUID) -> None:
         self.db = db
         self.organization_id = organization_id
+
+    def list_graph_anchors(self, limit: int = 6) -> list[tuple[EntityType, UUID]]:
+        """Seed entities for org overview graph (critical functions first)."""
+        org = self.organization_id
+        anchors: list[tuple[EntityType, UUID]] = []
+        seen: set[tuple[EntityType, UUID]] = set()
+
+        def add(etype: EntityType, eid: UUID) -> None:
+            key = (etype, eid)
+            if key not in seen and len(anchors) < limit:
+                seen.add(key)
+                anchors.append(key)
+
+        for row in self.db.scalars(
+            select(BusinessFunction)
+            .where(
+                BusinessFunction.financial_entity_id == org,
+                BusinessFunction.critical_or_important == CriticalOrImportant.CRITICAL,
+            )
+            .order_by(BusinessFunction.name)
+            .limit(limit)
+        ):
+            add(EntityType.BUSINESS_FUNCTION, row.id)
+
+        for row in self.db.scalars(
+            select(BusinessFunction)
+            .where(
+                BusinessFunction.financial_entity_id == org,
+                BusinessFunction.critical_or_important == CriticalOrImportant.IMPORTANT,
+            )
+            .order_by(BusinessFunction.name)
+            .limit(limit)
+        ):
+            add(EntityType.BUSINESS_FUNCTION, row.id)
+
+        for row in self.db.scalars(
+            select(BusinessFunction)
+            .where(BusinessFunction.financial_entity_id == org)
+            .order_by(BusinessFunction.name)
+            .limit(limit)
+        ):
+            add(EntityType.BUSINESS_FUNCTION, row.id)
+
+        for row in self.db.scalars(
+            select(ICTAsset)
+            .where(ICTAsset.financial_entity_id == org)
+            .order_by(ICTAsset.name)
+            .limit(limit)
+        ):
+            add(EntityType.ICT_ASSET, row.id)
+
+        for row in self.db.scalars(
+            select(BusinessService)
+            .where(BusinessService.financial_entity_id == org)
+            .order_by(BusinessService.name)
+            .limit(limit)
+        ):
+            add(EntityType.BUSINESS_SERVICE, row.id)
+
+        for row in self.db.scalars(
+            select(ICTProvider)
+            .where(ICTProvider.financial_entity_id == org)
+            .order_by(ICTProvider.legal_name)
+            .limit(limit)
+        ):
+            add(EntityType.ICT_PROVIDER, row.id)
+
+        return anchors[:limit]
 
     def search_entities(self, query: str, limit: int = 20) -> list[GraphNodeDTO]:
         q = f"%{query.strip()}%"

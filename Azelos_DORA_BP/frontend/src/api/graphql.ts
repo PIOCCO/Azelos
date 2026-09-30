@@ -28,6 +28,14 @@ query EntityGraph($entityType: EntityTypeGQL!, $entityId: ID!, $depth: Int!, $vi
   }
 }`;
 
+const ORG_GRAPH_QUERY = `
+query OrganizationGraph($depth: Int!, $maxNodes: Int!, $view: GraphViewGQL) {
+  organizationGraph(depth: $depth, maxNodes: $maxNodes, view: $view) {
+    nodes { id type label metadata }
+    edges { id source target relationship metadata }
+  }
+}`;
+
 const SEARCH_QUERY = `
 query GraphSearch($query: String!, $limit: Int) {
   graphSearch(query: $query, limit: $limit) {
@@ -63,6 +71,34 @@ export async function fetchEntityGraph(params: {
     throw new Error(body.errors[0].message ?? "GraphQL error");
   }
   return body.data.entityGraph;
+}
+
+export async function fetchOrganizationGraph(params: {
+  depth?: number;
+  maxNodes?: number;
+  view?: string;
+}): Promise<EntityGraphResult> {
+  const token = getTokenProvider()();
+  const res = await fetch(`${getApiBase()}/graphql`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({
+      query: ORG_GRAPH_QUERY,
+      variables: {
+        depth: params.depth ?? 1,
+        maxNodes: params.maxNodes ?? 80,
+        view: params.view ?? "ALL",
+      },
+    }),
+  });
+  const body = await res.json();
+  if (body.errors?.length) {
+    throw new Error(body.errors[0].message ?? "GraphQL error");
+  }
+  return body.data.organizationGraph;
 }
 
 export async function graphSearch(query: string, limit = 20): Promise<GraphNode[]> {

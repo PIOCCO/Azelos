@@ -7,7 +7,7 @@ from strawberry.types import Info
 
 from app.domain.graph.types import EntityType as DomainEntityType
 from app.domain.graph.types import GraphView as DomainGraphView
-from app.domain.graph.types import MAX_GRAPH_DEPTH
+from app.domain.graph.types import DEFAULT_OVERVIEW_MAX_NODES, MAX_GRAPH_DEPTH
 from app.graphql.context import GraphQLContext
 from app.core.exceptions import AppError
 from app.services.entity_graph import EntityGraphService
@@ -102,6 +102,32 @@ class Query:
                 UUID(str(entity_id)),
                 depth=depth,
                 view=DomainGraphView(view.value),
+            )
+        except AppError as exc:
+            raise Exception(exc.message) from exc
+        return _to_gql_graph(dto)
+
+    @strawberry.field(
+        description="Organization overview graph without a search query (bounded anchors + depth)."
+    )
+    def organization_graph(
+        self,
+        info: Info[GraphQLContext, None],
+        depth: int = 1,
+        max_nodes: int = DEFAULT_OVERVIEW_MAX_NODES,
+        view: GraphViewGQL = GraphViewGQL.ALL,
+        relationship_types: list[str] | None = None,
+        node_types: list[str] | None = None,
+    ) -> EntityGraph:
+        gctx = _require_auth(info)
+        service = EntityGraphService(gctx.db, gctx.auth.organization_id)
+        try:
+            dto = service.organization_overview_graph(
+                depth=depth,
+                max_nodes=max_nodes,
+                view=DomainGraphView(view.value),
+                relationship_types=relationship_types,
+                node_types=node_types,
             )
         except AppError as exc:
             raise Exception(exc.message) from exc

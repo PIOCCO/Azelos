@@ -10,6 +10,15 @@ Authentication: same JWT as REST (`Authorization: Bearer …` with org in token)
 
 ```graphql
 query {
+  organizationGraph(depth: 1, maxNodes: 80, view: ALL) {
+    nodes { id type label metadata }
+    edges { id source target relationship metadata }
+  }
+}
+```
+
+```graphql
+query {
   entityGraph(
     entityType: BUSINESS_FUNCTION
     entityId: "00000000-0000-0000-0000-000000000000"
