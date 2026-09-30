@@ -1,4 +1,6 @@
-# DORA Supplier Risk Blueprint (`Azelos_DORA_BP`)
+# Cloud Business Resilience Platform / DORA Blueprint (`Azelos_DORA_BP`)
+
+DORA remains a first-class framework; see [docs/CLOUD-RESILIENCE-PLATFORM.md](docs/CLOUD-RESILIENCE-PLATFORM.md) and [docs/CLOUD-RESILIENCE-IMPLEMENTATION-REPORT.md](docs/CLOUD-RESILIENCE-IMPLEMENTATION-REPORT.md).
 
 PostgreSQL source-of-truth for ICT third-party / supplier risk under DORA — **not** the APIO marketplace app in `maisonmaroc/`.
 
