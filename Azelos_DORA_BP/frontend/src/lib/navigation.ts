@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Building2,
   ClipboardCheck,
+  Cloud,
   FileStack,
   FolderKanban,
   HardDrive,
@@ -15,6 +16,10 @@ import {
   ShieldAlert,
   Sliders,
   Wrench,
+  Activity,
+  AlertTriangle,
+  CheckSquare,
+  FileBarChart,
 } from "lucide-react";
 import type { ModuleApplicability } from "../api/types";
 import { moduleAllowsAccess } from "./nav";
@@ -35,14 +40,30 @@ export interface NavSection {
 
 export const NAV_SECTIONS: NavSection[] = [
   {
-    title: "Main",
+    title: "Platform",
     items: [
       { label: "Dashboard", path: "/", icon: LayoutDashboard },
-      { label: "Organization", path: "/onboarding/profile", icon: Building2 },
+      { label: "Business Services", path: "/business-services", icon: Activity },
+      { label: "Cloud Environment", path: "/cloud-environment", icon: Cloud },
+      { label: "Resilience", path: "/resilience", icon: ShieldAlert },
+      { label: "DORA", path: "/dora", icon: Shield },
+      { label: "Findings", path: "/findings", icon: AlertTriangle },
+      { label: "Remediation", path: "/remediation", icon: CheckSquare },
+      { label: "Resilience Evidence", path: "/resilience-evidence", icon: FileStack },
+      { label: "Recovery Tests", path: "/recovery-tests", icon: Activity },
+      { label: "Reports", path: "/reports", icon: FileBarChart },
     ],
   },
   {
-    title: "DORA",
+    title: "Organization",
+    items: [
+      { label: "Organization", path: "/onboarding/profile", icon: Building2 },
+      { label: "Business Functions", path: "/business-functions", icon: Home, moduleKey: "ASSET_MANAGEMENT" },
+      { label: "Applicability", path: "/onboarding/applicability", icon: ClipboardCheck },
+    ],
+  },
+  {
+    title: "DORA modules",
     items: [
       { label: "ICT Risk Management", path: "/risks", icon: ShieldAlert, moduleKey: "ICT_RISK" },
       { label: "ICT Assets", path: "/ict-assets", icon: HardDrive, moduleKey: "ASSET_MANAGEMENT" },
@@ -53,28 +74,16 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Contracts", path: "/contracts", icon: FolderKanban, moduleKey: "THIRD_PARTY_RISK" },
       { label: "Sub-outsourcing", path: "/sub-outsourcing", icon: Layers, moduleKey: "THIRD_PARTY_RISK" },
       { label: "Controls", path: "/controls", icon: Shield, moduleKey: "ICT_RISK" },
+      { label: "Regulatory Requirements", path: "/requirements", icon: ClipboardCheck },
+      { label: "Evidence (uploads)", path: "/evidence", icon: FileStack, moduleKey: "EVIDENCE_MANAGEMENT" },
     ],
   },
   {
-    title: "Organization",
-    items: [
-      { label: "Business Functions", path: "/business-functions", icon: Home, moduleKey: "ASSET_MANAGEMENT" },
-      { label: "Applicability", path: "/onboarding/applicability", icon: ClipboardCheck },
-    ],
-  },
-  {
-    title: "Resilience",
+    title: "Legacy stubs",
     items: [
       { label: "Business Continuity", path: "/business-continuity", icon: Shield, moduleKey: "BUSINESS_CONTINUITY", stub: true },
       { label: "Disaster Recovery", path: "/disaster-recovery", icon: HardDrive, moduleKey: "DISASTER_RECOVERY", stub: true },
-      { label: "Resilience Testing", path: "/resilience-tests", icon: ShieldAlert, moduleKey: "RESILIENCE_TESTING", stub: true },
-    ],
-  },
-  {
-    title: "Compliance",
-    items: [
-      { label: "Regulatory Requirements", path: "/requirements", icon: ClipboardCheck },
-      { label: "Evidence", path: "/evidence", icon: FileStack, moduleKey: "EVIDENCE_MANAGEMENT" },
+      { label: "Resilience Testing (501)", path: "/resilience-tests", icon: ShieldAlert, moduleKey: "RESILIENCE_TESTING", stub: true },
     ],
   },
   {

@@ -24,6 +24,19 @@ from app.models.extensions import ExtensionRegistration
 from app.models.organization_profile import OrganizationProfile
 from app.models.profile_rules import ProfileRule
 from app.models.ict_assets import AssetFunctionMap, ICTAsset, InformationAsset
+from app.models.cloud_resilience import (
+    BusinessService,
+    BusinessServiceDoraLink,
+    CloudAccount,
+    CloudResource,
+    RecoveryTest,
+    RemediationAction,
+    ResilienceAssessment,
+    ResilienceAssessmentControl,
+    ResilienceEvidenceItem,
+    ResilienceFinding,
+    ServiceDependency,
+)
 
 __all__ = [
     "AuditRecord",
@@ -59,4 +72,15 @@ __all__ = [
     "InformationAsset",
     "ICTAsset",
     "AssetFunctionMap",
+    "CloudAccount",
+    "CloudResource",
+    "BusinessService",
+    "ServiceDependency",
+    "ResilienceAssessment",
+    "ResilienceAssessmentControl",
+    "ResilienceFinding",
+    "RemediationAction",
+    "ResilienceEvidenceItem",
+    "RecoveryTest",
+    "BusinessServiceDoraLink",
 ]

@@ -22,6 +22,10 @@ from app.api.v1 import (
     risks,
     stubs,
     sub_outsourcing,
+    cloud_accounts,
+    cloud_resources,
+    business_services,
+    resilience_ops,
 )
 
 api_v1_router = APIRouter()
@@ -46,3 +50,7 @@ api_v1_router.include_router(extensions.router)
 api_v1_router.include_router(regulatory_requirements.router)
 api_v1_router.include_router(database.router)
 api_v1_router.include_router(stubs.router)
+api_v1_router.include_router(cloud_accounts.router)
+api_v1_router.include_router(cloud_resources.router)
+api_v1_router.include_router(business_services.router)
+api_v1_router.include_router(resilience_ops.router)

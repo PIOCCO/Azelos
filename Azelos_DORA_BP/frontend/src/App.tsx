@@ -23,6 +23,12 @@ import type {
   InformationAsset,
   SubOutsourcing,
 } from "./api/types";
+import { BusinessServicesPage } from "./pages/resilience/BusinessServicesPage";
+import { CloudEnvironmentPage } from "./pages/resilience/CloudEnvironmentPage";
+import { DoraHubPage } from "./pages/resilience/DoraHubPage";
+import { ResilienceHubPage } from "./pages/resilience/ResilienceHubPage";
+import { SimpleResilienceListPage } from "./pages/resilience/SimpleResilienceListPage";
+import { ReportsPage } from "./pages/resilience/ReportsPage";
 
 export default function App() {
   return (
@@ -31,6 +37,86 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
+          <Route path="business-services" element={<BusinessServicesPage />} />
+          <Route path="cloud-environment" element={<CloudEnvironmentPage />} />
+          <Route path="resilience" element={<ResilienceHubPage />} />
+          <Route path="dora" element={<DoraHubPage />} />
+          <Route
+            path="findings"
+            element={
+              <SimpleResilienceListPage<{ id: string; title: string; severity: string; status: string }>
+                title="Findings"
+                path="/api/v1/resilience/findings"
+                queryKey="findings"
+                columns={[
+                  { key: "title", header: "Title", render: (r) => r.title },
+                  { key: "severity", header: "Severity", render: (r) => r.severity },
+                  { key: "status", header: "Status", render: (r) => r.status },
+                ]}
+              />
+            }
+          />
+          <Route
+            path="remediation"
+            element={
+              <SimpleResilienceListPage<{
+                id: string;
+                title: string;
+                status: string;
+                owner?: string | null;
+              }>
+                title="Remediation"
+                path="/api/v1/resilience/remediation"
+                queryKey="remediation"
+                columns={[
+                  { key: "title", header: "Action", render: (r) => r.title },
+                  { key: "status", header: "Status", render: (r) => r.status },
+                  { key: "owner", header: "Owner", render: (r) => r.owner ?? "—" },
+                ]}
+              />
+            }
+          />
+          <Route
+            path="resilience-evidence"
+            element={
+              <SimpleResilienceListPage<{
+                id: string;
+                title: string;
+                source_kind: string;
+                provenance: string;
+              }>
+                title="Resilience evidence"
+                path="/api/v1/resilience/evidence"
+                queryKey="resilience-evidence"
+                columns={[
+                  { key: "title", header: "Title", render: (r) => r.title },
+                  { key: "source", header: "Source", render: (r) => r.source_kind },
+                  { key: "prov", header: "Provenance", render: (r) => r.provenance },
+                ]}
+              />
+            }
+          />
+          <Route
+            path="recovery-tests"
+            element={
+              <SimpleResilienceListPage<{
+                id: string;
+                scenario: string;
+                outcome: string;
+                target_rto_minutes?: number | null;
+              }>
+                title="Recovery tests"
+                path="/api/v1/resilience/recovery-tests"
+                queryKey="recovery-tests"
+                columns={[
+                  { key: "scenario", header: "Scenario", render: (r) => r.scenario },
+                  { key: "outcome", header: "Outcome", render: (r) => r.outcome },
+                  { key: "rto", header: "Target RTO", render: (r) => r.target_rto_minutes ?? "—" },
+                ]}
+              />
+            }
+          />
+          <Route path="reports" element={<ReportsPage />} />
           <Route path="onboarding/profile" element={<ProfilePage />} />
           <Route path="onboarding/applicability" element={<ApplicabilityPage />} />
           <Route path="requirements" element={<RequirementsPage />} />

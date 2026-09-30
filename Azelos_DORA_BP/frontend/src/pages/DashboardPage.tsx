@@ -1,6 +1,7 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { fetchPaginated, listOrgRequirements, probeStubEndpoint } from "../api/dora";
+import { getResilienceDashboard } from "../api/resilience";
 import type { BusinessFunction, ICTAsset, Risk, Supplier } from "../api/types";
 import { useOrg } from "../contexts/OrgContext";
 import { Card, KpiCard } from "../components/ui/Card";
@@ -31,6 +32,12 @@ export function DashboardPage() {
     queryFn: () => probeStubEndpoint("/api/v1/incidents?page=1&page_size=1"),
   });
 
+  const resilienceQ = useQuery({
+    queryKey: ["dash-resilience"],
+    queryFn: getResilienceDashboard,
+    enabled: !!organizationId,
+  });
+
   if (orgLoading || counts.some((q) => q.isLoading)) {
     return (
       <div>
@@ -57,15 +64,31 @@ export function DashboardPage() {
       />
 
       <section className="mb-6">
-        <h2 className="text-sm font-semibold text-gray-900">Resilience overview</h2>
-        <p className="text-sm text-gray-500">Metrics from live API totals — no fabricated scores.</p>
+        <h2 className="text-sm font-semibold text-gray-900">Cloud business resilience</h2>
+        <p className="text-sm text-gray-500">Live API metrics — no compliance score or fabricated cloud data.</p>
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <KpiCard label="ICT providers" value={providers} tone="primary" />
+        <KpiCard
+          label="Critical services"
+          value={resilienceQ.data?.critical_business_services ?? "—"}
+          tone="primary"
+        />
+        <KpiCard
+          label="Services with gaps"
+          value={resilienceQ.data?.services_with_gaps ?? "—"}
+          tone="warning"
+        />
+        <KpiCard label="High findings" value={resilienceQ.data?.high_findings ?? "—"} tone="danger" />
+        <KpiCard label="Cloud resources" value={resilienceQ.data?.cloud_resources ?? "—"} />
+        <KpiCard label="Open remediations" value={resilienceQ.data?.open_remediations ?? "—"} />
+      </div>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <KpiCard label="ICT providers" value={providers} />
         <KpiCard label="ICT assets" value={ictAssets} />
         <KpiCard label="Open risks" value={risks} tone="warning" />
-        <KpiCard label="Business functions" value={functions} />
+        <KpiCard label="Business functions (DORA)" value={functions} />
         <KpiCard
           label="Active incidents"
           value={incidentsQ.data?.ok ? "—" : "N/A"}
