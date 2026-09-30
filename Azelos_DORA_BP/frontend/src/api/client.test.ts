@@ -57,6 +57,7 @@ describe("apiRequest", () => {
   });
 
   it("calls unauthorized handler on 401", async () => {
+    vi.useFakeTimers();
     const fn = vi.fn();
     setUnauthorizedHandler(fn);
     vi.stubGlobal(
@@ -69,7 +70,10 @@ describe("apiRequest", () => {
       }),
     );
     await expect(apiRequest("/x")).rejects.toMatchObject({ status: 401 });
+    expect(fn).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(150);
     expect(fn).toHaveBeenCalledOnce();
+    vi.useRealTimers();
   });
 
   it("maps 500 to ApiError without leaking stack", async () => {

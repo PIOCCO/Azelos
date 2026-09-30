@@ -3,39 +3,59 @@ import { Link } from "react-router-dom";
 import { fetchPaginated, listOrgRequirements, probeStubEndpoint } from "../api/dora";
 import { getResilienceDashboard } from "../api/resilience";
 import type { BusinessFunction, ICTAsset, Risk, Supplier } from "../api/types";
+import { useAuth } from "../contexts/AuthContext";
 import { useOrg } from "../contexts/OrgContext";
 import { Card, KpiCard } from "../components/ui/Card";
 import { PageHeader } from "../components/ui/PageHeader";
 import { ErrorState, LoadingSkeleton } from "../components/ui/States";
 
 export function DashboardPage() {
+  const { session } = useAuth();
   const { organizationId, organizationName, applicability, isLoading: orgLoading } = useOrg();
   const firstName = organizationName?.split(" ")[0] ?? "there";
+  const apiReady = !!session?.token;
 
   const counts = useQueries({
     queries: [
-      { queryKey: ["dash", "providers"], queryFn: () => fetchPaginated<Supplier>("/api/v1/ict-providers", 1, 1) },
-      { queryKey: ["dash", "risks"], queryFn: () => fetchPaginated<Risk>("/api/v1/risks", 1, 1) },
-      { queryKey: ["dash", "ict"], queryFn: () => fetchPaginated<ICTAsset>("/api/v1/ict-assets", 1, 1) },
-      { queryKey: ["dash", "functions"], queryFn: () => fetchPaginated<BusinessFunction>("/api/v1/business-functions", 1, 1) },
+      {
+        queryKey: ["dash", "providers"],
+        queryFn: () => fetchPaginated<Supplier>("/api/v1/ict-providers", 1, 1),
+        enabled: apiReady,
+      },
+      {
+        queryKey: ["dash", "risks"],
+        queryFn: () => fetchPaginated<Risk>("/api/v1/risks", 1, 1),
+        enabled: apiReady,
+      },
+      {
+        queryKey: ["dash", "ict"],
+        queryFn: () => fetchPaginated<ICTAsset>("/api/v1/ict-assets", 1, 1),
+        enabled: apiReady,
+      },
+      {
+        queryKey: ["dash", "functions"],
+        queryFn: () => fetchPaginated<BusinessFunction>("/api/v1/business-functions", 1, 1),
+        enabled: apiReady,
+      },
     ],
   });
 
   const requirementsQ = useQuery({
     queryKey: ["dash-reqs"],
     queryFn: () => listOrgRequirements(organizationId!),
-    enabled: !!organizationId,
+    enabled: apiReady && !!organizationId,
   });
 
   const incidentsQ = useQuery({
     queryKey: ["dash-incidents-probe"],
     queryFn: () => probeStubEndpoint("/api/v1/incidents?page=1&page_size=1"),
+    enabled: apiReady,
   });
 
   const resilienceQ = useQuery({
     queryKey: ["dash-resilience"],
     queryFn: getResilienceDashboard,
-    enabled: !!organizationId,
+    enabled: apiReady && !!organizationId,
   });
 
   if (orgLoading || counts.some((q) => q.isLoading)) {

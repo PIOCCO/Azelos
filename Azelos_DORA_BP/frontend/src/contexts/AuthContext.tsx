@@ -2,8 +2,8 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -39,17 +39,29 @@ function loadSession(): Session | null {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(() => loadSession());
+  const sessionRef = useRef<Session | null>(null);
 
-  useEffect(() => {
-    setTokenProvider(() => session?.token ?? null);
-  }, [session]);
-
-  const persist = useCallback((s: Session | null) => {
-    setSession(s);
-    if (s) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-    else sessionStorage.removeItem(STORAGE_KEY);
+  const syncToken = useCallback((s: Session | null) => {
+    sessionRef.current = s;
+    setTokenProvider(() => sessionRef.current?.token ?? null);
   }, []);
+
+  const [session, setSession] = useState<Session | null>(() => {
+    const s = loadSession();
+    sessionRef.current = s;
+    setTokenProvider(() => sessionRef.current?.token ?? null);
+    return s;
+  });
+
+  const persist = useCallback(
+    (s: Session | null) => {
+      syncToken(s);
+      setSession(s);
+      if (s) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+      else sessionStorage.removeItem(STORAGE_KEY);
+    },
+    [syncToken],
+  );
 
   const login = useCallback(
     async (email: string, password: string) => {
