@@ -1,4 +1,5 @@
-import { Bell, ChevronDown, HelpCircle, LogOut, Search } from "lucide-react";
+import { Bell, ChevronDown, HelpCircle, LogOut } from "lucide-react";
+import { GlobalSearchBar } from "./GlobalSearchBar";
 import { useAuth } from "../../contexts/AuthContext";
 import { useOrg } from "../../contexts/OrgContext";
 import { useState } from "react";
@@ -24,20 +25,8 @@ export function TopBar() {
           <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
         </button>
       </div>
-      <div className="hidden flex-1 md:block">
-        <label className="relative block max-w-xl mx-auto">
-          <span className="sr-only">Search</span>
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-            aria-hidden
-          />
-          <input
-            type="search"
-            disabled
-            placeholder="Search assets, risks, providers… (API not available)"
-            className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-3 text-sm text-gray-500"
-          />
-        </label>
+      <div className="min-w-0 flex-1 max-md:absolute max-md:left-14 max-md:right-4 max-md:top-16 max-md:z-20 md:relative md:top-auto">
+        <GlobalSearchBar />
       </div>
       <div className="ml-auto flex items-center gap-2">
         <button

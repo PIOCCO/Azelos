@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Background,
   Controls,
@@ -15,6 +16,8 @@ import {
   GQL_ENTITY_TYPES,
   detailPathForNode,
   fetchEntityGraph,
+  graphNodeEntityUuid,
+  graphNodeToEntityTypeGql,
   graphSearch,
   type GraphNode,
 } from "../../api/graphql";
@@ -77,7 +80,15 @@ function layoutNodes(nodes: GraphNode[], edges: { source: string; target: string
   return result;
 }
 
+type MapLocationState = {
+  gqlType?: string;
+  entityId?: string;
+  label?: string;
+  autoLoad?: boolean;
+};
+
 export function RelationshipMapPage() {
+  const location = useLocation();
   const [search, setSearch] = useState("");
   const [depth, setDepth] = useState(2);
   const [view, setView] = useState<"ALL" | "RISK" | "RESILIENCE">("ALL");
@@ -91,10 +102,10 @@ export function RelationshipMapPage() {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
   const loadGraph = useMutation({
-    mutationFn: () =>
+    mutationFn: (override?: { entityType: string; entityId: string }) =>
       fetchEntityGraph({
-        entityType,
-        entityId,
+        entityType: override?.entityType ?? entityType,
+        entityId: override?.entityId ?? entityId,
         depth,
         view,
       }),
@@ -128,14 +139,29 @@ export function RelationshipMapPage() {
     [],
   );
 
-  const onPickSearchResult = useCallback((n: GraphNode) => {
-    const enumVal =
-      GQL_ENTITY_TYPES.find((t) => n.type.includes(t.label.split(" ")[0]!))?.value ??
-      (n.type === "BusinessFunction" ? "BUSINESS_FUNCTION" : "ICT_ASSET");
-    setEntityType(enumVal);
-    setEntityId(n.id.split(":")[1] ?? n.id);
-    setSearch(n.label);
-  }, []);
+  const onPickSearchResult = useCallback(
+    (n: GraphNode, load = true) => {
+      const enumVal = graphNodeToEntityTypeGql(n.type);
+      const id = graphNodeEntityUuid(n);
+      setEntityType(enumVal);
+      setEntityId(id);
+      setSearch(n.label);
+      if (load) loadGraph.mutate({ entityType: enumVal, entityId: id });
+    },
+    [loadGraph],
+  );
+
+  useEffect(() => {
+    const st = location.state as MapLocationState | null;
+    if (!st?.entityId || !st.gqlType) return;
+    setEntityType(st.gqlType);
+    setEntityId(st.entityId);
+    if (st.label) setSearch(st.label);
+    if (st.autoLoad) {
+      loadGraph.mutate({ entityType: st.gqlType, entityId: st.entityId });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once when arriving from global search
+  }, [location.state]);
 
   const detailPath = selected ? detailPathForNode(selected) : null;
 
@@ -153,6 +179,9 @@ export function RelationshipMapPage() {
             className="ml-2 rounded border px-2 py-1"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && search.length >= 2) searchMut.mutate();
+            }}
             placeholder="Payment API, provider…"
           />
         </label>
@@ -167,7 +196,7 @@ export function RelationshipMapPage() {
           <ul className="max-h-24 overflow-auto text-sm">
             {searchMut.data.map((n) => (
               <li key={n.id}>
-                <button type="button" className="text-primary hover:underline" onClick={() => onPickSearchResult(n)}>
+                <button type="button" className="text-primary hover:underline" onClick={() => onPickSearchResult(n, true)}>
                   {n.type}: {n.label}
                 </button>
               </li>
@@ -226,7 +255,11 @@ export function RelationshipMapPage() {
           Filter relationship
           <input className="ml-2 rounded border px-2 py-1" value={relFilter} onChange={(e) => setRelFilter(e.target.value)} placeholder="SUPPORTS" />
         </label>
-        <Button type="button" onClick={() => loadGraph.mutate()} disabled={!entityId || loadGraph.isPending}>
+        <Button
+          type="button"
+          onClick={() => loadGraph.mutate()}
+          disabled={!entityId || loadGraph.isPending}
+        >
           Load graph
         </Button>
       </div>

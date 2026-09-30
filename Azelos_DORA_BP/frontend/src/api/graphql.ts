@@ -107,6 +107,26 @@ export function detailPathForNode(node: GraphNode): string | null {
   }
 }
 
+/** Map GraphQL node.type string to EntityTypeGQL variable value. */
+export function graphNodeToEntityTypeGql(nodeType: string): string {
+  const map: Record<string, string> = {
+    BusinessFunction: "BUSINESS_FUNCTION",
+    InformationAsset: "INFORMATION_ASSET",
+    ICTAsset: "ICT_ASSET",
+    ICTService: "ICT_SERVICE",
+    ICTProvider: "ICT_PROVIDER",
+    Contract: "CONTRACT",
+    RiskAssessment: "RISK_ASSESSMENT",
+    BusinessService: "BUSINESS_SERVICE",
+    ResilienceFinding: "RESILIENCE_FINDING",
+  };
+  return map[nodeType] ?? "ICT_ASSET";
+}
+
+export function graphNodeEntityUuid(node: GraphNode): string {
+  return node.id.includes(":") ? node.id.split(":")[1]! : node.id;
+}
+
 export const GQL_ENTITY_TYPES = [
   { value: "BUSINESS_FUNCTION", label: "Business function" },
   { value: "ICT_ASSET", label: "ICT asset" },
