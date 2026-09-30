@@ -37,6 +37,60 @@ def risk_lifecycle_columns_present(db: Session) -> bool:
     return required.issubset(cols)
 
 
+def repair_risk_lifecycle_columns(db: Session) -> bool:
+    """Idempotent SQL repair when Alembic 009 did not run (adds missing columns)."""
+    if risk_lifecycle_columns_present(db):
+        return True
+    bind = db.get_bind()
+    stmts = [
+        """
+        DO $$ BEGIN
+            CREATE TYPE risk_lifecycle_status AS ENUM (
+                'identification', 'assessment', 'treatment', 'monitoring',
+                'accepted', 'mitigated', 'review'
+            );
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$;
+        """,
+        "ALTER TABLE risk_assessments ADD COLUMN IF NOT EXISTS title VARCHAR(512)",
+        "ALTER TABLE risk_assessments ADD COLUMN IF NOT EXISTS owner VARCHAR(256)",
+        "ALTER TABLE risk_assessments ADD COLUMN IF NOT EXISTS treatment_plan TEXT",
+        "ALTER TABLE risk_assessments ADD COLUMN IF NOT EXISTS due_date DATE",
+        """
+        ALTER TABLE risk_assessments
+        ADD COLUMN IF NOT EXISTS likelihood risk_dimension_level
+        """,
+        """
+        ALTER TABLE risk_assessments
+        ADD COLUMN IF NOT EXISTS impact risk_dimension_level
+        """,
+        """
+        ALTER TABLE risk_assessments
+        ADD COLUMN IF NOT EXISTS inherent_risk_level risk_level
+        """,
+        """
+        ALTER TABLE risk_assessments
+        ADD COLUMN IF NOT EXISTS residual_risk_level risk_level
+        """,
+        """
+        ALTER TABLE risk_assessments
+        ADD COLUMN IF NOT EXISTS lifecycle_status risk_lifecycle_status
+        NOT NULL DEFAULT 'assessment'
+        """,
+        """
+        ALTER TABLE risk_assessments
+        ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ
+        """,
+    ]
+    try:
+        with bind.begin() as conn:
+            for stmt in stmts:
+                conn.execute(text(stmt))
+    except Exception:
+        return False
+    return risk_lifecycle_columns_present(db)
+
+
 def schema_migration_status(db: Session) -> dict:
     head = alembic_head_revision()
     current = current_db_revision(db)

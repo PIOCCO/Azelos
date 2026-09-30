@@ -42,6 +42,23 @@ def _maybe_auto_migrate_schema() -> None:
     elif result.stdout.strip():
         log.info("Database migrations applied:\n%s", result.stdout.strip())
 
+    if os.getenv("REPAIR_RISK_SCHEMA", "1").strip().lower() not in ("0", "false", "no", "off"):
+        try:
+            from app.core.database import SessionLocal
+            from app.core.schema_health import repair_risk_lifecycle_columns, risk_lifecycle_columns_present
+
+            with SessionLocal() as session:
+                if not risk_lifecycle_columns_present(session):
+                    log.warning("Risk lifecycle columns missing — attempting idempotent repair…")
+                    if repair_risk_lifecycle_columns(session):
+                        log.info("Risk lifecycle columns repaired successfully.")
+                    else:
+                        log.error(
+                            "Could not repair schema. Run: cd backend && python -m alembic upgrade head"
+                        )
+        except Exception:
+            log.exception("Schema repair check failed")
+
 
 def create_app() -> FastAPI:
     load_dotenv(Path(__file__).resolve().parents[1] / ".env")

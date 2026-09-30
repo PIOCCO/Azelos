@@ -24,6 +24,7 @@ from app.models.ict_assets import AssetFunctionMap, ICTAsset, InformationAsset
 from app.models.provider import ICTProvider
 from app.models.enums_operational import IncidentLinkKind
 from app.models.operational import ICTIncident, IncidentEntityLink
+from app.repositories.risk_assessment_read import RiskAssessmentReader, RiskGraphSlice
 from app.models.risk import RiskAssessment
 from app.models.service import ICTService
 from app.models.subcontractor import Subcontractor
@@ -33,6 +34,7 @@ class EntityGraphRepository:
     def __init__(self, db: Session, organization_id: UUID) -> None:
         self.db = db
         self.organization_id = organization_id
+        self._risks = RiskAssessmentReader(db)
 
     def list_graph_anchors(self, limit: int = 6) -> list[tuple[EntityType, UUID]]:
         """Seed entities for org overview graph (critical functions first)."""
@@ -178,7 +180,7 @@ class EntityGraphRepository:
             if row and row.financial_entity_id == org:
                 return self._contract_node(row)
         elif entity_type == EntityType.RISK_ASSESSMENT:
-            row = self.db.get(RiskAssessment, entity_id)
+            row = self._risks.get(entity_id)
             if row and row.financial_entity_id == org:
                 return self._risk_node(row)
         elif entity_type == EntityType.BUSINESS_SERVICE:
@@ -349,12 +351,7 @@ class EntityGraphRepository:
                     )
                 )
             if view in ("ALL", "RISK"):
-                for risk in self.db.scalars(
-                    select(RiskAssessment).where(
-                        RiskAssessment.financial_entity_id == org,
-                        RiskAssessment.service_id == svc.id,
-                    )
-                ):
+                for risk in self._risks.list_for_service(org, svc.id):
                     tid = node_key(EntityType.RISK_ASSESSMENT, str(risk.id))
                     nodes.append(self._risk_node(risk))
                     edges.append(
@@ -403,12 +400,7 @@ class EntityGraphRepository:
                     )
                 )
             if view in ("ALL", "RISK"):
-                for risk in self.db.scalars(
-                    select(RiskAssessment).where(
-                        RiskAssessment.financial_entity_id == org,
-                        RiskAssessment.contract_id == contract.id,
-                    )
-                ):
+                for risk in self._risks.list_for_contract(org, contract.id):
                     tid = node_key(EntityType.RISK_ASSESSMENT, str(risk.id))
                     nodes.append(self._risk_node(risk))
                     edges.append(
@@ -512,7 +504,7 @@ class EntityGraphRepository:
                 )
 
         elif entity_type == EntityType.RISK_ASSESSMENT:
-            risk = self.db.get(RiskAssessment, entity_id)
+            risk = self._risks.get(entity_id)
             if not risk or risk.financial_entity_id != org:
                 return [], []
             center = node_key(EntityType.RISK_ASSESSMENT, str(risk.id))
@@ -748,7 +740,7 @@ class EntityGraphRepository:
             metadata={"status": row.status.value, "contract_type": row.contract_type.value},
         )
 
-    def _risk_node(self, row: RiskAssessment) -> GraphNodeDTO:
+    def _risk_node(self, row: RiskAssessment | RiskGraphSlice) -> GraphNodeDTO:
         return GraphNodeDTO(
             id=node_key(EntityType.RISK_ASSESSMENT, str(row.id)),
             type=EntityType.RISK_ASSESSMENT.value,

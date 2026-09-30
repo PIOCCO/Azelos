@@ -43,6 +43,22 @@ query GraphSearch($query: String!, $limit: Int) {
   }
 }`;
 
+/** Short, actionable message when the API DB schema is behind the app (migration 009). */
+export function formatGraphQLError(message: string | undefined): string {
+  const raw = message ?? "GraphQL error";
+  if (
+    raw.includes("risk_assessments.title") ||
+    raw.includes("UndefinedColumn") ||
+    raw.includes("risk_lifecycle")
+  ) {
+    return (
+      "Database schema is out of date (missing risk assessment columns). " +
+      "Restart the API after running: cd backend && python -m alembic upgrade head"
+    );
+  }
+  return raw;
+}
+
 export async function fetchEntityGraph(params: {
   entityType: string;
   entityId: string;
@@ -68,7 +84,7 @@ export async function fetchEntityGraph(params: {
   });
   const body = await res.json();
   if (body.errors?.length) {
-    throw new Error(body.errors[0].message ?? "GraphQL error");
+    throw new Error(formatGraphQLError(body.errors[0].message));
   }
   return body.data.entityGraph;
 }
@@ -96,7 +112,7 @@ export async function fetchOrganizationGraph(params: {
   });
   const body = await res.json();
   if (body.errors?.length) {
-    throw new Error(body.errors[0].message ?? "GraphQL error");
+    throw new Error(formatGraphQLError(body.errors[0].message));
   }
   return body.data.organizationGraph;
 }
@@ -113,7 +129,7 @@ export async function graphSearch(query: string, limit = 20): Promise<GraphNode[
   });
   const body = await res.json();
   if (body.errors?.length) {
-    throw new Error(body.errors[0].message ?? "GraphQL error");
+    throw new Error(formatGraphQLError(body.errors[0].message));
   }
   return body.data.graphSearch;
 }

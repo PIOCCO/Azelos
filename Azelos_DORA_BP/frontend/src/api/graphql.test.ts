@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { detailPathForNode } from "./graphql";
+import { detailPathForNode, formatGraphQLError } from "./graphql";
+
+describe("formatGraphQLError", () => {
+  it("explains missing risk_assessments.title schema drift", () => {
+    const msg = formatGraphQLError("(psycopg.errors.UndefinedColumn) column risk_assessments.title");
+    expect(msg).toContain("alembic upgrade head");
+  });
+});
 
 describe("detailPathForNode", () => {
   it("maps risk assessments to detail route", () => {
