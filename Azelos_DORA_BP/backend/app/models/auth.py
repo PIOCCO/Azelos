@@ -20,7 +20,8 @@ class User(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     email: Mapped[str] = mapped_column(String(320), unique=True, nullable=False)
-    hashed_password: Mapped[str] = mapped_column(String(256), nullable=False)
+    hashed_password: Mapped[str | None] = mapped_column(String(256))
+    external_subject: Mapped[str | None] = mapped_column(String(256), unique=True)
     full_name: Mapped[str | None] = mapped_column(String(256))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(

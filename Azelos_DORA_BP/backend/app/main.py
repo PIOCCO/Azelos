@@ -17,7 +17,10 @@ from app.core.config import get_settings
 from app.core.database import check_database_connectivity, get_db
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import RequestLoggingMiddleware
+from app.core.production_validation import validate_production_settings
+from app.core.rate_limit import RateLimitMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
+from app.core.subscription_gate import SubscriptionGateMiddleware
 
 
 def _maybe_auto_migrate_schema() -> None:
@@ -42,7 +45,14 @@ def _maybe_auto_migrate_schema() -> None:
     elif result.stdout.strip():
         log.info("Database migrations applied:\n%s", result.stdout.strip())
 
-    if os.getenv("REPAIR_RISK_SCHEMA", "1").strip().lower() not in ("0", "false", "no", "off"):
+    settings_peek = get_settings()
+    repair_default = "0" if settings_peek.app_env.lower() == "production" else "1"
+    if os.getenv("REPAIR_RISK_SCHEMA", repair_default).strip().lower() not in (
+        "0",
+        "false",
+        "no",
+        "off",
+    ):
         try:
             from app.core.database import SessionLocal
             from app.core.schema_health import repair_risk_lifecycle_columns, risk_lifecycle_columns_present
@@ -62,14 +72,19 @@ def _maybe_auto_migrate_schema() -> None:
 
 def create_app() -> FastAPI:
     load_dotenv(Path(__file__).resolve().parents[1] / ".env")
-    _maybe_auto_migrate_schema()
     settings = get_settings()
+    if os.getenv("AUTO_MIGRATE_DB") is None and settings.app_env.lower() == "production":
+        os.environ["AUTO_MIGRATE_DB"] = "0"
+    _maybe_auto_migrate_schema()
+    validate_production_settings(settings)
     app = FastAPI(
         title=settings.app_name,
         version="1.0.0",
         description="DORA Blueprint — core + configuration API over PostgreSQL",
     )
     register_exception_handlers(app)
+    app.add_middleware(SubscriptionGateMiddleware)
+    app.add_middleware(RateLimitMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestLoggingMiddleware)
     origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]

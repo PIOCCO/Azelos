@@ -64,6 +64,100 @@ export function listOrgRequirements(orgId: string) {
   );
 }
 
+export function patchOrgRequirement(
+  orgId: string,
+  orgRequirementId: string,
+  data: Partial<Pick<OrganizationRequirement, "applicable" | "implementation_status" | "owner" | "notes">>,
+) {
+  return apiRequest<OrganizationRequirement>(
+    `/api/v1/organizations/${orgId}/requirements/${orgRequirementId}`,
+    { method: "PATCH", body: JSON.stringify(data) },
+  );
+}
+
+export function linkEvidenceToRequirement(evidenceId: string, organizationRequirementId: string) {
+  return apiRequest<{ id: string }>("/api/v1/evidence-links/requirements", {
+    method: "POST",
+    body: JSON.stringify({ evidence_id: evidenceId, organization_requirement_id: organizationRequirementId }),
+  });
+}
+
+export function linkFunctionService(businessFunctionId: string, ictServiceId: string) {
+  return apiRequest<{ id: string; function_id: string; service_id: string }>(
+    "/api/v1/dependencies/function-service",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        business_function_id: businessFunctionId,
+        ict_service_id: ictServiceId,
+      }),
+    },
+  );
+}
+
+export function patchContractControl(
+  controlId: string,
+  data: { compliance_status: string; notes?: string },
+) {
+  return apiRequest<{ id: string; compliance_status: string }>(
+    `/api/v1/controls/contract-controls/${controlId}`,
+    { method: "PATCH", body: JSON.stringify(data) },
+  );
+}
+
+export function inviteMember(email: string, role: string) {
+  return apiRequest<{ invitation_id: string; invite_token: string }>(
+    "/api/v1/memberships/invitations",
+    { method: "POST", body: JSON.stringify({ email, role }) },
+  );
+}
+
+export function listBia() {
+  return apiRequest<
+    {
+      id: string;
+      business_function_id: string;
+      rto_hours: number | null;
+      rpo_hours: number | null;
+      impact_summary: string | null;
+    }[]
+  >("/api/v1/bia");
+}
+
+export function createBia(body: {
+  business_function_id: string;
+  rto_hours?: number;
+  rpo_hours?: number;
+  impact_summary?: string;
+}) {
+  return apiRequest<unknown>("/api/v1/bia", { method: "POST", body: JSON.stringify(body) });
+}
+
+export async function uploadEvidenceFile(
+  file: File,
+  documentTypeId: string,
+  providerId?: string,
+  contractId?: string,
+) {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("document_type_id", documentTypeId);
+  if (providerId) form.append("provider_id", providerId);
+  if (contractId) form.append("contract_id", contractId);
+  const token = (await import("./client")).getTokenProvider()();
+  const base = (await import("./client")).getApiBase();
+  const res = await fetch(`${base}/api/v1/evidence/upload`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Upload failed");
+  }
+  return res.json() as Promise<Evidence>;
+}
+
 export function fetchPaginated<T>(path: string, page = 1, pageSize = 20) {
   const q = `?page=${page}&page_size=${pageSize}`;
   return apiRequest<Paginated<T>>(`${path}${q}`);

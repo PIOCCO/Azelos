@@ -1,6 +1,6 @@
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class RegulatoryRequirementOut(BaseModel):
@@ -21,3 +21,10 @@ class OrganizationRequirementDetailOut(BaseModel):
     implementation_status: str
     owner: str | None
     notes: str | None
+
+
+class OrganizationRequirementUpdate(BaseModel):
+    applicable: bool | None = None
+    implementation_status: str | None = Field(default=None, max_length=64)
+    owner: str | None = Field(default=None, max_length=256)
+    notes: str | None = None

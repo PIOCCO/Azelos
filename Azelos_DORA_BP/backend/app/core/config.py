@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     cors_origins: str = "*"
     graphql_introspection_enabled: bool = True
     expose_error_details: bool = False
+    oidc_enabled: bool = False
+    oidc_issuer_url: str = ""
+    oidc_client_id: str = ""
+    oidc_client_secret: str = ""
+    allow_tenant_self_signup: bool = False
 
 
 @lru_cache

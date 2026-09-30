@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { listOrgRequirements, listRegulatoryRequirements } from "../api/dora";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { listOrgRequirements, listRegulatoryRequirements, patchOrgRequirement } from "../api/dora";
 import { useOrg } from "../contexts/OrgContext";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Card } from "../components/ui/Card";
@@ -8,6 +8,12 @@ import { StatusBadge } from "../components/ui/Badge";
 
 export function RequirementsPage() {
   const { organizationId } = useOrg();
+  const qc = useQueryClient();
+  const patchM = useMutation({
+    mutationFn: (args: { id: string; status: string }) =>
+      patchOrgRequirement(organizationId!, args.id, { implementation_status: args.status }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["org-requirements", organizationId] }),
+  });
   const baseline = useQuery({
     queryKey: ["regulatory-baseline"],
     queryFn: listRegulatoryRequirements,
@@ -61,7 +67,18 @@ export function RequirementsPage() {
                       <span className="font-mono text-xs text-gray-500">{r.code}</span>
                       <div className="font-medium">{r.title}</div>
                     </td>
-                    <td className="py-3">{r.implementation_status}</td>
+                    <td className="py-3">
+                      <select
+                        className="rounded border px-1 py-0.5 text-sm"
+                        value={r.implementation_status}
+                        onChange={(e) => patchM.mutate({ id: r.id, status: e.target.value })}
+                      >
+                        <option value="not_started">Not started</option>
+                        <option value="in_progress">In progress</option>
+                        <option value="implemented">Implemented</option>
+                        <option value="not_applicable">Not applicable</option>
+                      </select>
+                    </td>
                     <td className="py-3">
                       <StatusBadge tone={r.applicable ? "success" : "neutral"}>
                         {r.applicable ? "Yes" : "No"}

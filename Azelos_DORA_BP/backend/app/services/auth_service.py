@@ -15,7 +15,9 @@ class AuthService:
 
     def login(self, email: str, password: str, organization_id: UUID | None) -> tuple[str, UUID, Role]:
         user = self.db.scalar(select(User).where(User.email == email))
-        if user is None or not verify_password(password, user.hashed_password):
+        if user is None or not user.hashed_password:
+            raise AppError("INVALID_CREDENTIALS", "Invalid email or password", 401)
+        if not verify_password(password, user.hashed_password):
             raise AppError("INVALID_CREDENTIALS", "Invalid email or password", 401)
         memberships = self.db.scalars(
             select(OrganizationMembership).where(OrganizationMembership.user_id == user.id)

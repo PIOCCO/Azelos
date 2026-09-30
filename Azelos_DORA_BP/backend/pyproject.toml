@@ -22,6 +22,7 @@ dependencies = [
 azure = [
     "azure-identity>=1.19,<2",
     "azure-mgmt-resource>=23.0,<24",
+    "azure-storage-blob>=12.23,<13",
 ]
 dev = [
     "pytest>=8.0,<9",

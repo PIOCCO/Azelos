@@ -1,7 +1,9 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, Text
+from datetime import datetime
+
+from sqlalchemy import DateTime, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -30,6 +32,7 @@ class FinancialEntity(Base, TimestampMixin):
     lei: Mapped[str | None] = mapped_column(String(20))
     country_code: Mapped[str] = mapped_column(String(2), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
+    onboarding_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     providers: Mapped[list["ICTProvider"]] = relationship(
         back_populates="financial_entity", cascade="all, delete-orphan"

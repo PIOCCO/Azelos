@@ -16,6 +16,7 @@ from app.repositories.evidence import EvidenceRepository
 from app.schemas.common import PaginatedResponse
 from app.schemas.evidence import EvidenceOut
 from app.services.platform_audit import record_platform_audit
+from app.core.upload_policy import validate_upload_content_type, validate_upload_filename
 from app.storage.factory import get_evidence_storage
 
 router = APIRouter(prefix="/evidence", tags=["Evidence"])
@@ -62,6 +63,8 @@ async def upload_evidence(
 ):
     if not file.filename:
         raise AppError("VALIDATION", "Filename required", 400)
+    validate_upload_filename(file.filename)
+    validate_upload_content_type(file.content_type)
     content = await file.read()
     if len(content) > 25 * 1024 * 1024:
         raise AppError("VALIDATION", "File exceeds 25MB limit", 400)

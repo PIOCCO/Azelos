@@ -33,6 +33,9 @@ import { RelationshipMapPage } from "./pages/dora/RelationshipMapPage";
 import { ResilienceHubPage } from "./pages/resilience/ResilienceHubPage";
 import { SimpleResilienceListPage } from "./pages/resilience/SimpleResilienceListPage";
 import { ReportsPage } from "./pages/resilience/ReportsPage";
+import { EvidencePage } from "./pages/entity/EvidencePage";
+import { BiaPage } from "./pages/entity/BiaPage";
+import { MembersPage } from "./pages/admin/MembersPage";
 
 export default function App() {
   return (
@@ -196,22 +199,8 @@ export default function App() {
           <Route path="risks" element={<RisksPage />} />
           <Route path="risks/:riskId" element={<RiskDetailPage />} />
           <Route path="controls" element={<ControlsPage />} />
-          <Route
-            path="evidence"
-            element={
-              <SimpleListPage<Evidence>
-                title="Evidence"
-                path="/api/v1/evidence"
-                queryKey="evidence"
-                moduleItem={{ label: "Evidence", moduleKey: "EVIDENCE_MANAGEMENT" }}
-                columns={[
-                  { key: "file", header: "File", render: (r) => r.file_name },
-                  { key: "storage", header: "Storage", render: (r) => r.storage_provider },
-                  { key: "at", header: "Uploaded", render: (r) => new Date(r.uploaded_at).toLocaleString() },
-                ]}
-              />
-            }
-          />
+          <Route path="evidence" element={<EvidencePage />} />
+          <Route path="bia" element={<BiaPage />} />
           <Route path="incidents" element={<IncidentsPage />} />
           <Route path="incidents/:incidentId" element={<IncidentDetailPage />} />
           <Route
@@ -278,6 +267,7 @@ export default function App() {
               />
             }
           />
+          <Route path="admin/members" element={<MembersPage />} />
           <Route path="audit-log" element={<AuditLogPage />} />
           <Route path="configuration/modules" element={<ModulesConfigPage />} />
           <Route path="configuration/custom-fields" element={<CustomFieldsPage />} />

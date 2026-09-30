@@ -30,6 +30,12 @@ from app.api.v1 import (
     incidents,
     operational_modules,
     audit_records,
+    tenant_provisioning,
+    memberships,
+    evidence_links,
+    bia,
+    dependencies,
+    tenant_data,
 )
 
 api_v1_router = APIRouter()
@@ -62,3 +68,9 @@ api_v1_router.include_router(dora_overview.router)
 api_v1_router.include_router(incidents.router)
 api_v1_router.include_router(operational_modules.router)
 api_v1_router.include_router(audit_records.router)
+api_v1_router.include_router(tenant_provisioning.router)
+api_v1_router.include_router(memberships.router)
+api_v1_router.include_router(evidence_links.router)
+api_v1_router.include_router(bia.router)
+api_v1_router.include_router(dependencies.router)
+api_v1_router.include_router(tenant_data.router)

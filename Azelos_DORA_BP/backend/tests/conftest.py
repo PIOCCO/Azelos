@@ -4,6 +4,8 @@ import os
 os.environ.setdefault("DISABLE_FRONTEND_STATIC", "1")
 
 import pytest
+
+os.environ.setdefault("DISABLE_RATE_LIMIT", "1")
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, text

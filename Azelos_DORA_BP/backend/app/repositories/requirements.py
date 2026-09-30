@@ -27,3 +27,14 @@ class RequirementRepository:
                 .options(selectinload(OrganizationRequirement.requirement))
             ).all()
         )
+
+    def get_organization_requirement(self, org_requirement_id: UUID) -> OrganizationRequirement | None:
+        assert self.organization_id is not None
+        return self.db.scalar(
+            select(OrganizationRequirement)
+            .where(
+                OrganizationRequirement.id == org_requirement_id,
+                OrganizationRequirement.financial_entity_id == self.organization_id,
+            )
+            .options(selectinload(OrganizationRequirement.requirement))
+        )
