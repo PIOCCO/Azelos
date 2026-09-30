@@ -9,7 +9,7 @@ export function setUnauthorizedHandler(fn: () => void) {
 export function notifyUnauthorized() {
   if (!onUnauthorized || logoutScheduled) return;
   logoutScheduled = true;
-  window.setTimeout(() => {
+  globalThis.setTimeout(() => {
     logoutScheduled = false;
     onUnauthorized?.();
   }, 100);
