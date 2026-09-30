@@ -12,9 +12,11 @@ COPY backend/pyproject.toml ./
 COPY backend/app ./app
 COPY backend/alembic ./alembic
 COPY backend/alembic.ini ./
-RUN pip install --no-cache-dir ".[dev]"
+COPY backend/scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
+RUN pip install --no-cache-dir ".[dev]" && chmod +x ./scripts/docker-entrypoint.sh
 COPY --from=frontend-build /fe/dist /app/frontend/dist
 ENV PYTHONUNBUFFERED=1
 ENV SERVE_FRONTEND=1
 EXPOSE 8000
+ENTRYPOINT ["./scripts/docker-entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

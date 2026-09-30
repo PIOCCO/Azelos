@@ -1,23 +1,51 @@
+import logging
 import os
+import subprocess
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
+from sqlalchemy.orm import Session
 from app.api.routes.config import router as legacy_config_router
 from app.core.spa_fallback import register_spa_routes
 from app.api.v1.router import api_v1_router
 from app.graphql.router import create_graphql_router
 from app.core.config import get_settings
-from app.core.database import check_database_connectivity
+from app.core.database import check_database_connectivity, get_db
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import RequestLoggingMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
 
 
+def _maybe_auto_migrate_schema() -> None:
+    """Apply pending Alembic revisions when AUTO_MIGRATE_DB is enabled (default on)."""
+    flag = os.getenv("AUTO_MIGRATE_DB", "1").strip().lower()
+    if flag in ("0", "false", "no", "off"):
+        return
+    backend_dir = Path(__file__).resolve().parents[1]
+    log = logging.getLogger("app.main")
+    log.info("Checking for pending database migrations…")
+    result = subprocess.run(
+        [sys.executable, "-m", "alembic", "upgrade", "head"],
+        cwd=backend_dir,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        log.error(
+            "Alembic upgrade failed (run manually: cd backend && python -m alembic upgrade head):\n%s",
+            result.stderr or result.stdout,
+        )
+    elif result.stdout.strip():
+        log.info("Database migrations applied:\n%s", result.stdout.strip())
+
+
 def create_app() -> FastAPI:
     load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+    _maybe_auto_migrate_schema()
     settings = get_settings()
     app = FastAPI(
         title=settings.app_name,
@@ -45,9 +73,23 @@ def create_app() -> FastAPI:
         return {"status": "alive"}
 
     @app.get("/ready", tags=["Health"])
-    def ready():
-        ok = check_database_connectivity()
-        return {"status": "ready" if ok else "degraded", "database": ok}
+    def ready(db: Session = Depends(get_db)):
+        from app.core.schema_health import schema_migration_status
+
+        db_ok = check_database_connectivity()
+        schema = schema_migration_status(db)
+        ok = db_ok and schema["ok"]
+        payload = {
+            "status": "ready" if ok else "degraded",
+            "database": db_ok,
+            "schema": schema,
+        }
+        if not schema["ok"]:
+            payload["message"] = (
+                "Database schema is behind application code. "
+                + (schema.get("fix_hint") or "Run Alembic migrations.")
+            )
+        return payload
 
     if not _maybe_mount_frontend(app):
         @app.get("/", include_in_schema=False)
