@@ -5,9 +5,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
-from fastapi.staticfiles import StaticFiles
-
 from app.api.routes.config import router as legacy_config_router
+from app.core.spa_fallback import register_spa_routes
 from app.api.v1.router import api_v1_router
 from app.graphql.router import create_graphql_router
 from app.core.config import get_settings
@@ -99,11 +98,8 @@ def _maybe_mount_frontend(app: FastAPI) -> bool:
             )
         return False
 
-    # Explicit SERVE_FRONTEND=1 or auto-serve when dist exists (one-port local dev)
-    assets = dist / "assets"
-    if assets.is_dir():
-        app.mount("/assets", StaticFiles(directory=assets), name="frontend-assets")
-    app.mount("/", StaticFiles(directory=dist, html=True), name="frontend")
+    # Explicit catch-all: client routes (e.g. /risks) → index.html; API stays on registered routers.
+    register_spa_routes(app, dist)
     import logging
 
     logging.getLogger("app.main").info("Serving web UI from %s", dist)

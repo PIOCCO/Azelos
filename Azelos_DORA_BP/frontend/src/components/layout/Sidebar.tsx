@@ -24,7 +24,7 @@ export function Sidebar() {
         </div>
         <span className="text-base font-semibold text-white">DORA Blueprint</span>
       </div>
-      <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-6" aria-label="Main">
+      <nav className="space-y-6 px-3 pb-6" aria-label="Main">
         {sections.map((section) => (
           <div key={section.title}>
             <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted">
@@ -90,7 +90,9 @@ export function Sidebar() {
           </aside>
         </div>
       ) : null}
-      <aside className="hidden w-64 shrink-0 flex-col bg-sidebar md:flex lg:w-72">{navBody}</aside>
+      <aside className="hidden w-64 shrink-0 bg-sidebar md:sticky md:top-0 md:self-start md:flex md:flex-col lg:w-72">
+        {navBody}
+      </aside>
     </>
   );
 }
