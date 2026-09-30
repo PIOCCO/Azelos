@@ -1,7 +1,15 @@
 from logging.config import fileConfig
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 from alembic import context
 from app.config.database import load_database_settings, create_engine_kwargs
+
+# Match FastAPI: load backend/.env (and optional repo-root .env) before DATABASE_URL is read.
+_backend_dir = Path(__file__).resolve().parents[1]
+load_dotenv(_backend_dir / ".env")
+load_dotenv(_backend_dir.parent / ".env")
 from app.database.base import Base
 from app.models import *  # noqa: F401, F403 — register metadata
 from sqlalchemy import create_engine
