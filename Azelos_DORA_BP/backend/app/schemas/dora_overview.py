@@ -17,3 +17,12 @@ class DoraOverviewOut(BaseModel):
     evidence_items_total: int
     ict_services_critical: int
     incidents_module_available: bool
+    incidents_total: int
+    incidents_open: int
+    incidents_major_open: int
+    resilience_tests_planned: int
+    tlpt_exercises_active: int
+    bcp_plans_active: int
+    drp_plans_active: int
+    overdue_remediations: int
+    evidence_expiring_within_30_days: int

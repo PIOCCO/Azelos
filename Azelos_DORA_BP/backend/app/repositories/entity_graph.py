@@ -22,6 +22,8 @@ from app.models.dora_control import ContractDoraControl, DoraControlDefinition, 
 from app.models.evidence import Evidence
 from app.models.ict_assets import AssetFunctionMap, ICTAsset, InformationAsset
 from app.models.provider import ICTProvider
+from app.models.enums_operational import IncidentLinkKind
+from app.models.operational import ICTIncident, IncidentEntityLink
 from app.models.risk import RiskAssessment
 from app.models.service import ICTService
 from app.models.subcontractor import Subcontractor
@@ -137,6 +139,16 @@ class EntityGraphRepository:
             .limit(limit)
         ):
             nodes.append(self._bsvc_node(row))
+        for row in self.db.scalars(
+            select(ICTIncident)
+            .where(
+                ICTIncident.financial_entity_id == org,
+                ICTIncident.archived_at.is_(None),
+                ICTIncident.title.ilike(q),
+            )
+            .limit(limit)
+        ):
+            nodes.append(self._incident_node(row))
         return nodes[:limit]
 
     def get_node(self, entity_type: EntityType, entity_id: UUID) -> GraphNodeDTO | None:
@@ -177,6 +189,10 @@ class EntityGraphRepository:
             row = self.db.get(ResilienceFinding, entity_id)
             if row and row.financial_entity_id == org:
                 return self._finding_node(row)
+        elif entity_type == EntityType.ICT_INCIDENT:
+            row = self.db.get(ICTIncident, entity_id)
+            if row and row.financial_entity_id == org and row.archived_at is None:
+                return self._incident_node(row)
         return None
 
     def expand(
@@ -543,6 +559,34 @@ class EntityGraphRepository:
                         )
                     )
 
+        elif entity_type == EntityType.ICT_INCIDENT:
+            inc = self.db.get(ICTIncident, entity_id)
+            if not inc or inc.financial_entity_id != org or inc.archived_at is not None:
+                return [], []
+            center = node_key(EntityType.ICT_INCIDENT, str(inc.id))
+            for link in self.db.scalars(
+                select(IncidentEntityLink).where(IncidentEntityLink.incident_id == inc.id)
+            ):
+                etype = self._link_kind_to_entity(link.link_kind)
+                target = self.get_node(etype, link.linked_entity_id)
+                if target is None:
+                    continue
+                tid = target.id
+                nodes.append(target)
+                edges.append(
+                    GraphEdgeDTO(
+                        id=f"{center}->{tid}:AFFECTS",
+                        source=center,
+                        target=tid,
+                        relationship=RelationshipType.AFFECTS.value,
+                        metadata={
+                            "link_kind": link.link_kind.value,
+                            "notes": link.notes,
+                            "reason": "Linked on incident record",
+                        },
+                    )
+                )
+
         elif entity_type == EntityType.BUSINESS_SERVICE and view in ("ALL", "RESILIENCE"):
             bsvc = self.db.get(BusinessService, entity_id)
             if not bsvc or bsvc.financial_entity_id != org:
@@ -778,3 +822,25 @@ class EntityGraphRepository:
             label=row.title,
             metadata={"status": row.status.value},
         )
+
+    def _incident_node(self, row: ICTIncident) -> GraphNodeDTO:
+        return GraphNodeDTO(
+            id=node_key(EntityType.ICT_INCIDENT, str(row.id)),
+            type=EntityType.ICT_INCIDENT.value,
+            label=row.title,
+            metadata={
+                "severity": row.severity.value,
+                "status": row.status.value,
+                "is_major": row.is_major,
+            },
+        )
+
+    def _link_kind_to_entity(self, kind: IncidentLinkKind) -> EntityType:
+        return {
+            IncidentLinkKind.BUSINESS_SERVICE: EntityType.BUSINESS_SERVICE,
+            IncidentLinkKind.BUSINESS_FUNCTION: EntityType.BUSINESS_FUNCTION,
+            IncidentLinkKind.ICT_ASSET: EntityType.ICT_ASSET,
+            IncidentLinkKind.ICT_SERVICE: EntityType.ICT_SERVICE,
+            IncidentLinkKind.ICT_PROVIDER: EntityType.ICT_PROVIDER,
+            IncidentLinkKind.RISK_ASSESSMENT: EntityType.RISK_ASSESSMENT,
+        }[kind]

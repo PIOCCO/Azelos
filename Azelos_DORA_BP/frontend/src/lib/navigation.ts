@@ -60,7 +60,8 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Controls", path: "/controls", icon: Shield, moduleKey: "ICT_RISK" },
       { label: "ICT Assets", path: "/ict-assets", icon: HardDrive, moduleKey: "ASSET_MANAGEMENT" },
       { label: "Information Assets", path: "/information-assets", icon: FileStack, moduleKey: "ASSET_MANAGEMENT" },
-      { label: "Incidents", path: "/incidents", icon: Shield, moduleKey: "INCIDENT_MANAGEMENT", stub: true },
+      { label: "Incidents", path: "/incidents", icon: Shield, moduleKey: "INCIDENT_MANAGEMENT" },
+      { label: "TLPT", path: "/tlpt", icon: ShieldAlert, moduleKey: "INCIDENT_MANAGEMENT" },
     ],
   },
   {
@@ -88,9 +89,9 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Resilience Evidence", path: "/resilience-evidence", icon: FileStack },
       { label: "Recovery Tests", path: "/recovery-tests", icon: Activity },
       { label: "Reports", path: "/reports", icon: FileBarChart },
-      { label: "Business Continuity", path: "/business-continuity", icon: Shield, moduleKey: "BUSINESS_CONTINUITY", stub: true },
-      { label: "Disaster Recovery", path: "/disaster-recovery", icon: HardDrive, moduleKey: "DISASTER_RECOVERY", stub: true },
-      { label: "Resilience Testing (501)", path: "/resilience-tests", icon: ShieldAlert, moduleKey: "RESILIENCE_TESTING", stub: true },
+      { label: "Business Continuity", path: "/business-continuity", icon: Shield, moduleKey: "BUSINESS_CONTINUITY" },
+      { label: "Disaster Recovery", path: "/disaster-recovery", icon: HardDrive, moduleKey: "DISASTER_RECOVERY" },
+      { label: "Resilience Testing", path: "/resilience-tests", icon: ShieldAlert, moduleKey: "RESILIENCE_TESTING" },
     ],
   },
   {
@@ -99,6 +100,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Modules", path: "/configuration/modules", icon: Sliders, adminOnly: true },
       { label: "Custom Fields", path: "/configuration/custom-fields", icon: Wrench, adminOnly: true },
       { label: "Settings", path: "/onboarding/profile", icon: Settings },
+      { label: "Audit log", path: "/audit-log", icon: ClipboardCheck },
     ],
   },
 ];

@@ -13,6 +13,15 @@ export interface DoraOverview {
   evidence_items_total: number;
   ict_services_critical: number;
   incidents_module_available: boolean;
+  incidents_total: number;
+  incidents_open: number;
+  incidents_major_open: number;
+  resilience_tests_planned: number;
+  tlpt_exercises_active: number;
+  bcp_plans_active: number;
+  drp_plans_active: number;
+  overdue_remediations: number;
+  evidence_expiring_within_30_days: number;
 }
 
 export function getDoraOverview() {

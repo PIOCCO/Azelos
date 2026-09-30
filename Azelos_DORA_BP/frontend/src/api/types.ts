@@ -98,8 +98,45 @@ export interface Risk {
   contract_id?: string | null;
   service_id?: string | null;
   resulting_risk_level: string;
+  inherent_risk_level?: string | null;
+  residual_risk_level?: string | null;
+  lifecycle_status?: string;
   calculated_at: string;
   assessor: string;
+  title?: string | null;
+  owner?: string | null;
+  treatment_plan?: string | null;
+  due_date?: string | null;
+}
+
+export interface IncidentTimelineEvent {
+  id: string;
+  event_type: string;
+  description: string;
+  actor: string;
+  recorded_at: string;
+}
+
+export interface IncidentLink {
+  id: string;
+  link_kind: string;
+  linked_entity_id: string;
+  notes?: string | null;
+}
+
+export interface ICTIncident {
+  id: string;
+  title: string;
+  description: string | null;
+  severity: string;
+  status: string;
+  is_major: boolean;
+  owner: string | null;
+  detected_at: string | null;
+  root_cause: string | null;
+  lessons_learned: string | null;
+  timeline?: IncidentTimelineEvent[];
+  links?: IncidentLink[];
 }
 
 export interface ControlDefinition {

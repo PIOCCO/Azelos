@@ -1,32 +1,5 @@
-"""Module-gated placeholders for entities not yet in dora_core."""
+"""Legacy stub router — operational modules moved to dedicated routers."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 router = APIRouter(tags=["Future modules"])
-
-
-def _not_implemented(name: str):
-    raise HTTPException(
-        status_code=501,
-        detail=f"{name} entity is not yet modelled in dora_core; enable module when available.",
-    )
-
-
-@router.get("/incidents")
-def list_incidents():
-    _not_implemented("Incidents")
-
-
-@router.get("/business-continuity")
-def list_bcp():
-    _not_implemented("Business continuity")
-
-
-@router.get("/disaster-recovery")
-def list_dr():
-    _not_implemented("Disaster recovery")
-
-
-@router.get("/resilience-tests")
-def list_resilience_tests():
-    _not_implemented("Resilience tests")

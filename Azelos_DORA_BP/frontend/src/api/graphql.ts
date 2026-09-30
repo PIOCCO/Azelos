@@ -129,7 +129,9 @@ export function detailPathForNode(node: GraphNode): string | null {
     case "RiskAssessment":
       return `/risks/${uuid}`;
     case "ICTProvider":
-      return `/ict-providers`;
+      return `/ict-providers/${uuid}`;
+    case "ICTIncident":
+      return `/incidents/${uuid}`;
     case "ICTService":
       return `/ict-services`;
     case "Contract":
@@ -155,6 +157,7 @@ export function graphNodeToEntityTypeGql(nodeType: string): string {
     RiskAssessment: "RISK_ASSESSMENT",
     BusinessService: "BUSINESS_SERVICE",
     ResilienceFinding: "RESILIENCE_FINDING",
+    ICTIncident: "ICT_INCIDENT",
   };
   return map[nodeType] ?? "ICT_ASSET";
 }

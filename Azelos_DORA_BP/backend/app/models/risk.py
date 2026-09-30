@@ -1,9 +1,10 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
@@ -18,6 +19,7 @@ from sqlalchemy.sql import func
 from app.database.base import Base
 from app.models.db_types import pg_enum
 from app.models.enums import RiskDimensionLevel, RiskLevel
+from app.models.enums_operational import RiskLifecycleStatus
 
 if TYPE_CHECKING:
     from app.models.contract import Contract
@@ -27,6 +29,7 @@ if TYPE_CHECKING:
 
 risk_level_enum = pg_enum(RiskLevel, "risk_level")
 risk_dimension_enum = pg_enum(RiskDimensionLevel, "risk_dimension_level")
+risk_lifecycle_status_enum = pg_enum(RiskLifecycleStatus, "risk_lifecycle_status")
 
 
 class RiskAssessment(Base):
@@ -104,6 +107,20 @@ class RiskAssessment(Base):
     )
     assessor: Mapped[str] = mapped_column(String(256), nullable=False)
     rationale: Mapped[str | None] = mapped_column(Text)
+    title: Mapped[str | None] = mapped_column(String(512))
+    owner: Mapped[str | None] = mapped_column(String(256))
+    treatment_plan: Mapped[str | None] = mapped_column(Text)
+    due_date: Mapped[date | None] = mapped_column(Date)
+    likelihood: Mapped[RiskDimensionLevel | None] = mapped_column(risk_dimension_enum)
+    impact: Mapped[RiskDimensionLevel | None] = mapped_column(risk_dimension_enum)
+    inherent_risk_level: Mapped[RiskLevel | None] = mapped_column(risk_level_enum)
+    residual_risk_level: Mapped[RiskLevel | None] = mapped_column(risk_level_enum)
+    lifecycle_status: Mapped[RiskLifecycleStatus] = mapped_column(
+        risk_lifecycle_status_enum,
+        nullable=False,
+        default=RiskLifecycleStatus.ASSESSMENT,
+    )
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     financial_entity: Mapped["FinancialEntity"] = relationship(
         back_populates="risk_assessments",

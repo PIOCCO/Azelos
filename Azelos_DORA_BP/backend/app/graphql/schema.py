@@ -24,6 +24,7 @@ class EntityTypeGQL(Enum):
     RISK_ASSESSMENT = "RiskAssessment"
     BUSINESS_SERVICE = "BusinessService"
     RESILIENCE_FINDING = "ResilienceFinding"
+    ICT_INCIDENT = "ICTIncident"
 
 
 @strawberry.enum

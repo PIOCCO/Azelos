@@ -27,7 +27,7 @@ export function can(role: Role | undefined, action: string): boolean {
     case "read":
       return roleAtLeast(role, "USER");
     case "auditor.readonly":
-      return role === "AUDITOR" || roleAtLeast(role, "USER");
+      return roleAtLeast(role, "AUDITOR");
     default:
       return false;
   }

@@ -28,7 +28,7 @@ function ModuleLink({
 
 export function DoraHubPage() {
   const { session } = useAuth();
-  const { profile } = useOrg();
+  useOrg();
   const q = useQuery({
     queryKey: ["dora-overview"],
     queryFn: getDoraOverview,
@@ -79,11 +79,12 @@ export function DoraHubPage() {
         />
         <KpiCard label="High/critical findings" value={r.high_findings} tone="danger" />
         <KpiCard label="Open remediations" value={r.open_remediations} />
-        <KpiCard
-          label="ICT incidents"
-          value={o.incidents_module_available ? "—" : "Not modelled"}
-          tone="default"
-        />
+        <Link to="/incidents" className="block">
+          <KpiCard label="Open incidents" value={o.incidents_open} tone={o.incidents_open ? "warning" : "default"} />
+        </Link>
+        <Link to="/incidents" className="block">
+          <KpiCard label="Major incidents (open)" value={o.incidents_major_open} tone="danger" />
+        </Link>
       </div>
 
       <section className="mb-2 mt-8">
@@ -108,12 +109,20 @@ export function DoraHubPage() {
         <KpiCard label="Insufficient evidence" value={r.dora_insufficient_evidence} />
       </div>
 
-      {profile?.tlpt_applicable ? (
-        <p className="mt-4 text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-          TLPT is applicable for this organization. Structured TLPT workflow data is not yet persisted in{" "}
-          <code className="text-xs">dora_core</code> — use Resilience Testing and Findings until the TLPT module ships.
-        </p>
-      ) : null}
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Link to="/remediation" className="block">
+          <KpiCard label="Overdue remediations" value={o.overdue_remediations} tone="danger" />
+        </Link>
+        <Link to="/evidence" className="block">
+          <KpiCard label="Evidence expiring (30d)" value={o.evidence_expiring_within_30_days} tone="warning" />
+        </Link>
+        <Link to="/resilience-tests" className="block">
+          <KpiCard label="Planned resilience tests" value={o.resilience_tests_planned} />
+        </Link>
+        <Link to="/tlpt" className="block">
+          <KpiCard label="Active TLPT exercises" value={o.tlpt_exercises_active} />
+        </Link>
+      </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <Card title="Navigate the dependency chain">

@@ -7,7 +7,7 @@ from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_auth_context, require_role
 from app.core.rbac import Role
 from app.schemas.common import PaginatedResponse
-from app.schemas.risks import RiskCreate, RiskOut
+from app.schemas.risks import RiskCreate, RiskOut, RiskUpdate
 from app.services.risks import RiskService
 
 router = APIRouter(prefix="/risks", tags=["Risks"])
@@ -50,4 +50,17 @@ def create_risk(
     row = service.create(body)
     db.flush()
     db.refresh(row)
+    return RiskOut.model_validate(row)
+
+
+@router.patch("/{risk_id}", response_model=RiskOut)
+def patch_risk(
+    risk_id: UUID,
+    body: RiskUpdate,
+    ctx: AuthContext = Depends(require_role(Role.RISK_MANAGER)),
+    db: Session = Depends(get_db),
+):
+    service = RiskService(db, ctx.organization_id)
+    row = service.update_lifecycle(risk_id, body, ctx.user.email)
+    db.flush()
     return RiskOut.model_validate(row)

@@ -71,4 +71,5 @@ def test_dora_overview_returns_tenant_counts(client, db_session):
     assert data["business_functions_total"] == 1
     assert data["business_functions_critical"] == 1
     assert "resilience" in data
-    assert data["incidents_module_available"] is False
+    assert data["incidents_module_available"] is True
+    assert data["incidents_total"] == 0

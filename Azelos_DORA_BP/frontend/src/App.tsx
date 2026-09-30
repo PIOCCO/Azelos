@@ -6,7 +6,10 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ApplicabilityPage } from "./pages/ApplicabilityPage";
 import { RequirementsPage } from "./pages/RequirementsPage";
-import { StubModulePage } from "./pages/StubModulePage";
+import { IncidentsPage } from "./pages/entity/IncidentsPage";
+import { IncidentDetailPage } from "./pages/entity/IncidentDetailPage";
+import { ProviderDetailPage } from "./pages/entity/ProviderDetailPage";
+import { AuditLogPage } from "./pages/admin/AuditLogPage";
 import { BusinessFunctionsPage } from "./pages/entity/BusinessFunctionsPage";
 import { ICTAssetsPage } from "./pages/entity/ICTAssetsPage";
 import { SimpleListPage } from "./pages/entity/SimpleListPage";
@@ -141,6 +144,7 @@ export default function App() {
           />
           <Route path="ict-assets" element={<ICTAssetsPage />} />
           <Route path="ict-providers" element={<ProvidersPage />} />
+          <Route path="ict-providers/:providerId" element={<ProviderDetailPage />} />
           <Route
             path="contracts"
             element={
@@ -208,22 +212,73 @@ export default function App() {
               />
             }
           />
-          <Route
-            path="incidents"
-            element={<StubModulePage title="Incidents" apiPath="/api/v1/incidents" />}
-          />
+          <Route path="incidents" element={<IncidentsPage />} />
+          <Route path="incidents/:incidentId" element={<IncidentDetailPage />} />
           <Route
             path="business-continuity"
-            element={<StubModulePage title="Business continuity" apiPath="/api/v1/business-continuity" />}
+            element={
+              <SimpleListPage<{ id: string; name: string; status: string; owner?: string | null }>
+                title="Business continuity plans"
+                path="/api/v1/business-continuity"
+                queryKey="business-continuity"
+                moduleItem={{ label: "Business continuity", moduleKey: "BUSINESS_CONTINUITY" }}
+                columns={[
+                  { key: "name", header: "Plan", render: (r) => r.name },
+                  { key: "status", header: "Status", render: (r) => r.status },
+                  { key: "owner", header: "Owner", render: (r) => r.owner ?? "—" },
+                ]}
+              />
+            }
           />
           <Route
             path="disaster-recovery"
-            element={<StubModulePage title="Disaster recovery" apiPath="/api/v1/disaster-recovery" />}
+            element={
+              <SimpleListPage<{ id: string; name: string; status: string; owner?: string | null }>
+                title="Disaster recovery plans"
+                path="/api/v1/disaster-recovery"
+                queryKey="disaster-recovery"
+                moduleItem={{ label: "Disaster recovery", moduleKey: "DISASTER_RECOVERY" }}
+                columns={[
+                  { key: "name", header: "Plan", render: (r) => r.name },
+                  { key: "status", header: "Status", render: (r) => r.status },
+                  { key: "owner", header: "Owner", render: (r) => r.owner ?? "—" },
+                ]}
+              />
+            }
           />
           <Route
             path="resilience-tests"
-            element={<StubModulePage title="Resilience tests" apiPath="/api/v1/resilience-tests" />}
+            element={
+              <SimpleListPage<{ id: string; title: string; status: string; test_kind: string }>
+                title="Resilience tests"
+                path="/api/v1/resilience-tests"
+                queryKey="resilience-tests"
+                moduleItem={{ label: "Resilience testing", moduleKey: "RESILIENCE_TESTING" }}
+                columns={[
+                  { key: "title", header: "Title", render: (r) => r.title },
+                  { key: "kind", header: "Kind", render: (r) => r.test_kind },
+                  { key: "status", header: "Status", render: (r) => r.status },
+                ]}
+              />
+            }
           />
+          <Route
+            path="tlpt"
+            element={
+              <SimpleListPage<{ id: string; name: string; status: string; owner?: string | null }>
+                title="TLPT exercises"
+                path="/api/v1/tlpt"
+                queryKey="tlpt"
+                moduleItem={{ label: "TLPT", moduleKey: "INCIDENT_MANAGEMENT" }}
+                columns={[
+                  { key: "name", header: "Exercise", render: (r) => r.name },
+                  { key: "status", header: "Status", render: (r) => r.status },
+                  { key: "owner", header: "Owner", render: (r) => r.owner ?? "—" },
+                ]}
+              />
+            }
+          />
+          <Route path="audit-log" element={<AuditLogPage />} />
           <Route path="configuration/modules" element={<ModulesConfigPage />} />
           <Route path="configuration/custom-fields" element={<CustomFieldsPage />} />
         </Route>

@@ -21,6 +21,7 @@ class EntityType(str, Enum):
     CLOUD_RESOURCE = "CloudResource"
     RESILIENCE_FINDING = "ResilienceFinding"
     REMEDIATION_ACTION = "RemediationAction"
+    ICT_INCIDENT = "ICTIncident"
 
 
 class RelationshipType(str, Enum):
@@ -36,6 +37,8 @@ class RelationshipType(str, Enum):
     DEPENDS_ON = "DEPENDS_ON"
     FINDING_ON = "FINDING_ON"
     REMEDIATES = "REMEDIATES"
+    AFFECTS = "AFFECTS"
+    IMPACTS = "IMPACTS"
 
 
 class GraphView(str, Enum):
