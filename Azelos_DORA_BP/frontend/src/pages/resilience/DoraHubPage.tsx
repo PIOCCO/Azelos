@@ -27,6 +27,12 @@ export function DoraHubPage() {
       <Card title="Sections" className="mt-6">
         <ul className="text-sm space-y-2 text-gray-700">
           <li>
+            <Link to="/dora/relationship-map" className="text-primary font-medium hover:underline">
+              Relationship Map
+            </Link>{" "}
+            — explore entity dependencies via GraphQL (live database relationships)
+          </li>
+          <li>
             <Link to="/requirements" className="text-primary hover:underline">
               Requirements
             </Link>{" "}

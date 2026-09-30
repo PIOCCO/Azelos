@@ -47,7 +47,6 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Cloud Environment", path: "/cloud-environment", icon: Cloud },
       { label: "Resilience", path: "/resilience", icon: ShieldAlert },
       { label: "DORA", path: "/dora", icon: Shield },
-      { label: "Relationship Map", path: "/dora/relationship-map", icon: Link2 },
       { label: "Findings", path: "/findings", icon: AlertTriangle },
       { label: "Remediation", path: "/remediation", icon: CheckSquare },
       { label: "Resilience Evidence", path: "/resilience-evidence", icon: FileStack },
@@ -66,6 +65,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "DORA modules",
     items: [
+      { label: "Relationship Map", path: "/dora/relationship-map", icon: Link2 },
       { label: "ICT Risk Management", path: "/risks", icon: ShieldAlert, moduleKey: "ICT_RISK" },
       { label: "ICT Assets", path: "/ict-assets", icon: HardDrive, moduleKey: "ASSET_MANAGEMENT" },
       { label: "Information Assets", path: "/information-assets", icon: FileStack, moduleKey: "ASSET_MANAGEMENT" },
