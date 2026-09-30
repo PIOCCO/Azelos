@@ -47,6 +47,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Cloud Environment", path: "/cloud-environment", icon: Cloud },
       { label: "Resilience", path: "/resilience", icon: ShieldAlert },
       { label: "DORA", path: "/dora", icon: Shield },
+      { label: "Relationship Map", path: "/dora/relationship-map", icon: Link2 },
       { label: "Findings", path: "/findings", icon: AlertTriangle },
       { label: "Remediation", path: "/remediation", icon: CheckSquare },
       { label: "Resilience Evidence", path: "/resilience-evidence", icon: FileStack },

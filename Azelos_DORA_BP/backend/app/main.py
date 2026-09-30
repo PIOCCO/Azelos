@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.routes.config import router as legacy_config_router
 from app.api.v1.router import api_v1_router
+from app.graphql.router import create_graphql_router
 from app.core.config import get_settings
 from app.core.database import check_database_connectivity
 from app.core.exceptions import register_exception_handlers
@@ -35,6 +36,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(api_v1_router, prefix=settings.api_v1_prefix)
+    app.include_router(create_graphql_router(), prefix="/graphql")
     app.include_router(legacy_config_router)  # backward compatible header-auth config
 
     @app.get("/health", tags=["Health"])

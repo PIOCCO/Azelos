@@ -26,6 +26,7 @@ import type {
 import { BusinessServicesPage } from "./pages/resilience/BusinessServicesPage";
 import { CloudEnvironmentPage } from "./pages/resilience/CloudEnvironmentPage";
 import { DoraHubPage } from "./pages/resilience/DoraHubPage";
+import { RelationshipMapPage } from "./pages/dora/RelationshipMapPage";
 import { ResilienceHubPage } from "./pages/resilience/ResilienceHubPage";
 import { SimpleResilienceListPage } from "./pages/resilience/SimpleResilienceListPage";
 import { ReportsPage } from "./pages/resilience/ReportsPage";
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="cloud-environment" element={<CloudEnvironmentPage />} />
           <Route path="resilience" element={<ResilienceHubPage />} />
           <Route path="dora" element={<DoraHubPage />} />
+          <Route path="dora/relationship-map" element={<RelationshipMapPage />} />
           <Route
             path="findings"
             element={

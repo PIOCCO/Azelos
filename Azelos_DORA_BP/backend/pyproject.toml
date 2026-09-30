@@ -15,6 +15,7 @@ dependencies = [
     "email-validator>=2.0,<3",
     "python-multipart>=0.0.9,<1",
     "python-dotenv>=1.0,<2",
+    "strawberry-graphql[fastapi]>=0.258,<1",
 ]
 
 [project.optional-dependencies]

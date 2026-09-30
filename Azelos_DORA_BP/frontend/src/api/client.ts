@@ -27,6 +27,10 @@ export function setTokenProvider(fn: TokenProvider) {
   tokenProvider = fn;
 }
 
+export function getTokenProvider(): TokenProvider {
+  return tokenProvider;
+}
+
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
