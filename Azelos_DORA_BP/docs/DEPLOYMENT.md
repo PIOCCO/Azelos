@@ -95,10 +95,12 @@ STORAGE_PROVIDER=local
 
 Production will typically use `azure_blob`, `s3`, or `s3_compatible` once adapters are implemented with optional SDK dependencies.
 
-## Out of scope here
+## Azure Terraform (IaC)
 
-- Terraform / Azure resource provisioning
-- CI/CD pipelines
-- Kubernetes manifests
+Production-oriented Azure deployment is defined under [`infra/terraform/`](../infra/terraform/README.md):
 
-Those layers supply **connection strings and secrets** to this Blueprint; they are not embedded in the codebase.
+- Container Apps (unified `Dockerfile.app` image)
+- PostgreSQL Flexible Server (private)
+- Key Vault, Storage, ACR, monitoring
+
+Terraform supplies **connection strings and secrets** via Key Vault; Alembic and seeds remain application operations.

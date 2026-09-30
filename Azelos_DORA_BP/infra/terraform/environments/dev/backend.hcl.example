@@ -1,0 +1,4 @@
+resource_group_name  = "dora-bp-tfstate-rg"
+storage_account_name = "dorabptfstate"
+container_name       = "tfstate"
+key                  = "dev.terraform.tfstate"

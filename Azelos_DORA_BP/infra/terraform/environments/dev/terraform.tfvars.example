@@ -1,0 +1,8 @@
+project_name    = "dora-bp"
+location        = "westeurope"
+owner           = "your-team"
+container_image = "dora-bp-dev-acr12345.azurecr.io/dora-bp-app:latest"
+cors_origins    = "https://your-app.azurecontainerapps.io"
+
+# Optional: your public IP for Key Vault access during first deploy
+# key_vault_allowed_ip_ranges = ["203.0.113.10/32"]
