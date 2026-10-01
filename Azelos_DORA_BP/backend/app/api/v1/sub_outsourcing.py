@@ -7,7 +7,7 @@ from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_auth_context, require_role
 from app.core.rbac import Role
 from app.schemas.common import PaginatedResponse
-from app.schemas.subcontractors import SubcontractorCreate, SubcontractorOut
+from app.schemas.subcontractors import SubcontractorCreate, SubcontractorOut, SubcontractorUpdate
 from app.services.subcontractors import SubcontractorService
 
 router = APIRouter(prefix="/sub-outsourcing", tags=["Sub-outsourcing"])
@@ -30,6 +30,17 @@ def list_subcontractors(
     )
 
 
+@router.get("/{subcontractor_id}", response_model=SubcontractorOut)
+def get_subcontractor(
+    subcontractor_id: UUID,
+    ctx: AuthContext = Depends(get_auth_context),
+    db: Session = Depends(get_db),
+):
+    return SubcontractorOut.model_validate(
+        SubcontractorService(db, ctx.organization_id).get(subcontractor_id)
+    )
+
+
 @router.post("", response_model=SubcontractorOut, status_code=201)
 def create_subcontractor(
     body: SubcontractorCreate,
@@ -38,6 +49,20 @@ def create_subcontractor(
 ):
     service = SubcontractorService(db, ctx.organization_id)
     row = service.create(body)
+    db.flush()
+    db.refresh(row)
+    return SubcontractorOut.model_validate(row)
+
+
+@router.patch("/{subcontractor_id}", response_model=SubcontractorOut)
+def patch_subcontractor(
+    subcontractor_id: UUID,
+    body: SubcontractorUpdate,
+    ctx: AuthContext = Depends(require_role(Role.SECURITY_MANAGER)),
+    db: Session = Depends(get_db),
+):
+    service = SubcontractorService(db, ctx.organization_id)
+    row = service.update(subcontractor_id, body)
     db.flush()
     db.refresh(row)
     return SubcontractorOut.model_validate(row)

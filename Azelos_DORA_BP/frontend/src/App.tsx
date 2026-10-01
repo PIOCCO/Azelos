@@ -17,16 +17,17 @@ import { SimpleListPage } from "./pages/entity/SimpleListPage";
 import { OperationalListPage } from "./pages/entity/OperationalListPage";
 import { ControlsPage } from "./pages/entity/ControlsPage";
 import { ProvidersPage } from "./pages/entity/ProvidersPage";
+import { ContractsPage } from "./pages/entity/ContractsPage";
+import { ContractDetailPage } from "./pages/entity/ContractDetailPage";
+import { ICTServicesPage } from "./pages/entity/ICTServicesPage";
+import { ICTServiceDetailPage } from "./pages/entity/ICTServiceDetailPage";
+import { SubOutsourcingPage } from "./pages/entity/SubOutsourcingPage";
+import { ProvisionTenantPage } from "./pages/admin/ProvisionTenantPage";
 import { RisksPage } from "./pages/entity/RisksPage";
 import { RiskDetailPage } from "./pages/entity/RiskDetailPage";
 import { ModulesConfigPage } from "./pages/config/ModulesConfigPage";
 import { CustomFieldsPage } from "./pages/config/CustomFieldsPage";
-import type {
-  Contract,
-  ICTService,
-  InformationAsset,
-  SubOutsourcing,
-} from "./api/types";
+import type { InformationAsset } from "./api/types";
 import { BusinessServicesPage } from "./pages/resilience/BusinessServicesPage";
 import { CloudEnvironmentPage } from "./pages/resilience/CloudEnvironmentPage";
 import { DoraHubPage } from "./pages/resilience/DoraHubPage";
@@ -190,54 +191,11 @@ export default function App() {
           <Route path="ict-assets" element={<ICTAssetsPage />} />
           <Route path="ict-providers" element={<ProvidersPage />} />
           <Route path="ict-providers/:providerId" element={<ProviderDetailPage />} />
-          <Route
-            path="contracts"
-            element={
-              <SimpleListPage<Contract>
-                title="Contractual arrangements"
-                path="/api/v1/contracts"
-                queryKey="contracts"
-                moduleItem={{ label: "Contracts", moduleKey: "THIRD_PARTY_RISK" }}
-                columns={[
-                  { key: "ref", header: "Reference", render: (r) => r.reference_number },
-                  { key: "type", header: "Type", render: (r) => r.contract_type },
-                  { key: "status", header: "Status", render: (r) => r.status },
-                ]}
-              />
-            }
-          />
-          <Route
-            path="ict-services"
-            element={
-              <SimpleListPage<ICTService>
-                title="ICT services"
-                path="/api/v1/ict-services"
-                queryKey="ict-services"
-                moduleItem={{ label: "ICT services", moduleKey: "THIRD_PARTY_RISK" }}
-                columns={[
-                  { key: "name", header: "Name", render: (r) => r.name },
-                  { key: "crit", header: "Supports C/I", render: (r) => r.supports_critical_or_important },
-                  { key: "status", header: "Status", render: (r) => r.status },
-                ]}
-              />
-            }
-          />
-          <Route
-            path="sub-outsourcing"
-            element={
-              <SimpleListPage<SubOutsourcing>
-                title="Sub-outsourcing"
-                path="/api/v1/sub-outsourcing"
-                queryKey="sub-outsourcing"
-                moduleItem={{ label: "Sub-outsourcing", moduleKey: "THIRD_PARTY_RISK" }}
-                columns={[
-                  { key: "name", header: "Legal name", render: (r) => r.legal_name },
-                  { key: "depth", header: "Depth", render: (r) => r.depth_rank },
-                  { key: "status", header: "Status", render: (r) => r.status },
-                ]}
-              />
-            }
-          />
+          <Route path="contracts" element={<ContractsPage />} />
+          <Route path="contracts/:contractId" element={<ContractDetailPage />} />
+          <Route path="ict-services" element={<ICTServicesPage />} />
+          <Route path="ict-services/:serviceId" element={<ICTServiceDetailPage />} />
+          <Route path="sub-outsourcing" element={<SubOutsourcingPage />} />
           <Route path="risks" element={<RisksPage />} />
           <Route path="risks/:riskId" element={<RiskDetailPage />} />
           <Route path="controls" element={<ControlsPage />} />
@@ -306,6 +264,7 @@ export default function App() {
             }
           />
           <Route path="admin/members" element={<MembersPage />} />
+          <Route path="admin/provision" element={<ProvisionTenantPage />} />
           <Route path="audit-log" element={<AuditLogPage />} />
           <Route path="configuration/modules" element={<ModulesConfigPage />} />
           <Route path="configuration/custom-fields" element={<CustomFieldsPage />} />

@@ -21,7 +21,7 @@ import {
   CheckSquare,
   FileBarChart,
 } from "lucide-react";
-import type { ModuleApplicability } from "../api/types";
+import type { ModuleApplicability, Role } from "../api/types";
 import { moduleAllowsAccess } from "./nav";
 
 export interface NavLinkItem {
@@ -31,6 +31,8 @@ export interface NavLinkItem {
   moduleKey?: string;
   stub?: boolean;
   adminOnly?: boolean;
+  /** Visible only to SUPER_ADMIN (platform operator). */
+  platformAdminOnly?: boolean;
 }
 
 export interface NavSection {
@@ -105,6 +107,12 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Custom Fields", path: "/configuration/custom-fields", icon: Wrench, adminOnly: true },
       { label: "Settings", path: "/onboarding/profile", icon: Settings },
       { label: "Audit log", path: "/audit-log", icon: ClipboardCheck },
+      {
+        label: "Provision customer org",
+        path: "/admin/provision",
+        icon: Settings,
+        platformAdminOnly: true,
+      },
     ],
   },
 ];
@@ -113,11 +121,13 @@ export function filterNavSections(
   sections: NavSection[],
   modules: ModuleApplicability[] | undefined,
   isAdmin: boolean,
+  role?: Role,
 ): NavSection[] {
   return sections
     .map((section) => ({
       ...section,
       items: section.items.filter((item) => {
+        if (item.platformAdminOnly && role !== "SUPER_ADMIN") return false;
         if (item.adminOnly && !isAdmin) return false;
         return moduleAllowsAccess(modules, item.moduleKey);
       }),

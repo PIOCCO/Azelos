@@ -86,28 +86,57 @@ export function OnboardingWizardPage() {
       )}
       {step === 2 && (
         <Card title="Recommended next steps">
-          <ul className="space-y-2 text-sm">
-            <li>
-              <Link className="text-primary underline" to="/business-functions">
-                Register business functions
-              </Link>
-            </li>
+          <p className="mb-3 text-sm text-gray-600">
+            Build your ICT chain in order: provider → contract → service → business function →
+            risk → requirements → evidence.
+          </p>
+          <ol className="list-decimal space-y-2 pl-5 text-sm">
             <li>
               <Link className="text-primary underline" to="/ict-providers">
                 Add ICT providers
               </Link>
             </li>
             <li>
+              <Link className="text-primary underline" to="/contracts">
+                Create contracts
+              </Link>
+            </li>
+            <li>
+              <Link className="text-primary underline" to="/ict-services">
+                Register ICT services
+              </Link>
+            </li>
+            <li>
+              <Link className="text-primary underline" to="/business-functions">
+                Register business functions
+              </Link>
+            </li>
+            <li>
+              <Link className="text-primary underline" to="/dependencies">
+                Link functions to services
+              </Link>
+            </li>
+            <li>
+              <Link className="text-primary underline" to="/risks">
+                Record risk assessments
+              </Link>
+            </li>
+            <li>
               <Link className="text-primary underline" to="/requirements">
-                Review DORA requirements
+                Track DORA requirements
+              </Link>
+            </li>
+            <li>
+              <Link className="text-primary underline" to="/evidence">
+                Upload evidence
               </Link>
             </li>
             <li>
               <Link className="text-primary underline" to="/dora/relationship-map">
-                Open relationship map
+                Review relationship map
               </Link>
             </li>
-          </ul>
+          </ol>
           <Button type="button" className="mt-4" onClick={() => navigate("/")}>
             Go to dashboard
           </Button>

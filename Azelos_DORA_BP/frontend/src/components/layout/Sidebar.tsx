@@ -12,7 +12,7 @@ export function Sidebar() {
   const modules = useModuleNav();
   const location = useLocation();
   const isAdmin = can(session?.role, "org.admin");
-  const sections = filterNavSections(NAV_SECTIONS, modules, isAdmin);
+  const sections = filterNavSections(NAV_SECTIONS, modules, isAdmin, session?.role);
   const allNavPaths = sections.flatMap((s) => s.items.map((i) => i.path));
   const [mobileOpen, setMobileOpen] = useState(false);
 

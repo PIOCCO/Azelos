@@ -7,7 +7,7 @@ from app.models.enums import SubcontractorStatus
 from app.models.provider import ICTProvider
 from app.models.subcontractor import Subcontractor
 from app.repositories.subcontractors import SubcontractorRepository
-from app.schemas.subcontractors import SubcontractorCreate
+from app.schemas.subcontractors import SubcontractorCreate, SubcontractorUpdate
 
 
 class SubcontractorService:
@@ -45,3 +45,9 @@ class SubcontractorService:
                 status=SubcontractorStatus.ACTIVE,
             )
         )
+
+    def update(self, row_id: UUID, data: SubcontractorUpdate) -> Subcontractor:
+        row = self.get(row_id)
+        for key, val in data.model_dump(exclude_unset=True).items():
+            setattr(row, key, val)
+        return row

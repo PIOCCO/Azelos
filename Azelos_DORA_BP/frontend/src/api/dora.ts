@@ -295,6 +295,89 @@ export function createProvider(body: {
   });
 }
 
+export function createContract(body: {
+  provider_id: string;
+  reference_number: string;
+  start_date: string;
+  end_date?: string | null;
+  contract_type?: string;
+}) {
+  return apiRequest<Contract>("/api/v1/contracts", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function patchContract(
+  contractId: string,
+  body: Partial<{ status: string; end_date: string | null; governing_law: string | null }>,
+) {
+  return apiRequest<Contract>(`/api/v1/contracts/${contractId}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+export function createIctService(body: {
+  contract_id: string;
+  name: string;
+  description?: string | null;
+  supports_critical_or_important?: string;
+}) {
+  return apiRequest<ICTService>("/api/v1/ict-services", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function patchIctService(
+  serviceId: string,
+  body: Partial<{ name: string; description: string | null; status: string }>,
+) {
+  return apiRequest<ICTService>(`/api/v1/ict-services/${serviceId}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+export function createSubOutsourcing(body: {
+  provider_id: string;
+  legal_name: string;
+  country_code: string;
+  lei?: string | null;
+  service_description?: string | null;
+  parent_subcontractor_id?: string | null;
+}) {
+  return apiRequest<SubOutsourcing>("/api/v1/sub-outsourcing", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function patchSubOutsourcing(
+  id: string,
+  body: Partial<{ legal_name: string; status: string; service_description: string | null }>,
+) {
+  return apiRequest<SubOutsourcing>(`/api/v1/sub-outsourcing/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+export function provisionTenant(body: {
+  legal_name: string;
+  country_code: string;
+  admin_email: string;
+  admin_password: string;
+  short_name?: string;
+  lei?: string;
+}) {
+  return apiRequest<LoginResponse & { organization: { id: string; legal_name: string } }>(
+    "/api/v1/tenant/provision",
+    { method: "POST", body: JSON.stringify(body) },
+  );
+}
+
 /** Stub list endpoints return 501 when not implemented. */
 export async function probeStubEndpoint(path: string): Promise<{ ok: boolean; message: string }> {
   try {

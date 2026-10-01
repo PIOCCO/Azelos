@@ -14,6 +14,12 @@ class SubcontractorCreate(BaseModel):
     parent_subcontractor_id: uuid.UUID | None = None
 
 
+class SubcontractorUpdate(BaseModel):
+    legal_name: str | None = None
+    status: SubcontractorStatus | None = None
+    service_description: str | None = None
+
+
 class SubcontractorOut(BaseModel):
     id: uuid.UUID
     provider_id: uuid.UUID

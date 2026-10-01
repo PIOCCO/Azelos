@@ -30,6 +30,17 @@ def list_ict_services(
     )
 
 
+@router.get("/{service_id}", response_model=ICTServiceOut)
+def get_ict_service(
+    service_id: UUID,
+    ctx: AuthContext = Depends(get_auth_context),
+    db: Session = Depends(get_db),
+):
+    return ICTServiceOut.model_validate(
+        ICTServiceDomainService(db, ctx.organization_id).get(service_id)
+    )
+
+
 @router.post("", response_model=ICTServiceOut, status_code=201)
 def create_ict_service(
     body: ICTServiceCreate,
