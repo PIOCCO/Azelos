@@ -37,7 +37,7 @@ Nordhaven depends on **PaymentClear EU B.V.** for **retail SEPA payment switchin
 13. **DORA overview** (`/dora/overview`) — KPIs from live counts.
 14. **Relationship map** (`/dora/relationship-map`) — expand from PaymentClear / payment service; pan/zoom; optional node drag (session-only positions).
 15. **Reports** — generate DORA assessment / resilience report available in UI.
-16. **Exports** — ICT providers CSV and tenant data export ZIP.
+16. **Exports** — ICT providers **CSV** from Providers page; **tenant ZIP** via API (`GET /api/v1/tenant/data/export`) if operator demo requires full export.
 
 ## What to say (and not say)
 

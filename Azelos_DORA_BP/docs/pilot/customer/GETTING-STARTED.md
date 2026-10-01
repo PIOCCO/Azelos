@@ -23,7 +23,7 @@ After first login:
 
 1. **Get started / Onboarding** — follow the wizard.
 2. **Organization profile** — entity type, size, regulatory status (under onboarding or settings).
-3. **DORA applicability** — confirm which modules/requirements apply to your organization.
+3. **DORA applicability** — review which modules apply (read-only; driven by your profile).
 
 These steps define how dashboards and requirement lists apply to you.
 

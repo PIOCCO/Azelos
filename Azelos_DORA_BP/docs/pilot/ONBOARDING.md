@@ -30,7 +30,7 @@ Two roles: **platform operator** (Azelos or customer IT hosting the instance) an
 | 2 | Login | No |
 | 3 | Open **Get started / Onboarding** wizard | No |
 | 4 | Complete **organization profile** (type, size, regulatory status) | No |
-| 5 | Configure **DORA applicability** (modules/requirements where shown) | No |
+| 5 | **Review DORA applicability** (read-only; complete profile in step 4 first) | No |
 | 6 | **Invite** internal users (Team / Members) | No |
 | 7 | Register **ICT providers** | No |
 | 8 | Register **contracts** linked to providers | No |
