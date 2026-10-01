@@ -36,6 +36,7 @@ class AcceptInviteIn(BaseModel):
 class AcceptInviteOut(BaseModel):
     access_token: str
     organization_id: UUID
+    role: str
 
 
 @router.post("/invitations", response_model=InviteOut, status_code=201)
@@ -86,4 +87,8 @@ def accept_invitation(body: AcceptInviteIn, db: Session = Depends(get_db)):
         str(user.id),
         {"org_id": str(invite.financial_entity_id), "role": membership_role.value},
     )
-    return AcceptInviteOut(access_token=token, organization_id=invite.financial_entity_id)
+    return AcceptInviteOut(
+        access_token=token,
+        organization_id=invite.financial_entity_id,
+        role=membership_role.value,
+    )

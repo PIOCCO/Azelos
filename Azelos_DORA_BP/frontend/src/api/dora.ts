@@ -129,6 +129,13 @@ export function inviteMember(email: string, role: string) {
   );
 }
 
+export function acceptInvitation(token: string, password: string, fullName?: string) {
+  return apiRequest<LoginResponse>("/api/v1/memberships/invitations/accept", {
+    method: "POST",
+    body: JSON.stringify({ token, password, full_name: fullName ?? null }),
+  });
+}
+
 export function listBia() {
   return apiRequest<
     {

@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AppLayout } from "./components/layout/AppLayout";
 import { LoginPage } from "./pages/LoginPage";
+import { AcceptInvitePage } from "./pages/AcceptInvitePage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ApplicabilityPage } from "./pages/ApplicabilityPage";
@@ -79,6 +80,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/accept-invite" element={<AcceptInvitePage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />

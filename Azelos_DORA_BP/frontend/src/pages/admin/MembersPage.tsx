@@ -45,8 +45,15 @@ export function MembersPage() {
         </form>
         {inviteM.error ? <p className="mt-2 text-sm text-red-600">{(inviteM.error as Error).message}</p> : null}
         {lastToken ? (
-          <p className="mt-3 break-all text-xs text-gray-600">
-            Share accept token with invitee (dev): {lastToken}
+          <p className="mt-3 text-sm text-gray-700">
+            Send this link to your colleague:{" "}
+            <a
+              className="break-all font-mono text-primary underline"
+              href={`/accept-invite?token=${encodeURIComponent(lastToken)}`}
+            >
+              Accept invitation
+            </a>
+            <span className="mt-2 block break-all text-xs text-gray-500">Token: {lastToken}</span>
           </p>
         ) : null}
       </Card>

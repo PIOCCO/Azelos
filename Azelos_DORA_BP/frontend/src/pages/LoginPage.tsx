@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ApiError } from "../api/client";
 import { getLoginOptions } from "../api/dora";
@@ -149,6 +149,12 @@ export function LoginPage() {
           <Button type="submit" disabled={loading} className="mt-6 w-full">
             {loading ? "Signing in…" : "Sign in"}
           </Button>
+          <p className="mt-4 text-center text-sm text-gray-500">
+            Invited by your team?{" "}
+            <Link to="/accept-invite" className="font-medium text-primary hover:underline">
+              Accept invitation
+            </Link>
+          </p>
         </form>
       </div>
     </div>

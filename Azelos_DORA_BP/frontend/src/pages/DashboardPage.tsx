@@ -84,9 +84,30 @@ export function DashboardPage() {
         subtitle={`Welcome back, ${firstName}. Organization: ${organizationName ?? "—"}.`}
       />
 
+      {providers === 0 && functions === 0 ? (
+        <div className="mb-6 rounded-lg border border-primary/30 bg-blue-50 px-4 py-3 text-sm text-gray-800">
+          <p className="font-medium">First time here?</p>
+          <p className="mt-1 text-gray-700">
+            Start with{" "}
+            <Link to="/onboarding" className="font-medium text-primary hover:underline">
+              Get started
+            </Link>{" "}
+            to confirm your organization profile, then register{" "}
+            <Link to="/business-functions" className="text-primary hover:underline">
+              business functions
+            </Link>{" "}
+            and{" "}
+            <Link to="/ict-providers" className="text-primary hover:underline">
+              ICT providers
+            </Link>
+            .
+          </p>
+        </div>
+      ) : null}
+
       <section className="mb-6">
         <h2 className="text-sm font-semibold text-gray-900">Cloud business resilience</h2>
-        <p className="text-sm text-gray-500">Live API metrics — no compliance score or fabricated cloud data.</p>
+        <p className="text-sm text-gray-500">Live KPIs from your organization&apos;s stored data.</p>
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">

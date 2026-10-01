@@ -24,6 +24,7 @@ interface AuthContextValue {
   session: Session | null;
   login: (email: string, password: string) => Promise<void>;
   loginWithOidc: (idToken: string, emailHint?: string) => Promise<void>;
+  establishSession: (res: LoginResponse, email: string) => void;
   logout: () => void;
 }
 
@@ -90,11 +91,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  const establishSession = useCallback(
+    (res: LoginResponse, email: string) => {
+      persist({
+        token: res.access_token,
+        organizationId: res.organization_id,
+        role: res.role,
+        email,
+      });
+    },
+    [persist],
+  );
+
   const logout = useCallback(() => persist(null), [persist]);
 
   const value = useMemo(
-    () => ({ session, login, loginWithOidc, logout }),
-    [session, login, loginWithOidc, logout],
+    () => ({ session, login, loginWithOidc, establishSession, logout }),
+    [session, login, loginWithOidc, establishSession, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
