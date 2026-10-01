@@ -70,9 +70,13 @@ export function OnboardingWizardPage() {
             <LoadingSkeleton rows={3} />
           ) : (
             <ul className="mb-4 list-disc pl-5 text-sm">
-              {(appQ.data?.enabled_modules ?? []).map((m) => (
-                <li key={m}>{m}</li>
-              ))}
+              {(appQ.data?.modules ?? [])
+                .filter((m) => m.applicable)
+                .map((m) => (
+                  <li key={m.key}>
+                    {m.name} ({m.key})
+                  </li>
+                ))}
             </ul>
           )}
           <Button type="button" onClick={() => setStep(2)}>

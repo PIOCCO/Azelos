@@ -19,11 +19,12 @@ router = APIRouter(prefix="/contracts", tags=["Contracts"])
 def list_contracts(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
+    q: str | None = Query(None, max_length=200),
     ctx: AuthContext = Depends(get_auth_context),
     db: Session = Depends(get_db),
 ):
     service = ContractService(db, ctx.organization_id)
-    items, total = service.list(page, page_size)
+    items, total = service.list(page, page_size, q=q)
     return PaginatedResponse(
         items=[ContractOut.model_validate(i) for i in items],
         page=page,

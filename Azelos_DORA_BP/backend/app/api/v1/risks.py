@@ -17,11 +17,12 @@ router = APIRouter(prefix="/risks", tags=["Risks"])
 def list_risks(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
+    q: str | None = Query(None, max_length=200),
     ctx: AuthContext = Depends(get_auth_context),
     db: Session = Depends(get_db),
 ):
     service = RiskService(db, ctx.organization_id)
-    items, total = service.list(page, page_size)
+    items, total = service.list(page, page_size, q=q)
     return PaginatedResponse(
         items=[RiskOut.model_validate(i) for i in items],
         page=page,

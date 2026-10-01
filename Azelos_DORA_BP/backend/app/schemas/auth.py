@@ -18,3 +18,9 @@ class TokenResponse(BaseModel):
 class OidcTokenRequest(BaseModel):
     id_token: str
     organization_id: uuid.UUID | None = None
+
+
+class LoginOptionsOut(BaseModel):
+    oidc_enabled: bool
+    oidc_client_id: str | None = None
+    oidc_issuer_url: str | None = None

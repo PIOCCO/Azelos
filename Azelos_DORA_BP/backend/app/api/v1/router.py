@@ -40,6 +40,7 @@ from app.api.v1 import (
     exports,
     subscription_admin,
     custom_field_values,
+    imports,
 )
 
 api_v1_router = APIRouter()
@@ -82,3 +83,4 @@ api_v1_router.include_router(exit_strategies.router)
 api_v1_router.include_router(exports.router)
 api_v1_router.include_router(subscription_admin.router)
 api_v1_router.include_router(custom_field_values.router)
+api_v1_router.include_router(imports.router)

@@ -57,16 +57,18 @@ export function EvidencePage() {
         {uploadM.error ? <p className="text-sm text-red-600">{(uploadM.error as Error).message}</p> : null}
         {uploadM.isSuccess ? <p className="text-sm text-green-700">Upload complete.</p> : null}
       </div>
-      <DataTable
+      <DataTable<Evidence>
         columns={[
-          { key: "file_name", header: "File" },
-          { key: "uploaded_by", header: "Uploaded by" },
-          { key: "size_bytes", header: "Size (bytes)" },
+          { key: "file_name", header: "File", render: (r) => r.file_name },
+          { key: "storage", header: "Storage", render: (r) => r.storage_provider },
+          {
+            key: "uploaded_at",
+            header: "Uploaded",
+            render: (r) => new Date(r.uploaded_at).toLocaleString(),
+          },
         ]}
-        items={data.items}
-        page={data.page}
-        pageSize={data.page_size}
-        total={data.total}
+        data={data}
+        page={page}
         onPageChange={setPage}
         emptyTitle="No evidence yet"
         emptyDescription="Upload a policy or audit artifact using the form above."

@@ -2,11 +2,22 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.schemas.auth import LoginRequest, OidcTokenRequest, TokenResponse
+from app.core.config import get_settings
+from app.schemas.auth import LoginOptionsOut, LoginRequest, OidcTokenRequest, TokenResponse
 from app.services.auth_service import AuthService
 from app.services.oidc_service import OidcService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+
+@router.get("/login-options", response_model=LoginOptionsOut)
+def login_options():
+    settings = get_settings()
+    return LoginOptionsOut(
+        oidc_enabled=settings.oidc_enabled,
+        oidc_client_id=settings.oidc_client_id or None,
+        oidc_issuer_url=settings.oidc_issuer_url or None,
+    )
 
 
 @router.post("/login", response_model=TokenResponse, summary="Obtain access token")

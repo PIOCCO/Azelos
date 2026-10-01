@@ -17,8 +17,10 @@ from app.services.suppliers import SupplierService
 router = APIRouter(tags=["ICT Providers"])
 
 
-def _paginated(service: SupplierService, page: int, page_size: int) -> PaginatedResponse:
-    items, total = service.list(page, page_size)
+def _paginated(
+    service: SupplierService, page: int, page_size: int, *, q: str | None = None
+) -> PaginatedResponse:
+    items, total = service.list(page, page_size, q=q)
     return PaginatedResponse(
         items=[SupplierOut.model_validate(i) for i in items],
         page=page,
@@ -31,10 +33,11 @@ def _paginated(service: SupplierService, page: int, page_size: int) -> Paginated
 def list_providers(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
+    q: str | None = Query(None, max_length=200),
     ctx: AuthContext = Depends(get_auth_context),
     db: Session = Depends(get_db),
 ):
-    return _paginated(SupplierService(db, ctx.organization_id), page, page_size)
+    return _paginated(SupplierService(db, ctx.organization_id), page, page_size, q=q)
 
 
 @router.get("/ict-providers/{provider_id}", response_model=SupplierOut)
@@ -96,7 +99,8 @@ def patch_provider(
 def list_suppliers_legacy(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
+    q: str | None = Query(None, max_length=200),
     ctx: AuthContext = Depends(get_auth_context),
     db: Session = Depends(get_db),
 ):
-    return _paginated(SupplierService(db, ctx.organization_id), page, page_size)
+    return _paginated(SupplierService(db, ctx.organization_id), page, page_size, q=q)

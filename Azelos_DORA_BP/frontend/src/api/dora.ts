@@ -27,6 +27,23 @@ export function login(email: string, password: string, organizationId?: string) 
   });
 }
 
+export interface LoginOptions {
+  oidc_enabled: boolean;
+  oidc_client_id: string | null;
+  oidc_issuer_url: string | null;
+}
+
+export function getLoginOptions() {
+  return apiRequest<LoginOptions>("/api/v1/auth/login-options");
+}
+
+export function loginWithOidcIdToken(idToken: string, organizationId?: string) {
+  return apiRequest<LoginResponse>("/api/v1/auth/oidc/token", {
+    method: "POST",
+    body: JSON.stringify({ id_token: idToken, organization_id: organizationId ?? null }),
+  });
+}
+
 export function getOrganization(orgId: string) {
   return apiRequest<{ id: string; legal_name: string; short_name: string | null }>(
     `/api/v1/organizations/${orgId}`,
@@ -158,9 +175,18 @@ export async function uploadEvidenceFile(
   return res.json() as Promise<Evidence>;
 }
 
-export function fetchPaginated<T>(path: string, page = 1, pageSize = 20) {
-  const q = `?page=${page}&page_size=${pageSize}`;
-  return apiRequest<Paginated<T>>(`${path}${q}`);
+export function fetchPaginated<T>(
+  path: string,
+  page = 1,
+  pageSize = 20,
+  search?: string,
+) {
+  const params = new URLSearchParams({
+    page: String(page),
+    page_size: String(pageSize),
+  });
+  if (search?.trim()) params.set("q", search.trim());
+  return apiRequest<Paginated<T>>(`${path}?${params.toString()}`);
 }
 
 export function listConfigModules() {

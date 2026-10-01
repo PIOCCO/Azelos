@@ -1,12 +1,19 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ApiError } from "../api/client";
+import { getLoginOptions } from "../api/dora";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "../components/ui/Button";
 import { ErrorState } from "../components/ui/States";
+import {
+  buildEntraAuthorizeUrl,
+  parseIdTokenFromHash,
+  storeOidcNonce,
+} from "../lib/oidc";
 
 export function LoginPage() {
-  const { session, login } = useAuth();
+  const { session, login, loginWithOidc } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from ?? "/";
@@ -16,7 +23,54 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const optionsQ = useQuery({
+    queryKey: ["login-options"],
+    queryFn: getLoginOptions,
+    staleTime: 60_000,
+  });
+
+  useEffect(() => {
+    const idToken = parseIdTokenFromHash();
+    if (!idToken) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        await loginWithOidc(idToken);
+        if (!cancelled) navigate(from, { replace: true });
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof ApiError ? err.message : "Microsoft sign-in failed");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [from, loginWithOidc, navigate]);
+
   if (session) return <Navigate to={from} replace />;
+
+  const oidc = optionsQ.data;
+  const canMicrosoft =
+    oidc?.oidc_enabled && oidc.oidc_client_id && oidc.oidc_issuer_url;
+
+  function startMicrosoftSignIn() {
+    if (!canMicrosoft) return;
+    const nonce = crypto.randomUUID();
+    storeOidcNonce(nonce);
+    const redirectUri = `${window.location.origin}/login`;
+    window.location.href = buildEntraAuthorizeUrl(
+      oidc!.oidc_issuer_url!,
+      oidc!.oidc_client_id!,
+      redirectUri,
+      nonce,
+    );
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -56,7 +110,21 @@ export function LoginPage() {
               <ErrorState title="Sign in failed" message={error} />
             </div>
           ) : null}
-          <label className="mt-6 block text-sm font-medium text-gray-700">
+          {canMicrosoft ? (
+            <>
+              <Button
+                type="button"
+                variant="secondary"
+                className="mt-6 w-full"
+                disabled={loading}
+                onClick={startMicrosoftSignIn}
+              >
+                Sign in with Microsoft
+              </Button>
+              <p className="my-4 text-center text-xs text-gray-400">or continue with email</p>
+            </>
+          ) : null}
+          <label className="mt-2 block text-sm font-medium text-gray-700">
             Email
             <input
               type="email"

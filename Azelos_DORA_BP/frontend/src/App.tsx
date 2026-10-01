@@ -21,7 +21,6 @@ import { ModulesConfigPage } from "./pages/config/ModulesConfigPage";
 import { CustomFieldsPage } from "./pages/config/CustomFieldsPage";
 import type {
   Contract,
-  Evidence,
   ICTService,
   InformationAsset,
   SubOutsourcing,

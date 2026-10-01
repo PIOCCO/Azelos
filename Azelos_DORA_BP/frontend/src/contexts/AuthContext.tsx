@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { login as apiLogin } from "../api/dora";
+import { login as apiLogin, loginWithOidcIdToken } from "../api/dora";
 import { setTokenProvider } from "../api/client";
 import type { LoginResponse, Role } from "../api/types";
 
@@ -23,6 +23,7 @@ interface Session {
 interface AuthContextValue {
   session: Session | null;
   login: (email: string, password: string) => Promise<void>;
+  loginWithOidc: (idToken: string, emailHint?: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -76,11 +77,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  const loginWithOidc = useCallback(
+    async (idToken: string, emailHint?: string) => {
+      const res: LoginResponse = await loginWithOidcIdToken(idToken);
+      persist({
+        token: res.access_token,
+        organizationId: res.organization_id,
+        role: res.role,
+        email: emailHint ?? "oidc-user",
+      });
+    },
+    [persist],
+  );
+
   const logout = useCallback(() => persist(null), [persist]);
 
   const value = useMemo(
-    () => ({ session, login, logout }),
-    [session, login, logout],
+    () => ({ session, login, loginWithOidc, logout }),
+    [session, login, loginWithOidc, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

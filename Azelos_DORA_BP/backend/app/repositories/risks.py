@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 
 from app.models.risk import RiskAssessment
 from app.repositories.base import OrgScopedRepository
@@ -13,18 +13,21 @@ class RiskRepository(OrgScopedRepository):
             return None
         return row
 
-    def list_paginated(self, page: int, page_size: int) -> tuple[list[RiskAssessment], int]:
+    def list_paginated(
+        self, page: int, page_size: int, *, q: str | None = None
+    ) -> tuple[list[RiskAssessment], int]:
         base = select(RiskAssessment).where(
             RiskAssessment.financial_entity_id == self.organization_id
         )
-        total = (
-            self.db.scalar(
-                select(func.count(RiskAssessment.id)).where(
-                    RiskAssessment.financial_entity_id == self.organization_id
+        if q:
+            term = f"%{q.strip()}%"
+            base = base.where(
+                or_(
+                    RiskAssessment.title.ilike(term),
+                    RiskAssessment.assessor.ilike(term),
                 )
             )
-            or 0
-        )
+        total = self.db.scalar(select(func.count()).select_from(base.subquery())) or 0
         rows = self.db.scalars(
             base.order_by(RiskAssessment.calculated_at.desc())
             .offset((page - 1) * page_size)

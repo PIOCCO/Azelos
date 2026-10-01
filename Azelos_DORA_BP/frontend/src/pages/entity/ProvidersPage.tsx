@@ -1,16 +1,19 @@
 import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Supplier } from "../../api/types";
 import { createProvider } from "../../api/dora";
+import { getApiBase, getTokenProvider } from "../../api/client";
 import { EntityListPage } from "./EntityListPage";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 
 export function ProvidersPage() {
   const qc = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [legalName, setLegalName] = useState("");
   const [country, setCountry] = useState("DE");
+  const [importMsg, setImportMsg] = useState<string | null>(null);
   const createM = useMutation({
     mutationFn: () => createProvider({ legal_name: legalName, country_code: country }),
     onSuccess: () => {
@@ -49,12 +52,70 @@ export function ProvidersPage() {
           </Button>
         </form>
         {createM.error ? <p className="mt-2 text-sm text-red-600">{(createM.error as Error).message}</p> : null}
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-3 text-sm">
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              setImportMsg(null);
+              const fd = new FormData();
+              fd.append("file", file);
+              const token = getTokenProvider()();
+              const res = await fetch(`${getApiBase()}/api/v1/import/ict-providers.csv`, {
+                method: "POST",
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+                body: fd,
+              });
+              const body = await res.json().catch(() => ({}));
+              if (!res.ok) {
+                setImportMsg(typeof body?.error?.message === "string" ? body.error.message : "Import failed");
+              } else {
+                setImportMsg(`Imported ${body.created} provider(s).`);
+                qc.invalidateQueries({ queryKey: ["ict-providers"] });
+              }
+              e.target.value = "";
+            }}
+          />
+          <Button type="button" variant="secondary" onClick={() => fileRef.current?.click()}>
+            Import CSV
+          </Button>
+          <a
+            className="text-primary hover:underline"
+            href={`${getApiBase()}/api/v1/export/ict-providers.csv`}
+            onClick={(ev) => {
+              const token = getTokenProvider()();
+              if (!token) return;
+              ev.preventDefault();
+              fetch(`${getApiBase()}/api/v1/export/ict-providers.csv`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+                .then((r) => r.text())
+                .then((text) => {
+                  const blob = new Blob([text], { type: "text/csv" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "ict-providers.csv";
+                  a.click();
+                  URL.revokeObjectURL(url);
+                });
+            }}
+          >
+            Export CSV
+          </a>
+          {importMsg ? <span className="text-gray-600">{importMsg}</span> : null}
+        </div>
       </Card>
       <EntityListPage<Supplier>
       pageTitle="Third-Party Provider Portfolio"
       tableTitle="Providers"
       path="/api/v1/ict-providers"
       queryKey="ict-providers"
+      searchable
       moduleItem={{ label: "ICT Third-Party Providers", moduleKey: "THIRD_PARTY_RISK" }}
       emptyTitle="No ICT providers yet"
       emptyDescription="Use the form above to register your first ICT third-party provider."

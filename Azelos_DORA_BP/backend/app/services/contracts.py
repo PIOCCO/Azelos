@@ -14,8 +14,8 @@ class ContractService:
     def __init__(self, db: Session, organization_id: UUID) -> None:
         self.repo = ContractRepository(db, organization_id)
 
-    def list(self, page: int, page_size: int):
-        return self.repo.list_paginated(page, page_size)
+    def list(self, page: int, page_size: int, *, q: str | None = None):
+        return self.repo.list_paginated(page, page_size, q=q)
 
     def get(self, contract_id: UUID) -> Contract:
         row = self.repo.get(contract_id)
