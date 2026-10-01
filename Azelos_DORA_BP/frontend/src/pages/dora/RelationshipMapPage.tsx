@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Node, XYPosition } from "@xyflow/react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Background,
@@ -34,6 +35,7 @@ import {
   applyGraphFilters,
   edgesForNode,
   layoutNodes,
+  mergeFlowNodePositions,
   mergeGraphs,
   neighborSets,
   relationshipTypesInGraph,
@@ -57,10 +59,13 @@ function GraphCanvas(props: {
   filterTarget: string;
   selectedNode: GraphNode | null;
   selectedEdge: GraphEdge | null;
+  layoutResetKey: number;
   onSelectNode: (n: GraphNode | null) => void;
   onSelectEdge: (e: GraphEdge | null) => void;
 }) {
   const { fitView } = useReactFlow();
+  const manualPositionsRef = useRef<Map<string, XYPosition>>(new Map());
+  const didDragRef = useRef(false);
   const {
     rawGraph,
     hiddenRelationships,
@@ -124,9 +129,27 @@ function GraphCanvas(props: {
   const [edges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
 
   useEffect(() => {
-    setNodes(flowNodes);
+    manualPositionsRef.current.clear();
+  }, [props.layoutResetKey]);
+
+  useEffect(() => {
+    setNodes((prev) => {
+      const prevPositions = new Map(prev.map((n) => [n.id, n.position]));
+      return mergeFlowNodePositions(flowNodes, manualPositionsRef.current, prevPositions);
+    });
     setEdges(flowEdges);
   }, [flowNodes, flowEdges, setNodes, setEdges]);
+
+  const onNodeDragStart = useCallback(() => {
+    didDragRef.current = true;
+  }, []);
+
+  const onNodeDragStop = useCallback((_evt: MouseEvent | TouchEvent, node: Node) => {
+    manualPositionsRef.current.set(node.id, { x: node.position.x, y: node.position.y });
+    window.setTimeout(() => {
+      didDragRef.current = false;
+    }, 0);
+  }, []);
 
   useEffect(() => {
     if (rawGraph.nodes.length) {
@@ -136,11 +159,18 @@ function GraphCanvas(props: {
 
   return (
     <ReactFlow
+      className="h-full w-full select-none"
       nodes={nodes}
       edges={edges}
+      nodesDraggable
+      nodeDragThreshold={6}
+      panOnDrag
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
+      onNodeDragStart={onNodeDragStart}
+      onNodeDragStop={onNodeDragStop}
       onNodeClick={(_, n) => {
+        if (didDragRef.current) return;
         props.onSelectEdge(null);
         props.onSelectNode((n.data as { node: GraphNode }).node);
       }}
@@ -187,6 +217,7 @@ function RelationshipMapInner() {
   const [activePreset, setActivePreset] = useState<string>("all");
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const initialLoaded = useRef(false);
+  const [layoutResetKey, setLayoutResetKey] = useState(0);
 
   const overviewQ = useQuery({
     queryKey: ["org-graph", depth, view],
@@ -357,7 +388,14 @@ function RelationshipMapInner() {
         <Button type="button" variant="secondary" onClick={() => fitView({ padding: 0.15 })}>
           Fit view
         </Button>
-        <Button type="button" variant="secondary" onClick={() => overviewQ.refetch()}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => {
+            setLayoutResetKey((k) => k + 1);
+            overviewQ.refetch();
+          }}
+        >
           Reset graph
         </Button>
         <button
@@ -398,7 +436,7 @@ function RelationshipMapInner() {
       ) : null}
 
       <div className="flex min-h-0 flex-1 gap-3">
-        <div className="min-w-0 flex-[3] rounded-lg border bg-white">
+        <div className="min-h-[420px] min-h-0 min-w-0 flex-[3] rounded-lg border bg-white [&>div]:h-full">
           {loading ? (
             <LoadingSkeleton rows={8} />
           ) : error ? (
@@ -418,6 +456,7 @@ function RelationshipMapInner() {
               filterTarget={filterTarget}
               selectedNode={selectedNode}
               selectedEdge={selectedEdge}
+              layoutResetKey={layoutResetKey}
               onSelectNode={setSelectedNode}
               onSelectEdge={setSelectedEdge}
             />

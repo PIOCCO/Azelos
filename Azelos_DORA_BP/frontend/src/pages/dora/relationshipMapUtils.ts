@@ -196,6 +196,21 @@ export function toFlowEdges(
     });
 }
 
+/** Apply user/session positions over auto-layout; layout is used only when no saved position exists. */
+export function mergeFlowNodePositions(
+  nextNodes: Node[],
+  manualPositions: ReadonlyMap<string, { x: number; y: number }>,
+  previousPositions: ReadonlyMap<string, { x: number; y: number }>,
+): Node[] {
+  return nextNodes.map((n) => {
+    const manual = manualPositions.get(n.id);
+    if (manual) return { ...n, position: { x: manual.x, y: manual.y } };
+    const prev = previousPositions.get(n.id);
+    if (prev) return { ...n, position: { x: prev.x, y: prev.y } };
+    return n;
+  });
+}
+
 export function toFlowNodes(
   flowLayout: Node[],
   opts: {

@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   applyGraphFilters,
+  mergeFlowNodePositions,
   mergeGraphs,
   relationshipTypesInGraph,
   RELATIONSHIP_PRESETS,
 } from "./relationshipMapUtils";
+import type { Node } from "@xyflow/react";
 import type { GraphEdge, GraphNode } from "../../api/graphql";
 
 const n = (id: string, type: string): GraphNode => ({ id, type, label: id });
@@ -45,6 +47,18 @@ describe("relationshipMapUtils", () => {
       e("2", "b", "c", "PROVIDED_BY"),
     ]);
     expect(types).toEqual(["PROVIDED_BY", "SUPPORTS"]);
+  });
+
+  it("prefers manual positions over auto layout", () => {
+    const layout: Node[] = [
+      { id: "a", position: { x: 0, y: 0 }, data: { label: "A" } },
+      { id: "b", position: { x: 200, y: 0 }, data: { label: "B" } },
+    ];
+    const manual = new Map([["a", { x: 50, y: 80 }]]);
+    const prev = new Map([["b", { x: 10, y: 20 }]]);
+    const merged = mergeFlowNodePositions(layout, manual, prev);
+    expect(merged[0]!.position).toEqual({ x: 50, y: 80 });
+    expect(merged[1]!.position).toEqual({ x: 10, y: 20 });
   });
 
   it("presets reference known relationship enums", () => {
