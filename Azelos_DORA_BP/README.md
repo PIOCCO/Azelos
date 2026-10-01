@@ -18,6 +18,7 @@ FastAPI, React, GraphQL, and Terraform are **out of scope** here. **PostgreSQL h
 - **Database:** client-provided PostgreSQL 16+ via `DATABASE_URL` only ([database contract](docs/DATABASE-CONTRACT.md)).
 - **Storage:** pluggable `EvidenceStorage` — `local` today; Azure/S3/MinIO adapters stubbed ([storage architecture](docs/STORAGE-ARCHITECTURE.md)).
 - **Deploy:** [DEPLOYMENT.md](docs/DEPLOYMENT.md)
+- **Pilot handoff (product, onboarding, demo tenant, customer guides):** [docs/pilot/README.md](docs/pilot/README.md)
 
 ## Web UI (fix “site can’t be reached”)
 

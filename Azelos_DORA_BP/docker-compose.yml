@@ -24,8 +24,12 @@ services:
       DATABASE_URL: postgresql+psycopg://dora:dora@postgres:5432/dora_supplier_risk
       CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000
       SERVE_FRONTEND: "1"
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-replace-with-32-plus-char-secret-for-pilot}
+      STORAGE_LOCAL_PATH: /app/storage
     ports:
       - "0.0.0.0:8000:8000"
+    volumes:
+      - dora_evidence_data:/app/storage
     depends_on:
       postgres:
         condition: service_healthy
@@ -43,3 +47,4 @@ services:
 
 volumes:
   dora_pg_data:
+  dora_evidence_data:
