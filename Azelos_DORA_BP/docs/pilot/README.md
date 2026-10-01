@@ -1,6 +1,8 @@
 # DORA Blueprint — Pilot delivery pack
 
-This folder contains everything needed to **hand the existing product to a pilot financial entity** without expanding DORA scope.
+**Canonical install and usage manual:** [../README.md](../README.md) (repository root `Azelos_DORA_BP/README.md`).
+
+This folder contains supplementary materials for **running a pilot** without expanding DORA scope.
 
 | Document | Purpose |
 |----------|---------|

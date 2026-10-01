@@ -1,5 +1,7 @@
 # DORA Blueprint — install and use (step by step)
 
+> **Authoritative manual:** The complete, maintained guide is [../../README.md](../../README.md). This file is a shorter companion.
+
 Operational ICT resilience / third-party risk workspace for financial entities. **Not** a compliance certification product.
 
 ---
