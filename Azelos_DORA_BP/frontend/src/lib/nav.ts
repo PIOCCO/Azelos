@@ -26,10 +26,10 @@ export const MODULE_NAV: NavItem[] = [
   { label: "Risks", path: "/risks", moduleKey: "ICT_RISK" },
   { label: "Controls", path: "/controls", moduleKey: "ICT_RISK" },
   { label: "Evidence", path: "/evidence", moduleKey: "EVIDENCE_MANAGEMENT" },
-  { label: "Incidents", path: "/incidents", moduleKey: "INCIDENT_MANAGEMENT", stub: true },
-  { label: "Business continuity", path: "/business-continuity", moduleKey: "BUSINESS_CONTINUITY", stub: true },
-  { label: "Disaster recovery", path: "/disaster-recovery", moduleKey: "DISASTER_RECOVERY", stub: true },
-  { label: "Resilience tests", path: "/resilience-tests", moduleKey: "RESILIENCE_TESTING", stub: true },
+  { label: "Incidents", path: "/incidents", moduleKey: "INCIDENT_MANAGEMENT" },
+  { label: "Business continuity", path: "/business-continuity", moduleKey: "BUSINESS_CONTINUITY" },
+  { label: "Disaster recovery", path: "/disaster-recovery", moduleKey: "DISASTER_RECOVERY" },
+  { label: "Resilience tests", path: "/resilience-tests", moduleKey: "RESILIENCE_TESTING" },
 ];
 
 export const ADMIN_NAV: NavItem[] = [

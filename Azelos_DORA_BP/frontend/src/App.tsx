@@ -13,6 +13,7 @@ import { AuditLogPage } from "./pages/admin/AuditLogPage";
 import { BusinessFunctionsPage } from "./pages/entity/BusinessFunctionsPage";
 import { ICTAssetsPage } from "./pages/entity/ICTAssetsPage";
 import { SimpleListPage } from "./pages/entity/SimpleListPage";
+import { OperationalListPage } from "./pages/entity/OperationalListPage";
 import { ControlsPage } from "./pages/entity/ControlsPage";
 import { ProvidersPage } from "./pages/entity/ProvidersPage";
 import { RisksPage } from "./pages/entity/RisksPage";
@@ -37,6 +38,42 @@ import { BiaPage } from "./pages/entity/BiaPage";
 import { MembersPage } from "./pages/admin/MembersPage";
 import { OnboardingWizardPage } from "./pages/onboarding/OnboardingWizardPage";
 import { DependenciesPage } from "./pages/entity/DependenciesPage";
+import { useState } from "react";
+
+function ResilienceTestsRoute() {
+  const [testKind, setTestKind] = useState("scenario");
+  return (
+    <OperationalListPage<{ id: string; title: string; status: string; test_kind: string }>
+      pageTitle="Resilience tests"
+      path="/api/v1/resilience-tests"
+      queryKey="resilience-tests"
+      createLabel="New resilience test"
+      buildCreateBody={(title) => ({ title, test_kind: testKind })}
+      moduleItem={{ label: "Resilience testing", moduleKey: "RESILIENCE_TESTING" }}
+      extraCreateFields={
+        <label className="block text-sm">
+          <span className="text-gray-600">Test kind</span>
+          <select
+            className="mt-1 rounded border px-2 py-1"
+            value={testKind}
+            onChange={(e) => setTestKind(e.target.value)}
+          >
+            <option value="scenario">Scenario</option>
+            <option value="business_continuity">Business continuity</option>
+            <option value="disaster_recovery">Disaster recovery</option>
+            <option value="penetration_test">Penetration test</option>
+            <option value="tlpt">TLPT</option>
+          </select>
+        </label>
+      }
+      columns={[
+        { key: "title", header: "Title", render: (r) => r.title },
+        { key: "kind", header: "Kind", render: (r) => r.test_kind },
+        { key: "status", header: "Status", render: (r) => r.status },
+      ]}
+    />
+  );
+}
 
 export default function App() {
   return (
@@ -209,10 +246,12 @@ export default function App() {
           <Route
             path="business-continuity"
             element={
-              <SimpleListPage<{ id: string; name: string; status: string; owner?: string | null }>
-                title="Business continuity plans"
+              <OperationalListPage<{ id: string; name: string; status: string; owner?: string | null }>
+                pageTitle="Business continuity plans"
                 path="/api/v1/business-continuity"
                 queryKey="business-continuity"
+                createLabel="New continuity plan"
+                buildCreateBody={(name) => ({ name })}
                 moduleItem={{ label: "Business continuity", moduleKey: "BUSINESS_CONTINUITY" }}
                 columns={[
                   { key: "name", header: "Plan", render: (r) => r.name },
@@ -225,10 +264,12 @@ export default function App() {
           <Route
             path="disaster-recovery"
             element={
-              <SimpleListPage<{ id: string; name: string; status: string; owner?: string | null }>
-                title="Disaster recovery plans"
+              <OperationalListPage<{ id: string; name: string; status: string; owner?: string | null }>
+                pageTitle="Disaster recovery plans"
                 path="/api/v1/disaster-recovery"
                 queryKey="disaster-recovery"
+                createLabel="New disaster recovery plan"
+                buildCreateBody={(name) => ({ name })}
                 moduleItem={{ label: "Disaster recovery", moduleKey: "DISASTER_RECOVERY" }}
                 columns={[
                   { key: "name", header: "Plan", render: (r) => r.name },
@@ -241,26 +282,18 @@ export default function App() {
           <Route
             path="resilience-tests"
             element={
-              <SimpleListPage<{ id: string; title: string; status: string; test_kind: string }>
-                title="Resilience tests"
-                path="/api/v1/resilience-tests"
-                queryKey="resilience-tests"
-                moduleItem={{ label: "Resilience testing", moduleKey: "RESILIENCE_TESTING" }}
-                columns={[
-                  { key: "title", header: "Title", render: (r) => r.title },
-                  { key: "kind", header: "Kind", render: (r) => r.test_kind },
-                  { key: "status", header: "Status", render: (r) => r.status },
-                ]}
-              />
+              <ResilienceTestsRoute />
             }
           />
           <Route
             path="tlpt"
             element={
-              <SimpleListPage<{ id: string; name: string; status: string; owner?: string | null }>
-                title="TLPT exercises"
+              <OperationalListPage<{ id: string; name: string; status: string; owner?: string | null }>
+                pageTitle="TLPT exercises"
                 path="/api/v1/tlpt"
                 queryKey="tlpt"
+                createLabel="New TLPT exercise"
+                buildCreateBody={(name) => ({ name })}
                 moduleItem={{ label: "TLPT", moduleKey: "INCIDENT_MANAGEMENT" }}
                 columns={[
                   { key: "name", header: "Exercise", render: (r) => r.name },

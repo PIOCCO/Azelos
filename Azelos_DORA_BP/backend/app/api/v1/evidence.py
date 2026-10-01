@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from fastapi.responses import Response
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -14,12 +15,22 @@ from app.models.enums import AuditAction
 from app.models.evidence import DocumentType, Evidence
 from app.repositories.evidence import EvidenceRepository
 from app.schemas.common import PaginatedResponse
-from app.schemas.evidence import EvidenceOut
+from app.schemas.evidence import DocumentTypeOut, EvidenceOut
 from app.services.platform_audit import record_platform_audit
 from app.core.upload_policy import validate_upload_content_type, validate_upload_filename
 from app.storage.factory import get_evidence_storage
 
 router = APIRouter(prefix="/evidence", tags=["Evidence"])
+
+
+@router.get("/document-types", response_model=list[DocumentTypeOut])
+def list_document_types(
+    ctx: AuthContext = Depends(get_auth_context),
+    db: Session = Depends(get_db),
+):
+    _ = ctx
+    rows = db.scalars(select(DocumentType).order_by(DocumentType.code)).all()
+    return [DocumentTypeOut.model_validate(r) for r in rows]
 
 
 @router.get("", response_model=PaginatedResponse, summary="Evidence metadata only")

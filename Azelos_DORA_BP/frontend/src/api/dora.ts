@@ -175,6 +175,16 @@ export async function uploadEvidenceFile(
   return res.json() as Promise<Evidence>;
 }
 
+export interface DocumentTypeOption {
+  id: string;
+  code: string;
+  label: string;
+}
+
+export function listDocumentTypes() {
+  return apiRequest<DocumentTypeOption[]>("/api/v1/evidence/document-types");
+}
+
 export function fetchPaginated<T>(
   path: string,
   page = 1,

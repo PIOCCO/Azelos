@@ -1,65 +1,119 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchPaginated, uploadEvidenceFile } from "../../api/dora";
+import { fetchPaginated, listDocumentTypes, uploadEvidenceFile } from "../../api/dora";
 import type { Evidence } from "../../api/types";
+import { getApiBase, getTokenProvider } from "../../api/client";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { DataTable } from "../../components/ui/DataTable";
 import { Button } from "../../components/ui/Button";
 import { ErrorState, LoadingSkeleton } from "../../components/ui/States";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function EvidencePage() {
   const qc = useQueryClient();
   const [page, setPage] = useState(1);
   const [docTypeId, setDocTypeId] = useState("");
+  const docTypesQ = useQuery({
+    queryKey: ["document-types"],
+    queryFn: listDocumentTypes,
+  });
   const listQ = useQuery({
     queryKey: ["evidence", page],
     queryFn: () => fetchPaginated<Evidence>("/api/v1/evidence", page),
   });
   const uploadM = useMutation({
     mutationFn: (file: File) => {
-      if (!docTypeId) throw new Error("Enter a document type UUID from seed data");
+      if (!docTypeId) throw new Error("Select a document type");
       return uploadEvidenceFile(file, docTypeId);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["evidence"] }),
   });
 
-  if (listQ.isLoading) return <LoadingSkeleton rows={6} />;
+  useEffect(() => {
+    if (docTypesQ.data?.length && !docTypeId) {
+      setDocTypeId(docTypesQ.data[0]!.id);
+    }
+  }, [docTypesQ.data, docTypeId]);
+
+  if (listQ.isLoading || docTypesQ.isLoading) return <LoadingSkeleton rows={6} />;
   if (listQ.error) return <ErrorState message={(listQ.error as Error).message} onRetry={() => listQ.refetch()} />;
+  if (docTypesQ.error) {
+    return <ErrorState message={(docTypesQ.error as Error).message} onRetry={() => docTypesQ.refetch()} />;
+  }
 
   const data = listQ.data!;
+  const docTypes = docTypesQ.data ?? [];
+
+  async function downloadEvidence(id: string, fileName: string) {
+    const token = getTokenProvider()();
+    const res = await fetch(`${getApiBase()}/api/v1/evidence/${id}/download`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error("Download failed");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div>
       <PageHeader title="Evidence" subtitle="Upload files linked to your organization (metadata + storage)." />
-      <div className="mb-4 flex flex-wrap items-end gap-2 rounded-lg border bg-surface p-3">
-        <label className="text-sm">
-          Document type ID
-          <input
-            className="ml-2 rounded border px-2 py-1 font-mono text-xs"
-            value={docTypeId}
-            onChange={(e) => setDocTypeId(e.target.value)}
-            placeholder="UUID from document_types"
-          />
-        </label>
-        <label className="cursor-pointer">
-          <span className="sr-only">Upload evidence</span>
-          <input
-            type="file"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) uploadM.mutate(f);
-            }}
-          />
-          <Button type="button" variant="primary" disabled={uploadM.isPending}>
-            {uploadM.isPending ? "Uploading…" : "Upload file"}
-          </Button>
-        </label>
-        {uploadM.error ? <p className="text-sm text-red-600">{(uploadM.error as Error).message}</p> : null}
-        {uploadM.isSuccess ? <p className="text-sm text-green-700">Upload complete.</p> : null}
-      </div>
+      {docTypes.length === 0 ? (
+        <p className="mb-4 text-sm text-amber-800">
+          No document types in the database. Run database migrations and reference seed data.
+        </p>
+      ) : (
+        <div className="mb-4 flex flex-wrap items-end gap-2 rounded-lg border bg-surface p-3">
+          <label className="text-sm">
+            Document type
+            <select
+              className="ml-2 rounded border px-2 py-1 text-sm"
+              value={docTypeId}
+              onChange={(e) => setDocTypeId(e.target.value)}
+            >
+              {docTypes.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.label} ({d.code})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="cursor-pointer">
+            <span className="sr-only">Upload evidence</span>
+            <input
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) uploadM.mutate(f);
+              }}
+            />
+            <Button type="button" variant="primary" disabled={uploadM.isPending || !docTypeId}>
+              {uploadM.isPending ? "Uploading…" : "Upload file"}
+            </Button>
+          </label>
+          {uploadM.error ? <p className="text-sm text-red-600">{(uploadM.error as Error).message}</p> : null}
+          {uploadM.isSuccess ? <p className="text-sm text-green-700">Upload complete.</p> : null}
+        </div>
+      )}
       <DataTable<Evidence>
         columns={[
-          { key: "file_name", header: "File", render: (r) => r.file_name },
+          {
+            key: "file_name",
+            header: "File",
+            render: (r) => (
+              <button
+                type="button"
+                className="text-primary hover:underline"
+                onClick={() => downloadEvidence(r.id, r.file_name).catch(() => undefined)}
+              >
+                {r.file_name}
+              </button>
+            ),
+          },
           { key: "storage", header: "Storage", render: (r) => r.storage_provider },
           {
             key: "uploaded_at",

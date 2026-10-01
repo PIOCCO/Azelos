@@ -1,6 +1,7 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { fetchPaginated, listOrgRequirements, probeStubEndpoint } from "../api/dora";
+import { fetchPaginated, listOrgRequirements } from "../api/dora";
+import type { ICTIncident } from "../api/types";
 import { getResilienceDashboard } from "../api/resilience";
 import type { BusinessFunction, ICTAsset, Risk, Supplier } from "../api/types";
 import { useAuth } from "../contexts/AuthContext";
@@ -47,8 +48,8 @@ export function DashboardPage() {
   });
 
   const incidentsQ = useQuery({
-    queryKey: ["dash-incidents-probe"],
-    queryFn: () => probeStubEndpoint("/api/v1/incidents?page=1&page_size=1"),
+    queryKey: ["dash", "incidents"],
+    queryFn: () => fetchPaginated<ICTIncident>("/api/v1/incidents", 1, 1),
     enabled: apiReady,
   });
 
@@ -109,11 +110,7 @@ export function DashboardPage() {
         <KpiCard label="ICT assets" value={ictAssets} />
         <KpiCard label="Open risks" value={risks} tone="warning" />
         <KpiCard label="Business functions (DORA)" value={functions} />
-        <KpiCard
-          label="Active incidents"
-          value={incidentsQ.data?.ok ? "—" : "N/A"}
-          tone="danger"
-        />
+        <KpiCard label="Incidents (total)" value={incidentsQ.data?.total ?? "—"} tone="danger" />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
@@ -195,11 +192,6 @@ export function DashboardPage() {
         </Card>
       </div>
 
-      {!incidentsQ.data?.ok ? (
-        <p className="mt-4 text-xs text-gray-500">
-          Incident KPI unavailable: backend returns 501 until incident module is modelled.
-        </p>
-      ) : null}
     </div>
   );
 }
