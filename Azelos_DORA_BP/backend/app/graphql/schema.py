@@ -10,6 +10,7 @@ from app.domain.graph.types import GraphView as DomainGraphView
 from app.domain.graph.types import DEFAULT_OVERVIEW_MAX_NODES, MAX_GRAPH_DEPTH
 from app.graphql.context import GraphQLContext
 from app.core.exceptions import AppError
+from app.graphql.extensions import MaxQueryLengthExtension
 from app.services.entity_graph import EntityGraphService
 
 
@@ -157,7 +158,7 @@ class Query:
 def build_schema(*, introspection_enabled: bool = True):
     return strawberry.Schema(
         query=Query,
-        extensions=[],
+        extensions=[MaxQueryLengthExtension()],
         config=strawberry.schema.config.StrawberryConfig(
             disable_field_suggestions=not introspection_enabled,
         ),

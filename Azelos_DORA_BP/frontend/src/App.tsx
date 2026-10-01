@@ -36,6 +36,8 @@ import { ReportsPage } from "./pages/resilience/ReportsPage";
 import { EvidencePage } from "./pages/entity/EvidencePage";
 import { BiaPage } from "./pages/entity/BiaPage";
 import { MembersPage } from "./pages/admin/MembersPage";
+import { OnboardingWizardPage } from "./pages/onboarding/OnboardingWizardPage";
+import { DependenciesPage } from "./pages/entity/DependenciesPage";
 
 export default function App() {
   return (
@@ -126,7 +128,9 @@ export default function App() {
             }
           />
           <Route path="reports" element={<ReportsPage />} />
+          <Route path="onboarding" element={<OnboardingWizardPage />} />
           <Route path="onboarding/profile" element={<ProfilePage />} />
+          <Route path="dependencies" element={<DependenciesPage />} />
           <Route path="onboarding/applicability" element={<ApplicabilityPage />} />
           <Route path="requirements" element={<RequirementsPage />} />
           <Route path="business-functions" element={<BusinessFunctionsPage />} />

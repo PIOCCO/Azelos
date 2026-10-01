@@ -1,11 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
-import { listContractControls, listControlDefinitions } from "../../api/dora";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { listContractControls, listControlDefinitions, patchContractControl } from "../../api/dora";
 import { ModuleGate } from "../../components/auth/ModuleGate";
 import { ErrorPanel, LoadingPanel } from "../../components/ui/StatePanel";
 
 export function ControlsPage() {
+  const qc = useQueryClient();
   const defs = useQuery({ queryKey: ["control-defs"], queryFn: listControlDefinitions });
   const org = useQuery({ queryKey: ["contract-controls"], queryFn: listContractControls });
+  const patchM = useMutation({
+    mutationFn: (args: { id: string; status: string }) =>
+      patchContractControl(args.id, { compliance_status: args.status }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["contract-controls"] }),
+  });
 
   if (defs.isLoading || org.isLoading) return <LoadingPanel />;
   if (defs.error) return <ErrorPanel message={(defs.error as Error).message} />;
@@ -48,7 +54,18 @@ export function ControlsPage() {
                 return (
                   <tr key={c.id} className="border-t">
                     <td className="py-2">{d ? `${d.code} — ${d.title}` : c.control_definition_id}</td>
-                    <td>{c.compliance_status}</td>
+                    <td>
+                      <select
+                        className="rounded border px-1 py-0.5 text-xs"
+                        value={c.compliance_status}
+                        onChange={(e) => patchM.mutate({ id: c.id, status: e.target.value })}
+                      >
+                        <option value="not_assessed">Not assessed</option>
+                        <option value="compliant">Compliant</option>
+                        <option value="partially_compliant">Partially compliant</option>
+                        <option value="non_compliant">Non-compliant</option>
+                      </select>
+                    </td>
                   </tr>
                 );
               })

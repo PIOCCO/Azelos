@@ -44,6 +44,7 @@ export const NAV_SECTIONS: NavSection[] = [
     title: "Main",
     items: [
       { label: "Dashboard", path: "/", icon: LayoutDashboard },
+      { label: "Get started", path: "/onboarding", icon: ClipboardCheck },
       { label: "Organization", path: "/onboarding/profile", icon: Building2 },
     ],
   },
@@ -70,6 +71,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Applicability", path: "/onboarding/applicability", icon: ClipboardCheck },
       { label: "Business Functions", path: "/business-functions", icon: Home, moduleKey: "ASSET_MANAGEMENT" },
       { label: "BIA", path: "/bia", icon: Activity, moduleKey: "ASSET_MANAGEMENT" },
+      { label: "Dependencies", path: "/dependencies", icon: Link2, moduleKey: "ASSET_MANAGEMENT" },
       { label: "Team", path: "/admin/members", icon: Settings, adminOnly: true },
     ],
   },

@@ -13,3 +13,8 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     organization_id: uuid.UUID
     role: str
+
+
+class OidcTokenRequest(BaseModel):
+    id_token: str
+    organization_id: uuid.UUID | None = None
