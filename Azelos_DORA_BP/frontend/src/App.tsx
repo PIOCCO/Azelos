@@ -43,7 +43,6 @@ import { SimpleResilienceListPage } from "./pages/resilience/SimpleResilienceLis
 import { ReportsPage } from "./pages/resilience/ReportsPage";
 import { EvidencePage } from "./pages/entity/EvidencePage";
 import { BiaPage } from "./pages/entity/BiaPage";
-import { MembersPage } from "./pages/admin/MembersPage";
 import { OnboardingWizardPage } from "./pages/onboarding/OnboardingWizardPage";
 import { DependenciesPage } from "./pages/entity/DependenciesPage";
 import { useState } from "react";
@@ -278,13 +277,12 @@ export default function App() {
               />
             }
           />
-          <Route path="admin/members" element={<MembersPage />} />
+          <Route path="admin/members" element={<Navigate to="/settings/access" replace />} />
           <Route path="admin/provision" element={<ProvisionTenantPage />} />
           <Route path="audit-log" element={<AuditLogPage />} />
           <Route path="configuration/integrations" element={<Navigate to="/settings/integrations" replace />} />
           <Route path="configuration/modules" element={<Navigate to="/settings/dora" replace />} />
           <Route path="configuration/custom-fields" element={<Navigate to="/settings/custom-fields" replace />} />
-          <Route path="admin/members" element={<Navigate to="/settings/access" replace />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
