@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 import { useState } from "react";
 import {
   createHttpIntegration,
@@ -14,7 +13,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { can } from "../../lib/permissions";
 import { Navigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
-import { Card } from "../../components/ui/Card";
 import { ErrorPanel, LoadingPanel } from "../../components/ui/StatePanel";
 
 function statusLabel(status: string) {
@@ -45,7 +43,7 @@ function statusTone(status: string) {
   return "text-amber-800 bg-amber-50";
 }
 
-export function IntegrationsConfigPage() {
+export function IntegrationsConfigPage({ embedded = false }: { embedded?: boolean }) {
   const { session } = useAuth();
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["integrations"], queryFn: listIntegrations });
@@ -122,7 +120,7 @@ export function IntegrationsConfigPage() {
     onError: (e: Error) => setMsg(e.message),
   });
 
-  if (!can(session?.role, "org.admin")) {
+  if (!embedded && !can(session?.role, "org.admin")) {
     return <Navigate to="/" replace />;
   }
   if (q.isLoading) return <LoadingPanel />;
@@ -130,23 +128,20 @@ export function IntegrationsConfigPage() {
 
   return (
     <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Configuration</h1>
-        <p className="mt-1 text-sm text-gray-600">Integrations</p>
-      </div>
-
-      <Card title="Hosted DORA Blueprint">
-        <p className="text-sm text-gray-700">
-          You access DORA BP through this secure web application. Your operational registers, evidence,
-          and assessments are stored in your isolated tenant on the service platform. Use integrations
-          below to connect optional external systems (for example a customer-managed PostgreSQL schema
-          or internal APIs). Connections are made from the server—never from your browser.
+      {!embedded ? (
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Integrations</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            Optional connections to external systems. Credentials are stored encrypted server-side and are never
+            shown after save. Azure subscriptions are configured under Cloud environment.
+          </p>
+        </div>
+      ) : (
+        <p className="text-sm text-gray-600">
+          Connect optional PostgreSQL or HTTP APIs. Tests run from the hosted service. For Azure, use{" "}
+          <span className="font-medium">Settings → Cloud environment</span>.
         </p>
-        <p className="mt-2 text-xs text-gray-500">
-          Private customer databases require network paths from the hosted service (VPN, private
-          endpoint, or connector). Do not expose internal PostgreSQL to the public internet.
-        </p>
-      </Card>
+      )}
 
       <section className="rounded-lg border border-gray-200 bg-white shadow-card">
         <div className="border-b border-gray-100 px-5 py-4">
@@ -259,20 +254,6 @@ export function IntegrationsConfigPage() {
             ) : null}
           </div>
         </form>
-      </section>
-
-      <section className="rounded-lg border border-gray-200 bg-white shadow-card">
-        <div className="border-b border-gray-100 px-5 py-4">
-          <h2 className="text-base font-semibold">Azure cloud environment</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            Register Azure subscriptions for resource discovery and resilience views.
-          </p>
-        </div>
-        <div className="px-5 py-4 text-sm">
-          <Link to="/cloud-environment" className="text-primary underline">
-            Open Cloud Environment
-          </Link>
-        </div>
       </section>
 
       <section className="rounded-lg border border-gray-200 bg-white shadow-card">

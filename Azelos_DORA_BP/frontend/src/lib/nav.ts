@@ -10,7 +10,7 @@ export interface NavItem {
 
 export const CORE_NAV: NavItem[] = [
   { label: "Dashboard", path: "/" },
-  { label: "Organization profile", path: "/onboarding/profile" },
+  { label: "Organization profile", path: "/organization/profile" },
   { label: "Applicability", path: "/onboarding/applicability" },
   { label: "Regulatory requirements", path: "/requirements" },
 ];
@@ -33,8 +33,7 @@ export const MODULE_NAV: NavItem[] = [
 ];
 
 export const ADMIN_NAV: NavItem[] = [
-  { label: "Modules", path: "/configuration/modules" },
-  { label: "Custom fields", path: "/configuration/custom-fields" },
+  { label: "Settings", path: "/settings" },
 ];
 
 export function moduleAllowsAccess(

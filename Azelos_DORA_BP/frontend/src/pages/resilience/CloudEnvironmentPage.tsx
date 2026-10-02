@@ -4,21 +4,28 @@ import { Card } from "../../components/ui/Card";
 import { DataTable } from "../../components/ui/DataTable";
 import { usePaginatedResource } from "../../hooks/usePaginatedResource";
 
-export function CloudEnvironmentPage() {
+export function CloudEnvironmentPage({ embedded = false }: { embedded?: boolean }) {
   const accounts = usePaginatedResource<CloudAccount>("cloud-accounts", "/api/v1/cloud-accounts");
   const resources = usePaginatedResource<CloudResource>("cloud-resources", "/api/v1/cloud-resources");
 
   return (
     <div>
-      <PageHeader
-        title="Cloud environment"
-        subtitle="Discovered Azure inventory (server-side credentials). Resources are not auto-assigned to business services."
-      />
+      {!embedded ? (
+        <PageHeader
+          title="Cloud environment"
+          subtitle="Discovered Azure inventory (server-side credentials). Resources are not auto-assigned to business services."
+        />
+      ) : (
+        <p className="mb-4 text-sm text-gray-600">
+          Azure subscriptions and discovered resources for resilience and ICT inventory. Register accounts via the cloud
+          accounts API or your deployment runbook; discovery runs server-side.
+        </p>
+      )}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="Connected accounts">
           <DataTable
             emptyTitle="No cloud accounts"
-            emptyDescription="Register Azure subscriptions under Configuration → Integrations or via the API, then run discovery."
+            emptyDescription="Cloud environment not configured. Register an Azure subscription account, then run discovery."
             columns={[
               { key: "name", header: "Name", render: (r) => r.display_name },
               { key: "sub", header: "Subscription", render: (r) => r.subscription_id },

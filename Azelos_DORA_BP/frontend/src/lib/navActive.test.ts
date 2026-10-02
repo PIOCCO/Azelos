@@ -9,6 +9,7 @@ const NAV_PATHS = [
   "/incidents",
   "/ict-providers",
   "/onboarding/applicability",
+  "/organization/profile",
   "/onboarding/profile",
 ];
 
@@ -53,7 +54,7 @@ describe("resolveActiveNavPath", () => {
   });
 
   it("picks longest match for nested onboarding paths", () => {
-    expect(resolveActiveNavPath("/onboarding/profile", NAV_PATHS)).toBe("/onboarding/profile");
+    expect(resolveActiveNavPath("/organization/profile", NAV_PATHS)).toBe("/organization/profile");
     expect(resolveActiveNavPath("/onboarding/applicability", NAV_PATHS)).toBe("/onboarding/applicability");
   });
 });

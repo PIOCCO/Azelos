@@ -6,7 +6,7 @@ import { can } from "../../lib/permissions";
 import { ErrorPanel, LoadingPanel } from "../../components/ui/StatePanel";
 import { Navigate } from "react-router-dom";
 
-export function ModulesConfigPage() {
+export function ModulesConfigPage({ embedded = false }: { embedded?: boolean }) {
   const { session } = useAuth();
   const { refreshOrg } = useOrg();
   const qc = useQueryClient();
@@ -20,7 +20,7 @@ export function ModulesConfigPage() {
     },
   });
 
-  if (!can(session?.role, "org.admin")) {
+  if (!embedded && !can(session?.role, "org.admin")) {
     return <Navigate to="/" replace />;
   }
   if (q.isLoading) return <LoadingPanel />;
@@ -28,10 +28,22 @@ export function ModulesConfigPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Module configuration</h1>
-      <p className="mt-1 text-sm text-slate-600">
-        Toggles call the backend; applicability refreshes after changes.
-      </p>
+      {embedded ? (
+        <>
+          <h2 className="text-lg font-semibold text-gray-900">Platform modules</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Enable or disable DORA capability areas for this tenant. Changes persist immediately and refresh
+            navigation applicability.
+          </p>
+        </>
+      ) : (
+        <>
+          <h1 className="text-2xl font-semibold">Module configuration</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Toggles call the backend; applicability refreshes after changes.
+          </p>
+        </>
+      )}
       <ul className="mt-6 space-y-2">
         {(q.data ?? []).map((m) => (
           <li
