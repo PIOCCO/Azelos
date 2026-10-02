@@ -22,7 +22,8 @@ import {
   FileBarChart,
 } from "lucide-react";
 import type { ModuleApplicability, Role } from "../api/types";
-import { moduleAllowsAccess } from "./nav";
+import type { ModuleNavMode } from "./moduleNav";
+import { moduleNavItemVisible } from "./moduleNav";
 
 export interface NavLinkItem {
   label: string;
@@ -121,6 +122,7 @@ export const NAV_SECTIONS: NavSection[] = [
 export function filterNavSections(
   sections: NavSection[],
   modules: ModuleApplicability[] | undefined,
+  moduleNavMode: ModuleNavMode,
   isAdmin: boolean,
   role?: Role,
 ): NavSection[] {
@@ -130,7 +132,7 @@ export function filterNavSections(
       items: section.items.filter((item) => {
         if (item.platformAdminOnly && role !== "SUPER_ADMIN") return false;
         if (item.adminOnly && !isAdmin) return false;
-        return moduleAllowsAccess(modules, item.moduleKey);
+        return moduleNavItemVisible(moduleNavMode, modules, item.moduleKey);
       }),
     }))
     .filter((s) => s.items.length > 0);

@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { useModuleNav } from "../../contexts/OrgContext";
+import { useModuleNav, useModuleNavMode } from "../../contexts/OrgContext";
 import { moduleAllowsAccess, type NavItem } from "../../lib/nav";
-import { EmptyState } from "../ui/States";
+import { EmptyState, LoadingSkeleton } from "../ui/States";
 
 export function ModuleGate({
   item,
@@ -12,7 +12,12 @@ export function ModuleGate({
   children: ReactNode;
 }) {
   const modules = useModuleNav();
-  const allowed = moduleAllowsAccess(modules, item.moduleKey);
+  const moduleNavMode = useModuleNavMode();
+  if (moduleNavMode === "pending") {
+    return <LoadingSkeleton rows={4} />;
+  }
+  const allowed =
+    moduleNavMode === "error" ? true : moduleAllowsAccess(modules, item.moduleKey);
   if (!allowed) {
     return (
       <EmptyState

@@ -41,8 +41,7 @@ export function moduleAllowsAccess(
   moduleKey: string | undefined,
 ): boolean {
   if (!moduleKey) return true;
-  /** While org modules are loading, do not hide the entire sidebar (empty [] was treated as "deny all"). */
-  if (modules === undefined) return true;
+  if (modules === undefined) return false;
   const m = modules.find((x) => x.key === moduleKey);
   if (!m) return false;
   if (m.disabled || !m.available) return false;

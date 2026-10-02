@@ -12,7 +12,8 @@ import {
   getOrgModules,
   getProfile,
 } from "../api/dora";
-import type { ApplicabilityResult, OrganizationProfile } from "../api/types";
+import type { ApplicabilityResult, ModuleApplicability, OrganizationProfile } from "../api/types";
+import { resolveModuleNavMode, type ModuleNavMode } from "../lib/moduleNav";
 import { useAuth } from "./AuthContext";
 
 interface OrgContextValue {
@@ -21,6 +22,9 @@ interface OrgContextValue {
   profile: OrganizationProfile | undefined;
   applicability: ApplicabilityResult | undefined;
   modules: ApplicabilityResult["modules"] | undefined;
+  /** First resolved module list (modules endpoint or applicability payload). */
+  modulesNavList: ModuleApplicability[] | undefined;
+  moduleNavMode: ModuleNavMode;
   isLoading: boolean;
   error: Error | null;
   refreshOrg: () => Promise<void>;
@@ -51,12 +55,31 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     queryKey: ["org", orgId, "applicability"],
     queryFn: () => getApplicability(orgId!),
     enabled,
+    placeholderData: (previous) => previous,
   });
 
   const modulesQ = useQuery({
     queryKey: ["org", orgId, "modules"],
     queryFn: () => getOrgModules(orgId!),
     enabled,
+    placeholderData: (previous) => previous,
+  });
+
+  const modulesNavList = modulesQ.data ?? applQ.data?.modules;
+  const modulesNavPending =
+    enabled && modulesNavList === undefined && (modulesQ.isPending || applQ.isPending);
+  const modulesNavFailed =
+    enabled &&
+    modulesNavList === undefined &&
+    !modulesNavPending &&
+    modulesQ.isError &&
+    applQ.isError;
+
+  const moduleNavMode = resolveModuleNavMode({
+    orgContextEnabled: enabled,
+    modulesNavList,
+    modulesPending: modulesNavPending,
+    modulesFailed: modulesNavFailed,
   });
 
   const refreshOrg = useCallback(async () => {
@@ -70,6 +93,8 @@ export function OrgProvider({ children }: { children: ReactNode }) {
       profile: profileQ.data,
       applicability: applQ.data,
       modules: modulesQ.data,
+      modulesNavList,
+      moduleNavMode,
       isLoading:
         orgQ.isLoading || profileQ.isLoading || applQ.isLoading || modulesQ.isLoading,
       error: (profileQ.error ?? applQ.error) as Error | null,
@@ -81,6 +106,13 @@ export function OrgProvider({ children }: { children: ReactNode }) {
       profileQ.data,
       applQ.data,
       modulesQ.data,
+      modulesNavList,
+      moduleNavMode,
+      modulesQ.isPending,
+      modulesQ.isError,
+      applQ.isPending,
+      applQ.isError,
+      enabled,
       orgQ.isLoading,
       profileQ.isLoading,
       applQ.isLoading,
@@ -100,9 +132,13 @@ export function useOrg() {
   return ctx;
 }
 
-/** Module nav: backend drives enabled/applicable — no client-side sector rules. */
-export function useModuleNav(): import("../api/types").ModuleApplicability[] | undefined {
-  const { modules, applicability, isLoading } = useOrg();
-  if (isLoading) return undefined;
-  return modules ?? applicability?.modules ?? [];
+/** Module list for gates — available as soon as modules or applicability responds. */
+export function useModuleNav(): ModuleApplicability[] | undefined {
+  const { modulesNavList } = useOrg();
+  return modulesNavList;
+}
+
+export function useModuleNavMode(): ModuleNavMode {
+  const { moduleNavMode } = useOrg();
+  return moduleNavMode;
 }

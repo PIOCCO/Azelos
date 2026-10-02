@@ -38,7 +38,7 @@ describe("moduleAllowsAccess", () => {
     expect(moduleAllowsAccess(modules, undefined)).toBe(true);
   });
 
-  it("allows module routes while module list is still loading", () => {
-    expect(moduleAllowsAccess(undefined, "ICT_RISK")).toBe(true);
+  it("denies module routes when module list is unavailable", () => {
+    expect(moduleAllowsAccess(undefined, "ICT_RISK")).toBe(false);
   });
 });
