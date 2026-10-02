@@ -77,7 +77,7 @@ export function Sidebar() {
             aria-label="Close menu overlay"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="relative flex h-full w-72 max-w-[85vw] flex-col bg-sidebar">
+          <aside className="relative flex h-full w-72 max-w-[85vw] flex-col overflow-y-auto overscroll-y-contain bg-sidebar">
             <button
               type="button"
               className="absolute right-3 top-4 rounded p-1 text-white"
@@ -90,7 +90,7 @@ export function Sidebar() {
           </aside>
         </div>
       ) : null}
-      <aside className="hidden w-64 shrink-0 bg-sidebar md:sticky md:top-0 md:self-start md:flex md:flex-col lg:w-72">
+      <aside className="hidden h-full min-h-0 w-64 shrink-0 flex-col overflow-y-auto overscroll-y-contain bg-sidebar md:flex lg:w-72">
         {navBody}
       </aside>
     </>
