@@ -457,6 +457,68 @@ export type EntityPaths = {
   evidence: "/api/v1/evidence";
 };
 
+export function listIntegrations() {
+  return apiRequest<import("./types").TenantIntegration[]>("/api/v1/integrations");
+}
+
+export function createPostgresqlIntegration(body: {
+  name: string;
+  host: string;
+  port: number;
+  database: string;
+  username: string;
+  password: string;
+  ssl_mode: string;
+}) {
+  return apiRequest<import("./types").TenantIntegration>("/api/v1/integrations/postgresql", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function updatePostgresqlIntegration(
+  id: string,
+  body: {
+    name: string;
+    host: string;
+    port: number;
+    database: string;
+    username: string;
+    password?: string;
+    ssl_mode: string;
+  },
+) {
+  return apiRequest<import("./types").TenantIntegration>(`/api/v1/integrations/postgresql/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+}
+
+export function createHttpIntegration(body: {
+  name: string;
+  base_url: string;
+  auth_type: string;
+  api_key?: string;
+}) {
+  return apiRequest<import("./types").TenantIntegration>("/api/v1/integrations/http-api", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function testIntegration(id: string) {
+  return apiRequest<{ success: boolean; message: string; status: string }>(
+    `/api/v1/integrations/${id}/test`,
+    { method: "POST" },
+  );
+}
+
+export function disableIntegration(id: string) {
+  return apiRequest<import("./types").TenantIntegration>(`/api/v1/integrations/${id}/disable`, {
+    method: "POST",
+  });
+}
+
 export type {
   BusinessFunction,
   Contract,

@@ -36,6 +36,7 @@ from app.models.operational import (
     ResilienceTestCampaign,
     TlptExercise,
 )
+from app.models.tenant_integration import TenantIntegration
 from app.models.cloud_resilience import (
     BusinessService,
     BusinessServiceDoraLink,
@@ -84,6 +85,7 @@ __all__ = [
     "InformationAsset",
     "ICTAsset",
     "AssetFunctionMap",
+    "TenantIntegration",
     "CloudAccount",
     "CloudResource",
     "BusinessService",

@@ -103,6 +103,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Administration",
     items: [
+      { label: "Integrations", path: "/configuration/integrations", icon: Link2, adminOnly: true },
       { label: "Modules", path: "/configuration/modules", icon: Sliders, adminOnly: true },
       { label: "Custom Fields", path: "/configuration/custom-fields", icon: Wrench, adminOnly: true },
       { label: "Settings", path: "/onboarding/profile", icon: Settings },

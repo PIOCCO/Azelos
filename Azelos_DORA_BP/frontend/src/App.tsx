@@ -27,6 +27,7 @@ import { RisksPage } from "./pages/entity/RisksPage";
 import { RiskDetailPage } from "./pages/entity/RiskDetailPage";
 import { ModulesConfigPage } from "./pages/config/ModulesConfigPage";
 import { CustomFieldsPage } from "./pages/config/CustomFieldsPage";
+import { IntegrationsConfigPage } from "./pages/config/IntegrationsConfigPage";
 import type { InformationAsset } from "./api/types";
 import { BusinessServicesPage } from "./pages/resilience/BusinessServicesPage";
 import { CloudEnvironmentPage } from "./pages/resilience/CloudEnvironmentPage";
@@ -266,6 +267,7 @@ export default function App() {
           <Route path="admin/members" element={<MembersPage />} />
           <Route path="admin/provision" element={<ProvisionTenantPage />} />
           <Route path="audit-log" element={<AuditLogPage />} />
+          <Route path="configuration/integrations" element={<IntegrationsConfigPage />} />
           <Route path="configuration/modules" element={<ModulesConfigPage />} />
           <Route path="configuration/custom-fields" element={<CustomFieldsPage />} />
         </Route>

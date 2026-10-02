@@ -159,6 +159,19 @@ export interface ConfigModule {
   enabled: boolean;
 }
 
+export interface TenantIntegration {
+  id: string;
+  integration_type: string;
+  name: string;
+  status: string;
+  config: Record<string, string | number | boolean | null>;
+  last_test_at: string | null;
+  last_test_success: boolean | null;
+  last_test_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CustomField {
   id: string;
   entity_type: string;
