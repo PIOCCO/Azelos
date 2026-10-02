@@ -77,12 +77,20 @@ describe("moduleNavItemVisible", () => {
     expect(moduleNavItemVisible("ready", [], "ICT_RISK")).toBe(true);
   });
 
-  it("sidebar keeps ICT visible when /modules denies but applicability allows (no flash collapse)", () => {
+  it("sidebar keeps ICT visible when enabled even if applicability rules mark not applicable", () => {
+    const enabledNotApplicable = [{ ...enabledModule, applicable: false, required: false }];
+    expect(moduleNavSidebarItemVisible("ready", enabledNotApplicable, "ICT_RISK")).toBe(true);
+    expect(moduleNavItemVisible("ready", enabledNotApplicable, "ICT_RISK")).toBe(false);
+  });
+
+  it("sidebar hides only when org explicitly disables module in all loaded lists", () => {
     const disabledInModules = [{ ...enabledModule, enabled: false, disabled: true }];
     expect(moduleNavSidebarItemVisible("ready", disabledInModules, "ICT_RISK", [enabledModule])).toBe(
       true,
     );
-    expect(moduleNavItemVisible("ready", disabledInModules, "ICT_RISK", [enabledModule])).toBe(false);
+    expect(
+      moduleNavSidebarItemVisible("ready", disabledInModules, "ICT_RISK", disabledInModules),
+    ).toBe(false);
   });
 
   it("respects disabled modules when ready", () => {
@@ -119,7 +127,7 @@ describe("filterNavSections stability", () => {
       .flatMap((s) => s.items).length;
 
     expect(pendingWithAppl).toBe(readyCount);
-    expect(pendingNoAppl).toBeGreaterThanOrEqual(readyCount - 5);
+    expect(pendingNoAppl).toBe(readyCount);
     expect(readyCount).toBeGreaterThanOrEqual(30);
   });
 });

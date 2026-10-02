@@ -1,5 +1,5 @@
 import type { ModuleApplicability } from "../api/types";
-import { moduleAllowsAccess } from "./nav";
+import { moduleAllowsAccess, moduleOrganizationEnabled } from "./nav";
 
 /** Module list used for sidebar filtering — independent of profile/org entity loading. */
 export type ModuleNavMode = "pending" | "ready" | "error";
@@ -57,33 +57,34 @@ export function resolveModuleNavMode(input: {
   return "pending";
 }
 
-/**
- * Sidebar only: show a link if either /modules or applicability allows it.
- * Prevents ICT items from flashing on load then vanishing when /modules settles
- * ahead of applicability (or the two responses briefly disagree).
- */
+/** Sidebar: always list workflow routes; org module toggles only hide when explicitly disabled. */
 export function moduleNavSidebarItemVisible(
-  mode: ModuleNavMode,
+  _mode: ModuleNavMode,
   modules: ModuleApplicability[] | undefined,
   moduleKey: string | undefined,
   applicabilityModules?: ModuleApplicability[] | undefined,
 ): boolean {
   if (!moduleKey) return true;
 
-  const fromModules =
-    mode === "ready" && modules !== undefined && modules.length > 0
-      ? moduleAllowsAccess(modules, moduleKey)
-      : undefined;
-  const fromApplicability =
-    applicabilityModules !== undefined && applicabilityModules.length > 0
-      ? moduleAllowsAccess(applicabilityModules, moduleKey)
-      : undefined;
+  const lists: ModuleApplicability[][] = [];
+  if (modules !== undefined && modules.length > 0) lists.push(modules);
+  if (applicabilityModules !== undefined && applicabilityModules.length > 0) {
+    lists.push(applicabilityModules);
+  }
+  if (lists.length === 0) return true;
 
-  if (fromModules === true || fromApplicability === true) return true;
-  if (fromModules === false && fromApplicability === false) return false;
-  if (fromModules === false && fromApplicability === undefined) return false;
-  if (fromModules === undefined && fromApplicability === false) return false;
-  return true;
+  return lists.some((list) => moduleOrganizationEnabled(list, moduleKey));
+}
+
+/** Route content: enabled org module from /modules or applicability; open while config loads. */
+export function modulePageAccessAllowed(
+  mode: ModuleNavMode,
+  modules: ModuleApplicability[] | undefined,
+  moduleKey: string | undefined,
+  applicabilityModules?: ModuleApplicability[] | undefined,
+): boolean {
+  if (!moduleKey) return true;
+  return moduleNavSidebarItemVisible(mode, modules, moduleKey, applicabilityModules);
 }
 
 /** Page gates and non-sidebar checks — single authoritative list with fallback. */

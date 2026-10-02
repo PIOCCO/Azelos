@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import type { ModuleApplicability, Role } from "../api/types";
 import type { ModuleNavMode } from "./moduleNav";
-import { moduleNavSidebarItemVisible } from "./moduleNav";
 
 export interface NavLinkItem {
   label: string;
@@ -121,11 +120,11 @@ export const NAV_SECTIONS: NavSection[] = [
 
 export function filterNavSections(
   sections: NavSection[],
-  modules: ModuleApplicability[] | undefined,
-  moduleNavMode: ModuleNavMode,
+  _modules: ModuleApplicability[] | undefined,
+  _moduleNavMode: ModuleNavMode,
   isAdmin: boolean,
   role?: Role,
-  applicabilityModules?: ModuleApplicability[] | undefined,
+  _applicabilityModules?: ModuleApplicability[] | undefined,
 ): NavSection[] {
   return sections
     .map((section) => ({
@@ -133,12 +132,9 @@ export function filterNavSections(
       items: section.items.filter((item) => {
         if (item.platformAdminOnly && role !== "SUPER_ADMIN") return false;
         if (item.adminOnly && !isAdmin) return false;
-        return moduleNavSidebarItemVisible(
-          moduleNavMode,
-          modules,
-          item.moduleKey,
-          applicabilityModules,
-        );
+        // Do not async-filter workflow links from the sidebar (caused ICT flash then empty).
+        // Module keys are enforced on each route via ModuleGate.
+        return true;
       }),
     }))
     .filter((s) => s.items.length > 0);

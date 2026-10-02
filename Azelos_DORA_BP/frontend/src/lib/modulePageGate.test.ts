@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { ModuleNavMode } from "./moduleNav";
-import { moduleNavSidebarItemVisible } from "./moduleNav";
+import { modulePageAccessAllowed } from "./moduleNav";
 
 /** Mirrors ModuleGate. */
 function modulePageBlocked(
   mode: ModuleNavMode,
-  modules: Parameters<typeof moduleNavSidebarItemVisible>[1],
+  modules: Parameters<typeof modulePageAccessAllowed>[1],
   moduleKey: string | undefined,
-  applicabilityModules?: Parameters<typeof moduleNavSidebarItemVisible>[3],
+  applicabilityModules?: Parameters<typeof modulePageAccessAllowed>[3],
 ): boolean {
-  return !moduleNavSidebarItemVisible(mode, modules, moduleKey, applicabilityModules);
+  return !modulePageAccessAllowed(mode, modules, moduleKey, applicabilityModules);
 }
 
 describe("module page gate", () => {
@@ -22,7 +22,7 @@ describe("module page gate", () => {
       available: true,
       disabled: false,
     },
-  ] as NonNullable<Parameters<typeof moduleNavSidebarItemVisible>[1]>;
+  ] as NonNullable<Parameters<typeof modulePageAccessAllowed>[1]>;
 
   it("does not block while module nav is pending", () => {
     expect(modulePageBlocked("pending", undefined, "ASSET_MANAGEMENT")).toBe(false);

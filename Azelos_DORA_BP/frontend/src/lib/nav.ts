@@ -48,6 +48,19 @@ export function moduleAllowsAccess(
   return m.enabled && (m.applicable || m.required);
 }
 
+/** Org toggle only — ignores applicability rules (used for nav + pages with live workflow data). */
+export function moduleOrganizationEnabled(
+  modules: ModuleApplicability[] | undefined,
+  moduleKey: string | undefined,
+): boolean {
+  if (!moduleKey) return true;
+  if (modules === undefined) return true;
+  const m = modules.find((x) => x.key === moduleKey);
+  if (!m) return true;
+  if (!m.available || m.disabled) return false;
+  return m.enabled;
+}
+
 export function filterNav(
   items: NavItem[],
   modules: ModuleApplicability[] | undefined,

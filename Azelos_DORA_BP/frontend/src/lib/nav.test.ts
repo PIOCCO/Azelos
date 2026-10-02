@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { moduleAllowsAccess } from "./nav";
+import { moduleAllowsAccess, moduleOrganizationEnabled } from "./nav";
 import type { ModuleApplicability } from "../api/types";
 
 const modules: ModuleApplicability[] = [
@@ -40,5 +40,16 @@ describe("moduleAllowsAccess", () => {
 
   it("denies module routes when module list is unavailable", () => {
     expect(moduleAllowsAccess(undefined, "ICT_RISK")).toBe(false);
+  });
+});
+
+describe("moduleOrganizationEnabled", () => {
+  it("allows enabled modules even when applicability rules say not applicable", () => {
+    const mod = { ...modules[0]!, applicable: false, required: false };
+    expect(moduleOrganizationEnabled([mod], "ICT_RISK")).toBe(true);
+  });
+
+  it("denies when org disabled the module", () => {
+    expect(moduleOrganizationEnabled(modules, "INCIDENT_MANAGEMENT")).toBe(false);
   });
 });
