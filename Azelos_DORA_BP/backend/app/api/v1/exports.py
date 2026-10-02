@@ -3,11 +3,12 @@ import io
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, Response
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_auth_context
+from app.services.dora_pdf_export import build_dora_assessment_pdf
 from app.services.suppliers import SupplierService
 
 router = APIRouter(prefix="/export", tags=["Export"])
@@ -38,4 +39,17 @@ def export_providers_csv(
         content=buf.getvalue(),
         media_type="text/csv",
         headers={"Content-Disposition": 'attachment; filename="ict-providers.csv"'},
+    )
+
+
+@router.get("/dora-assessment.pdf")
+def export_dora_assessment_pdf(
+    ctx: AuthContext = Depends(get_auth_context),
+    db: Session = Depends(get_db),
+):
+    pdf_bytes = build_dora_assessment_pdf(db, ctx.organization_id)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="dora-assessment.pdf"'},
     )

@@ -99,6 +99,46 @@ export function linkEvidenceToRequirement(evidenceId: string, organizationRequir
   });
 }
 
+export async function uploadRequirementEvidence(
+  organizationId: string,
+  organizationRequirementId: string,
+  file: File,
+) {
+  const form = new FormData();
+  form.append("file", file);
+  const token = (await import("./client")).getTokenProvider()();
+  const base = (await import("./client")).getApiBase();
+  const res = await fetch(
+    `${base}/api/v1/organizations/${organizationId}/requirements/${organizationRequirementId}/evidence`,
+    {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    },
+  );
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Upload failed");
+  }
+  return res.json() as Promise<Evidence>;
+}
+
+export async function downloadDoraAssessmentPdf(): Promise<void> {
+  const token = (await import("./client")).getTokenProvider()();
+  const base = (await import("./client")).getApiBase();
+  const res = await fetch(`${base}/api/v1/export/dora-assessment.pdf`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new Error("PDF export failed");
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "dora-assessment.pdf";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function linkFunctionService(businessFunctionId: string, ictServiceId: string) {
   return apiRequest<{ id: string; function_id: string; service_id: string }>(
     "/api/v1/dependencies/function-service",

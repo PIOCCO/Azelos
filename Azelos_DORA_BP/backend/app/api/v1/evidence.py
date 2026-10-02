@@ -17,7 +17,12 @@ from app.repositories.evidence import EvidenceRepository
 from app.schemas.common import PaginatedResponse
 from app.schemas.evidence import DocumentTypeOut, EvidenceOut
 from app.services.platform_audit import record_platform_audit
-from app.core.upload_policy import validate_upload_content_type, validate_upload_filename
+from app.core.pdf_validation import validate_pdf_upload
+from app.core.upload_policy import (
+    sanitize_upload_basename,
+    validate_upload_content_type,
+    validate_upload_filename,
+)
 from app.storage.factory import get_evidence_storage
 
 router = APIRouter(prefix="/evidence", tags=["Evidence"])
@@ -79,11 +84,14 @@ async def upload_evidence(
     content = await file.read()
     if len(content) > 25 * 1024 * 1024:
         raise AppError("VALIDATION", "File exceeds 25MB limit", 400)
+    safe_name = sanitize_upload_basename(file.filename)
+    if safe_name.lower().endswith(".pdf"):
+        validate_pdf_upload(content, safe_name)
     doc = db.get(DocumentType, document_type_id)
     if doc is None:
         raise AppError("NOT_FOUND", "Document type not found", 404)
     storage = get_evidence_storage()
-    key = f"evidence/{ctx.organization_id}/{uuid.uuid4()}/{file.filename}"
+    key = f"evidence/{ctx.organization_id}/{uuid.uuid4()}/{safe_name}"
     storage.upload(key, content, content_type=file.content_type)
     digest = hashlib.sha256(content).hexdigest()
     row = Evidence(
@@ -96,7 +104,7 @@ async def upload_evidence(
         content_hash=digest,
         content_type=file.content_type,
         size_bytes=len(content),
-        file_name=file.filename,
+        file_name=safe_name,
         uploaded_by=ctx.user.email,
     )
     db.add(row)
@@ -113,6 +121,26 @@ async def upload_evidence(
     return EvidenceOut.model_validate(row)
 
 
+def _evidence_file_response(
+    row: Evidence,
+    *,
+    inline: bool,
+) -> Response:
+    storage = get_evidence_storage()
+    if not storage.exists(row.storage_object_key):
+        raise AppError("NOT_FOUND", "Evidence file missing in storage", 404)
+    data = storage.download(row.storage_object_key)
+    disposition = "inline" if inline else "attachment"
+    media = row.content_type or "application/octet-stream"
+    if row.file_name.lower().endswith(".pdf"):
+        media = "application/pdf"
+    return Response(
+        content=data,
+        media_type=media,
+        headers={"Content-Disposition": f'{disposition}; filename="{row.file_name}"'},
+    )
+
+
 @router.get("/{evidence_id}/download")
 def download_evidence(
     evidence_id: UUID,
@@ -123,12 +151,17 @@ def download_evidence(
     row = repo.get(evidence_id)
     if row is None:
         raise AppError("NOT_FOUND", "Evidence not found", 404)
-    storage = get_evidence_storage()
-    if not storage.exists(row.storage_object_key):
-        raise AppError("NOT_FOUND", "Evidence file missing in storage", 404)
-    data = storage.download(row.storage_object_key)
-    return Response(
-        content=data,
-        media_type=row.content_type or "application/octet-stream",
-        headers={"Content-Disposition": f'attachment; filename="{row.file_name}"'},
-    )
+    return _evidence_file_response(row, inline=False)
+
+
+@router.get("/{evidence_id}/view")
+def view_evidence(
+    evidence_id: UUID,
+    ctx: AuthContext = Depends(get_auth_context),
+    db: Session = Depends(get_db),
+):
+    repo = EvidenceRepository(db, ctx.organization_id)
+    row = repo.get(evidence_id)
+    if row is None:
+        raise AppError("NOT_FOUND", "Evidence not found", 404)
+    return _evidence_file_response(row, inline=True)

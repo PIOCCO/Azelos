@@ -5,6 +5,7 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { Card } from "../components/ui/Card";
 import { LoadingSkeleton, ErrorState } from "../components/ui/States";
 import { StatusBadge } from "../components/ui/Badge";
+import { RequirementEvidenceCell } from "../components/dora/RequirementEvidenceCell";
 
 export function RequirementsPage() {
   const { organizationId } = useOrg();
@@ -56,6 +57,7 @@ export function RequirementsPage() {
               <thead className="text-xs font-semibold uppercase text-gray-500">
                 <tr>
                   <th className="pb-2">Requirement</th>
+                  <th className="pb-2">Evidence (PDF)</th>
                   <th className="pb-2">Status</th>
                   <th className="pb-2">Applicable</th>
                 </tr>
@@ -63,11 +65,18 @@ export function RequirementsPage() {
               <tbody className="divide-y divide-gray-100">
                 {(orgReq.data ?? []).map((r) => (
                   <tr key={r.id}>
-                    <td className="py-3">
+                    <td className="py-3 align-top">
                       <span className="font-mono text-xs text-gray-500">{r.code}</span>
                       <div className="font-medium">{r.title}</div>
                     </td>
-                    <td className="py-3">
+                    <td className="min-w-[220px] py-3 align-top">
+                      {organizationId ? (
+                        <RequirementEvidenceCell organizationId={organizationId} requirement={r} />
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="py-3 align-top">
                       <select
                         className="rounded border px-1 py-0.5 text-sm"
                         value={r.implementation_status}
@@ -79,7 +88,7 @@ export function RequirementsPage() {
                         <option value="not_applicable">Not applicable</option>
                       </select>
                     </td>
-                    <td className="py-3">
+                    <td className="py-3 align-top">
                       <StatusBadge tone={r.applicable ? "success" : "neutral"}>
                         {r.applicable ? "Yes" : "No"}
                       </StatusBadge>

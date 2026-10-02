@@ -1,13 +1,17 @@
+from collections import defaultdict
 from uuid import UUID
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session, selectinload
 
 from app.core.exceptions import AppError
+from app.models.requirement_evidence import RequirementEvidenceLink
 from app.repositories.requirements import RequirementRepository
 from app.schemas.requirements import (
     OrganizationRequirementDetailOut,
     OrganizationRequirementUpdate,
     RegulatoryRequirementOut,
+    RequirementEvidenceFileOut,
 )
 from app.models.enums import AuditAction
 from app.services.platform_audit import record_platform_audit
@@ -28,10 +32,32 @@ class RequirementService:
             raise AppError("NOT_FOUND", "Requirement not found", 404)
         return RegulatoryRequirementOut.model_validate(row)
 
+    def _evidence_by_requirement(self) -> dict[UUID, list[RequirementEvidenceFileOut]]:
+        assert self.organization_id is not None
+        links = self.db.scalars(
+            select(RequirementEvidenceLink)
+            .where(RequirementEvidenceLink.financial_entity_id == self.organization_id)
+            .options(selectinload(RequirementEvidenceLink.evidence))
+            .order_by(RequirementEvidenceLink.created_at)
+        ).all()
+        grouped: dict[UUID, list[RequirementEvidenceFileOut]] = defaultdict(list)
+        for link in links:
+            ev = link.evidence
+            grouped[link.organization_requirement_id].append(
+                RequirementEvidenceFileOut(
+                    link_id=link.id,
+                    evidence_id=ev.id,
+                    file_name=ev.file_name,
+                    uploaded_at=ev.uploaded_at,
+                )
+            )
+        return grouped
+
     def list_organization_status(self) -> list[OrganizationRequirementDetailOut]:
         if self.organization_id is None:
             raise AppError("FORBIDDEN", "Organization required", 403)
         rows = RequirementRepository(self.db, self.organization_id).list_organization_implementation()
+        evidence_map = self._evidence_by_requirement()
         out: list[OrganizationRequirementDetailOut] = []
         for row in rows:
             out.append(
@@ -44,6 +70,7 @@ class RequirementService:
                     implementation_status=row.implementation_status,
                     owner=row.owner,
                     notes=row.notes,
+                    evidence_files=evidence_map.get(row.id, []),
                 )
             )
         return out
@@ -69,6 +96,7 @@ class RequirementService:
             new_value=data.model_dump(exclude_unset=True),
         )
         self.db.flush()
+        evidence_map = self._evidence_by_requirement()
         return OrganizationRequirementDetailOut(
             id=row.id,
             dora_requirement_id=row.dora_requirement_id,
@@ -78,4 +106,5 @@ class RequirementService:
             implementation_status=row.implementation_status,
             owner=row.owner,
             notes=row.notes,
+            evidence_files=evidence_map.get(row.id, []),
         )

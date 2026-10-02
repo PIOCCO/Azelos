@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchPaginated, listDocumentTypes, uploadEvidenceFile } from "../../api/dora";
 import type { Evidence } from "../../api/types";
-import { getApiBase, getTokenProvider } from "../../api/client";
+import { downloadEvidenceFile, viewEvidenceFile } from "../../lib/evidenceFile";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { DataTable } from "../../components/ui/DataTable";
 import { Button } from "../../components/ui/Button";
@@ -42,21 +42,6 @@ export function EvidencePage() {
 
   const data = listQ.data!;
   const docTypes = docTypesQ.data ?? [];
-
-  async function downloadEvidence(id: string, fileName: string) {
-    const token = getTokenProvider()();
-    const res = await fetch(`${getApiBase()}/api/v1/evidence/${id}/download`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    if (!res.ok) throw new Error("Download failed");
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
 
   return (
     <div>
@@ -104,14 +89,30 @@ export function EvidencePage() {
           {
             key: "file_name",
             header: "File",
+            render: (r) => <span className="font-medium text-gray-800">{r.file_name}</span>,
+          },
+          {
+            key: "actions",
+            header: "Actions",
             render: (r) => (
-              <button
-                type="button"
-                className="text-primary hover:underline"
-                onClick={() => downloadEvidence(r.id, r.file_name).catch(() => undefined)}
-              >
-                {r.file_name}
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="px-2 py-0.5 text-xs"
+                  onClick={() => viewEvidenceFile(r.id).catch(() => undefined)}
+                >
+                  View
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="px-2 py-0.5 text-xs"
+                  onClick={() => downloadEvidenceFile(r.id, r.file_name).catch(() => undefined)}
+                >
+                  Download
+                </Button>
+              </div>
             ),
           },
           { key: "storage", header: "Storage", render: (r) => r.storage_provider },

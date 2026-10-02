@@ -203,6 +203,13 @@ export interface RegulatoryRequirement {
   description: string | null;
 }
 
+export interface RequirementEvidenceFile {
+  link_id: string;
+  evidence_id: string;
+  file_name: string;
+  uploaded_at: string;
+}
+
 export interface OrganizationRequirement {
   id: string;
   dora_requirement_id: string;
@@ -212,6 +219,7 @@ export interface OrganizationRequirement {
   implementation_status: string;
   owner: string | null;
   notes: string | null;
+  evidence_files?: RequirementEvidenceFile[];
 }
 
 export interface ApiErrorBody {

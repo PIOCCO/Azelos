@@ -1,16 +1,18 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, require_role
 from app.core.org_context import organization_from_path
 from app.core.rbac import Role
+from app.schemas.evidence import EvidenceOut
 from app.schemas.requirements import (
     OrganizationRequirementDetailOut,
     OrganizationRequirementUpdate,
 )
+from app.services.requirement_evidence_service import RequirementEvidenceService
 from app.services.requirement_service import RequirementService
 
 router = APIRouter(prefix="/organizations", tags=["Organization requirements"])
@@ -45,6 +47,31 @@ def patch_organization_requirement(
         raise HTTPException(status_code=403, detail="Forbidden")
     out = RequirementService(db, organization_id).update_organization_requirement(
         org_requirement_id, body, ctx.user.email
+    )
+    db.commit()
+    return out
+
+
+@router.post(
+    "/{organization_id}/requirements/{org_requirement_id}/evidence",
+    response_model=EvidenceOut,
+    status_code=201,
+)
+async def upload_requirement_evidence(
+    organization_id: UUID,
+    org_requirement_id: UUID,
+    file: UploadFile = File(...),
+    ctx: AuthContext = Depends(require_role(Role.SECURITY_MANAGER)),
+    db: Session = Depends(get_db),
+):
+    if organization_id != ctx.organization_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    content = await file.read()
+    out = RequirementEvidenceService(db, organization_id).upload_pdf(
+        org_requirement_id,
+        file.filename or "evidence.pdf",
+        content,
+        ctx.user.email,
     )
     db.commit()
     return out

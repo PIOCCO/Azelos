@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
@@ -12,6 +13,13 @@ class RegulatoryRequirementOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class RequirementEvidenceFileOut(BaseModel):
+    link_id: uuid.UUID
+    evidence_id: uuid.UUID
+    file_name: str
+    uploaded_at: datetime
+
+
 class OrganizationRequirementDetailOut(BaseModel):
     id: uuid.UUID
     dora_requirement_id: uuid.UUID
@@ -21,6 +29,7 @@ class OrganizationRequirementDetailOut(BaseModel):
     implementation_status: str
     owner: str | None
     notes: str | None
+    evidence_files: list[RequirementEvidenceFileOut] = Field(default_factory=list)
 
 
 class OrganizationRequirementUpdate(BaseModel):

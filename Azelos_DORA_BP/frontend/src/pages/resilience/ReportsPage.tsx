@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { apiRequest } from "../../api/client";
+import { downloadDoraAssessmentPdf } from "../../api/dora";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { Button } from "../../components/ui/Button";
 
@@ -14,6 +15,8 @@ const REPORT_TYPES = [
 export function ReportsPage() {
   const [result, setResult] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   async function runReport(type: string) {
     setLoading(true);
@@ -33,6 +36,23 @@ export function ReportsPage() {
         title="Reports"
         subtitle="JSON summaries distinguishing observed evidence, assessments, and recommendations."
       />
+      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border bg-surface p-3">
+        <Button
+          type="button"
+          variant="primary"
+          disabled={pdfLoading}
+          onClick={() => {
+            setPdfError(null);
+            setPdfLoading(true);
+            downloadDoraAssessmentPdf()
+              .catch((e) => setPdfError(String(e)))
+              .finally(() => setPdfLoading(false));
+          }}
+        >
+          {pdfLoading ? "Generating…" : "Export DORA assessment (PDF)"}
+        </Button>
+        {pdfError ? <p className="text-sm text-red-600">{pdfError}</p> : null}
+      </div>
       <ul className="flex flex-wrap gap-2">
         {REPORT_TYPES.map((r) => (
           <li key={r.id}>
