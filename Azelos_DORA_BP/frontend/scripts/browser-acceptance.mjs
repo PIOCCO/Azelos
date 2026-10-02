@@ -2,23 +2,8 @@ import { chromium } from "playwright";
 
 const BASE = process.env.BASE_URL ?? "http://127.0.0.1:5173";
 
-async function countNavLinks(page) {
-  return page.locator('nav[aria-label="Main"] a').count();
-}
-
-async function dragReactFlowNode(page, nodeLocator, dx, dy) {
-  const box = await nodeLocator.boundingBox();
-  if (!box) return false;
-  const startX = box.x + box.width / 2;
-  const startY = box.y + box.height / 2;
-  await page.mouse.move(startX, startY);
-  await page.mouse.down();
-  for (let i = 1; i <= 20; i++) {
-    await page.mouse.move(startX + (dx * i) / 20, startY + (dy * i) / 20);
-    await page.waitForTimeout(16);
-  }
-  await page.mouse.up();
-  return true;
+async function navLabels(page) {
+  return page.locator('nav[aria-label="Main"] a span.truncate').allTextContents();
 }
 
 function parseTranslate(style) {
@@ -31,10 +16,24 @@ async function main() {
   const browser = await chromium.launch({ headless: true, channel: "chrome" });
   const page = await browser.newPage();
 
-  const puts = [];
-  page.on("response", (r) => {
-    if (r.url().includes("/api/v1/dora/relationship-map/layout") && r.request().method() === "PUT") {
-      puts.push({ status: r.status() });
+  const moduleResponses = [];
+  page.on("response", async (r) => {
+    const url = r.url();
+    if (url.includes("/modules") || url.includes("/applicability")) {
+      let body = null;
+      try {
+        body = await r.json();
+      } catch {
+        body = null;
+      }
+      moduleResponses.push({
+        url: url.replace(/^https?:\/\/[^/]+/, ""),
+        status: r.status(),
+        len: Array.isArray(body) ? body.length : body?.modules?.length ?? null,
+        enabledCount: Array.isArray(body)
+          ? body.filter((m) => m.enabled && !m.disabled).length
+          : body?.modules?.filter((m) => m.enabled && !m.disabled).length ?? null,
+      });
     }
   });
 
@@ -43,88 +42,70 @@ async function main() {
   await page.getByLabel("Password").fill("ChangeMeNow!");
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/(|\?)/, { timeout: 15000 });
-  await page.waitForTimeout(500);
-  const t0 = await countNavLinks(page);
+
+  const earlyLabels = await navLabels(page);
   await page.waitForTimeout(10000);
-  const t10 = await countNavLinks(page);
-  for (let i = 0; i < 2; i++) {
-    await page.reload();
-    await page.waitForTimeout(500);
-    await page.waitForTimeout(10000);
-  }
-  const r10 = await countNavLinks(page);
+  const lateLabels = await navLabels(page);
+
+  await page.reload({ waitUntil: "networkidle" });
+  const rEarly = await navLabels(page);
+  await page.waitForTimeout(10000);
+  const rLate = await navLabels(page);
 
   const seeded = await page.evaluate(async () => {
     const raw = sessionStorage.getItem("dora.session");
-    if (!raw) return { ok: false, reason: "no session" };
     const { token } = JSON.parse(raw);
     const graphRes = await fetch("/graphql", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        query: "{ organizationGraph(depth:1,maxNodes:8){ nodes { id } } }",
-      }),
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ query: "{ organizationGraph(depth:1,maxNodes:8){ nodes { id } } }" }),
     });
-    const graphJson = await graphRes.json();
-    const nodeId = graphJson?.data?.organizationGraph?.nodes?.[0]?.id;
-    if (!nodeId) return { ok: false, reason: "no nodes" };
-    const positions = { [nodeId]: { x: 912, y: 488 } };
+    const nodeId = (await graphRes.json())?.data?.organizationGraph?.nodes?.[0]?.id;
+    const positions = { [nodeId]: { x: 845, y: 512 } };
     const putRes = await fetch("/api/v1/dora/relationship-map/layout", {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ positions }),
     });
-    return { ok: putRes.ok, nodeId, status: putRes.status };
+    return { ok: putRes.ok, nodeId };
   });
 
   await page.goto(`${BASE}/dora/relationship-map`, { waitUntil: "networkidle" });
   await page.waitForSelector(".react-flow__node", { timeout: 30000 });
-  await page.waitForTimeout(3000);
-  const node = page.locator(".react-flow__node").first();
-  const styleAfterSeed = await node.getAttribute("style");
-  const flowPosAfterSeed = parseTranslate(styleAfterSeed);
+  await page.waitForTimeout(1500);
+  const styleNoClick = await page.locator(".react-flow__node").first().getAttribute("style");
+  const posNoClick = parseTranslate(styleNoClick);
 
   await page.reload({ waitUntil: "networkidle" });
   await page.waitForSelector(".react-flow__node", { timeout: 30000 });
-  await page.waitForTimeout(3000);
-  const styleAfterRefresh = await node.getAttribute("style");
-  const flowPosAfterRefresh = parseTranslate(styleAfterRefresh);
-
-  const before = await node.boundingBox();
-  await dragReactFlowNode(page, node, 180, 100);
-  await page.waitForTimeout(3500);
-  const afterDrag = await node.boundingBox();
+  await page.waitForTimeout(1500);
+  const styleAfterRefreshNoClick = await page.locator(".react-flow__node").first().getAttribute("style");
+  const posAfterRefreshNoClick = parseTranslate(styleAfterRefreshNoClick);
 
   console.log(
     JSON.stringify(
       {
-        sidebar: { t0, t10, r10, stable: t0 === t10 && t10 === r10 },
-        layoutSeed: seeded,
-        layoutPutAfterDrag: puts,
-        persistedLoad: {
-          afterSeed: flowPosAfterSeed,
-          afterRefresh: flowPosAfterRefresh,
-          matchesSeed:
-            flowPosAfterSeed &&
-            flowPosAfterRefresh &&
-            Math.abs(flowPosAfterSeed.x - 912) < 2 &&
-            Math.abs(flowPosAfterSeed.y - 488) < 2 &&
-            Math.abs(flowPosAfterRefresh.x - flowPosAfterSeed.x) < 2 &&
-            Math.abs(flowPosAfterRefresh.y - flowPosAfterSeed.y) < 2,
+        sidebar: {
+          earlyCount: earlyLabels.length,
+          lateCount: lateLabels.length,
+          stableAfterLoad: earlyLabels.join("|") === lateLabels.join("|"),
+          refreshEarlyCount: rEarly.length,
+          refreshLateCount: rLate.length,
+          stableAfterRefresh: rEarly.join("|") === rLate.join("|"),
         },
-        drag: {
-          before,
-          afterDrag,
-          moved:
-            before && afterDrag
-              ? Math.abs(afterDrag.x - before.x) + Math.abs(afterDrag.y - before.y) > 8
-              : false,
+        moduleApi: moduleResponses,
+        relationMap: {
+          seed: seeded,
+          posNoClick,
+          posAfterRefreshNoClick,
+          savedLayoutOnFirstPaint:
+            posNoClick &&
+            Math.abs(posNoClick.x - 845) < 3 &&
+            Math.abs(posNoClick.y - 512) < 3,
+          savedLayoutAfterRefreshNoClick:
+            posAfterRefreshNoClick &&
+            Math.abs(posAfterRefreshNoClick.x - 845) < 3 &&
+            Math.abs(posAfterRefreshNoClick.y - 512) < 3,
         },
       },
       null,

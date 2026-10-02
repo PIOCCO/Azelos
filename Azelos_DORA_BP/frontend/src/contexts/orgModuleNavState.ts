@@ -15,16 +15,21 @@ export function deriveOrgModuleNavState(input: {
   modulesFetching: boolean;
   applFetching: boolean;
 }): { modulesNavList: ModuleApplicability[] | undefined; moduleNavMode: ModuleNavMode } {
+  // Never use applicability modules while the org /modules request is still in flight —
+  // that caused a full nav flash (applicability) then collapse (modules refetch).
+  const modulesEndpointSettled =
+    input.modulesFetched && !input.modulesFetching;
+
   const modulesNavList = input.modulesSuccess
     ? input.modulesData
-    : input.applSuccess
+    : modulesEndpointSettled && input.modulesError && input.applSuccess
       ? input.applModules
       : undefined;
 
   const awaitingFirstSuccess =
     input.orgContextEnabled &&
     modulesNavList === undefined &&
-    (!input.modulesFetched || !input.applFetched || input.modulesFetching || input.applFetching);
+    (!modulesEndpointSettled || !input.applFetched || input.applFetching);
 
   const modulesNavFailed =
     input.orgContextEnabled &&

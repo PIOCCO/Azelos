@@ -121,6 +121,14 @@ function GraphCanvas(props: {
     });
   }, [filtered, highlight, selectedNode?.id]);
 
+  const flowNodesWithPersistedLayout = useMemo(() => {
+    const saved = new Map<string, XYPosition>();
+    for (const [id, pos] of Object.entries(props.persistedPositions)) {
+      saved.set(id, { x: pos.x, y: pos.y });
+    }
+    return mergeFlowNodePositions(flowNodes, saved, new Map());
+  }, [flowNodes, props.persistedPositions, props.layoutResetKey]);
+
   const flowEdges = useMemo(
     () =>
       toFlowEdges(filtered.edges, {
@@ -133,7 +141,7 @@ function GraphCanvas(props: {
     [filtered.edges, selectedEdge, highlight, hiddenRelationships],
   );
 
-  const [nodes, setNodes, onNodesChangeInternal] = useNodesState(flowNodes);
+  const [nodes, setNodes, onNodesChangeInternal] = useNodesState(flowNodesWithPersistedLayout);
   const [edges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
 
   const flushPersistedPositions = useCallback(() => {
@@ -171,12 +179,9 @@ function GraphCanvas(props: {
   }, [props.layoutEpoch, props.layoutResetKey, props.persistedPositions]);
 
   useEffect(() => {
-    setNodes((prev) => {
-      const prevPositions = new Map(prev.map((n) => [n.id, n.position]));
-      return mergeFlowNodePositions(flowNodes, manualPositionsRef.current, prevPositions);
-    });
+    setNodes(flowNodesWithPersistedLayout);
     setEdges(flowEdges);
-  }, [flowNodes, flowEdges, props.layoutEpoch, props.layoutResetKey, setNodes, setEdges]);
+  }, [flowNodesWithPersistedLayout, flowEdges, setNodes, setEdges]);
 
   const onNodeDragStart = useCallback(() => {
     didDragRef.current = true;

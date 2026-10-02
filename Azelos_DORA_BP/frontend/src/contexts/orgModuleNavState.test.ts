@@ -31,6 +31,24 @@ describe("deriveOrgModuleNavState", () => {
     expect(s.moduleNavMode).toBe("pending");
   });
 
+  it("stays pending when applicability succeeds but /modules is still fetching", () => {
+    const s = deriveOrgModuleNavState({
+      orgContextEnabled: true,
+      modulesData: undefined,
+      modulesSuccess: false,
+      applModules: [mod],
+      applSuccess: true,
+      modulesFetched: false,
+      applFetched: true,
+      modulesError: false,
+      applError: false,
+      modulesFetching: true,
+      applFetching: false,
+    });
+    expect(s.moduleNavMode).toBe("pending");
+    expect(s.modulesNavList).toBeUndefined();
+  });
+
   it("ready with stable list after modules success", () => {
     const s = deriveOrgModuleNavState({
       orgContextEnabled: true,
