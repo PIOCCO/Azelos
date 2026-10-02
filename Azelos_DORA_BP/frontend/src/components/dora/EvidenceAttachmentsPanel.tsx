@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Eye, FileText, Plus, PlusCircle } from "lucide-react";
+import { Download, Eye, FileText, Plus } from "lucide-react";
 import type { EvidenceAttachmentFile, EvidenceEntityType } from "../../api/types";
 import { listEvidenceAttachments, uploadEvidenceAttachment } from "../../api/dora";
 import { Button } from "../ui/Button";
@@ -160,7 +160,7 @@ export function EvidenceAttachmentsPanel(props: {
               {hiddenInput}
               <ImportButton
                 primary
-                label="+ Import PDF"
+                label="Import PDF"
                 pending={uploadM.isPending}
                 onClick={openImport}
               />
@@ -196,7 +196,7 @@ export function EvidenceAttachmentsPanel(props: {
                     label="Import"
                     pending={uploadM.isPending}
                     onClick={openImport}
-                    icon="plus-circle"
+                    compact
                   />
                 </>
               }
@@ -295,7 +295,6 @@ function ActionButtons({
           label="Import"
           pending={importPending}
           onClick={onImport}
-          icon="plus-circle"
           compact
         />
       ) : null}
@@ -332,28 +331,28 @@ function ImportButton({
   onClick,
   pending,
   primary,
-  icon = "plus",
   compact,
 }: {
   label: string;
   onClick: () => void;
   pending?: boolean;
   primary?: boolean;
-  icon?: "plus" | "plus-circle";
   compact?: boolean;
 }) {
-  const Icon = icon === "plus-circle" ? PlusCircle : Plus;
+  /** Icon carries the plus; strip accidental "+" prefixes from labels. */
+  const text = pending ? "Uploading…" : label.replace(/^\+\s*/, "");
+  const icon = <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden />;
   if (primary) {
     return (
       <Button
         type="button"
         variant="primary"
-        className={`gap-1 ${compact ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-xs"}`}
+        className={`gap-1.5 ${compact ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-xs"}`}
         disabled={pending}
         onClick={onClick}
       >
-        <Icon className="h-3.5 w-3.5" />
-        {pending ? "Uploading…" : label}
+        {icon}
+        {text}
       </Button>
     );
   }
@@ -362,12 +361,12 @@ function ImportButton({
       type="button"
       disabled={pending}
       onClick={onClick}
-      className={`inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50 ${
+      className={`inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50 ${
         compact ? "px-2 py-1 text-xs" : "px-2.5 py-1 text-xs"
       }`}
     >
-      <Icon className="h-3.5 w-3.5" />
-      {pending ? "Uploading…" : label}
+      {icon}
+      {text}
     </button>
   );
 }
