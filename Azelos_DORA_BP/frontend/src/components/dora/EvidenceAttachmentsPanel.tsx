@@ -141,7 +141,7 @@ export function EvidenceAttachmentsPanel(props: {
         {hiddenInput}
         <ImportButton
           primary={files.length === 0}
-          label={files.length === 0 ? "+ Import PDF" : "Import"}
+          label={files.length === 0 ? "Import PDF" : "Import"}
           pending={uploadM.isPending}
           onClick={openImport}
         />
