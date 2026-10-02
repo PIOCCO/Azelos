@@ -2,7 +2,6 @@ import type { Role, ModuleApplicability } from "../api/types";
 import type { ModuleNavMode } from "./moduleNav";
 import { moduleNavItemVisible } from "./moduleNav";
 import { NAV_SECTIONS, type NavLinkItem, type NavSection } from "./navigation";
-import { can } from "./permissions";
 
 export type NavPipelineStage = {
   stage: string;
