@@ -92,6 +92,11 @@ export function OnboardingWizardPage() {
           </p>
           <ol className="list-decimal space-y-2 pl-5 text-sm">
             <li>
+              <Link className="text-primary underline" to="/configuration/integrations">
+                Connect integrations (optional)
+              </Link>
+            </li>
+            <li>
               <Link className="text-primary underline" to="/ict-providers">
                 Add ICT providers
               </Link>
