@@ -2,7 +2,10 @@ import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import type { SupplierWithEvidence } from "../../api/types";
-import { EvidenceAttachmentsPanel } from "../../components/dora/EvidenceAttachmentsPanel";
+import {
+  EvidenceAttachmentsPanel,
+  EvidencePdfColumnSubHeader,
+} from "../../components/dora/EvidenceAttachmentsPanel";
 import { createProvider } from "../../api/dora";
 import { getApiBase, getTokenProvider } from "../../api/client";
 import { EntityListPage } from "./EntityListPage";
@@ -136,6 +139,8 @@ export function ProvidersPage() {
         {
           key: "evidence",
           header: "Evidence (PDF)",
+          subHeader: <EvidencePdfColumnSubHeader />,
+          className: "min-w-[300px] align-top",
           render: (r) => (
             <EvidenceAttachmentsPanel
               entityType="ict_provider"

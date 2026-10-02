@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { listContractControls, listControlDefinitions, patchContractControl } from "../../api/dora";
 import type { ContractControlRow } from "../../api/types";
-import { EvidenceAttachmentsPanel } from "../../components/dora/EvidenceAttachmentsPanel";
+import {
+  EvidenceAttachmentsPanel,
+  EvidencePdfColumnSubHeader,
+} from "../../components/dora/EvidenceAttachmentsPanel";
 import { ModuleGate } from "../../components/auth/ModuleGate";
 import { ErrorPanel, LoadingPanel } from "../../components/ui/StatePanel";
 
@@ -37,11 +40,14 @@ export function ControlsPage() {
       <section className="mt-4 rounded border bg-white p-4">
         <h2 className="font-medium">Contract control implementation</h2>
         <table className="mt-2 w-full text-left text-sm">
-          <thead className="text-slate-500">
+          <thead className="text-xs font-semibold uppercase text-slate-500">
             <tr>
-              <th>Control</th>
-              <th>Evidence (PDF)</th>
-              <th>Compliance</th>
+              <th className="pb-1 align-bottom">Control</th>
+              <th className="min-w-[300px] pb-1 align-bottom">
+                <div>Evidence (PDF)</div>
+                <EvidencePdfColumnSubHeader />
+              </th>
+              <th className="pb-1 align-bottom">Compliance</th>
             </tr>
           </thead>
           <tbody>

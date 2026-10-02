@@ -41,6 +41,7 @@ export function ProviderDetailPage() {
       {providerId ? (
         <Card title="Evidence (PDF)" className="mt-6">
           <EvidenceAttachmentsPanel
+            variant="panel"
             entityType="ict_provider"
             entityId={providerId}
             invalidateQueryKeys={[["provider", providerId], ["ict-providers"]]}

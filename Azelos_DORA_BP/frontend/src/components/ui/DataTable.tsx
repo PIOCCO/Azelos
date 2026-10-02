@@ -8,6 +8,8 @@ export interface Column<T> {
   header: string;
   render: (row: T) => ReactNode;
   className?: string;
+  /** Optional sub-header row content (e.g. Evidence / Actions labels). */
+  subHeader?: ReactNode;
 }
 
 export function DataTable<T>({
@@ -71,8 +73,9 @@ export function DataTable<T>({
           <thead className="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
             <tr>
               {columns.map((c) => (
-                <th key={c.key} scope="col" className={`px-5 py-3 ${c.className ?? ""}`}>
-                  {c.header}
+                <th key={c.key} scope="col" className={`px-5 py-3 align-bottom ${c.className ?? ""}`}>
+                  <div>{c.header}</div>
+                  {c.subHeader ? <div className="mt-1">{c.subHeader}</div> : null}
                 </th>
               ))}
             </tr>

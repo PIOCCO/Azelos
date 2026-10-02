@@ -88,6 +88,7 @@ export function ContractDetailPage() {
       {contractId ? (
         <Card title="Evidence (PDF)" className="mt-6">
           <EvidenceAttachmentsPanel
+            variant="panel"
             entityType="contract"
             entityId={contractId}
             invalidateQueryKeys={[["contract", contractId], ["contracts"]]}

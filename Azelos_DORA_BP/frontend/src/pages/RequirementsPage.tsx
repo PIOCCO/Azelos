@@ -5,7 +5,10 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { Card } from "../components/ui/Card";
 import { LoadingSkeleton, ErrorState } from "../components/ui/States";
 import { StatusBadge } from "../components/ui/Badge";
-import { EvidenceAttachmentsPanel } from "../components/dora/EvidenceAttachmentsPanel";
+import {
+  EvidenceAttachmentsPanel,
+  EvidencePdfColumnSubHeader,
+} from "../components/dora/EvidenceAttachmentsPanel";
 
 export function RequirementsPage() {
   const { organizationId } = useOrg();
@@ -56,10 +59,13 @@ export function RequirementsPage() {
             <table className="min-w-full text-left text-sm">
               <thead className="text-xs font-semibold uppercase text-gray-500">
                 <tr>
-                  <th className="pb-2">Requirement</th>
-                  <th className="pb-2">Evidence (PDF)</th>
-                  <th className="pb-2">Status</th>
-                  <th className="pb-2">Applicable</th>
+                  <th className="pb-1 align-bottom">Requirement</th>
+                  <th className="min-w-[300px] pb-1 align-bottom">
+                    <div>Evidence (PDF)</div>
+                    <EvidencePdfColumnSubHeader />
+                  </th>
+                  <th className="pb-1 align-bottom">Status</th>
+                  <th className="pb-1 align-bottom">Applicable</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">

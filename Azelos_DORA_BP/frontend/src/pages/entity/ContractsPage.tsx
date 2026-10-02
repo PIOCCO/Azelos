@@ -2,7 +2,10 @@ import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import type { ContractWithEvidence, Supplier } from "../../api/types";
-import { EvidenceAttachmentsPanel } from "../../components/dora/EvidenceAttachmentsPanel";
+import {
+  EvidenceAttachmentsPanel,
+  EvidencePdfColumnSubHeader,
+} from "../../components/dora/EvidenceAttachmentsPanel";
 import { createContract, fetchPaginated } from "../../api/dora";
 import { EntityListPage } from "./EntityListPage";
 import { Button } from "../../components/ui/Button";
@@ -118,6 +121,8 @@ export function ContractsPage() {
           {
             key: "evidence",
             header: "Evidence (PDF)",
+            subHeader: <EvidencePdfColumnSubHeader />,
+            className: "min-w-[300px] align-top",
             render: (r) => (
               <EvidenceAttachmentsPanel
                 entityType="contract"
