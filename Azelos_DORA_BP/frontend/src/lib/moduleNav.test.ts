@@ -57,11 +57,18 @@ describe("resolveModuleNavMode", () => {
 });
 
 describe("moduleNavItemVisible", () => {
-  it("hides gated routes while pending (no allow-all flash)", () => {
-    expect(moduleNavItemVisible("pending", undefined, "ICT_RISK")).toBe(false);
+  it("shows gated routes while pending until applicability is available", () => {
+    expect(moduleNavItemVisible("pending", undefined, "ICT_RISK")).toBe(true);
   });
 
-  it("hides gated routes on error (no fail-open flash)", () => {
+  it("filters pending nav using applicability fallback", () => {
+    expect(moduleNavItemVisible("pending", undefined, "ICT_RISK", [enabledModule])).toBe(true);
+    expect(moduleNavItemVisible("pending", undefined, "INCIDENT_MANAGEMENT", [disabledModule])).toBe(
+      false,
+    );
+  });
+
+  it("hides gated routes on error when no fallback", () => {
     expect(moduleNavItemVisible("error", undefined, "ICT_RISK")).toBe(false);
   });
 
@@ -84,12 +91,22 @@ describe("filterNavSections stability", () => {
       { ...enabledModule, key: "RESILIENCE_TESTING" },
     ];
 
-    const pendingCount = filterNavSections(NAV_SECTIONS, undefined, "pending", true, "ORG_ADMIN")
+    const pendingNoAppl = filterNavSections(NAV_SECTIONS, undefined, "pending", true, "ORG_ADMIN")
+      .flatMap((s) => s.items).length;
+    const pendingWithAppl = filterNavSections(
+      NAV_SECTIONS,
+      undefined,
+      "pending",
+      true,
+      "ORG_ADMIN",
+      allEnabled,
+    )
       .flatMap((s) => s.items).length;
     const readyCount = filterNavSections(NAV_SECTIONS, allEnabled, "ready", true, "ORG_ADMIN")
       .flatMap((s) => s.items).length;
 
-    expect(readyCount).toBeGreaterThan(pendingCount);
+    expect(pendingWithAppl).toBe(readyCount);
+    expect(pendingNoAppl).toBeGreaterThanOrEqual(readyCount - 5);
     expect(readyCount).toBeGreaterThanOrEqual(30);
   });
 });

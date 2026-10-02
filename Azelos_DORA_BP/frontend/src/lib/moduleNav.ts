@@ -18,15 +18,28 @@ export function resolveModuleNavMode(input: {
 }
 
 /**
- * Sidebar module filter. Pending/error: hide module-gated items (never allow-all flash).
- * Ready: enforce backend module rules.
+ * Sidebar module filter. While /modules is loading, use applicability when available.
+ * Do not treat "still loading" as "module disabled" (that emptied the DORA ICT nav).
  */
 export function moduleNavItemVisible(
   mode: ModuleNavMode,
   modules: ModuleApplicability[] | undefined,
   moduleKey: string | undefined,
+  applicabilityModules?: ModuleApplicability[] | undefined,
 ): boolean {
   if (!moduleKey) return true;
-  if (mode === "pending" || mode === "error") return false;
-  return moduleAllowsAccess(modules, moduleKey);
+
+  if (mode === "ready") {
+    return moduleAllowsAccess(modules, moduleKey);
+  }
+
+  if (applicabilityModules !== undefined) {
+    return moduleAllowsAccess(applicabilityModules, moduleKey);
+  }
+
+  if (mode === "pending") {
+    return true;
+  }
+
+  return false;
 }

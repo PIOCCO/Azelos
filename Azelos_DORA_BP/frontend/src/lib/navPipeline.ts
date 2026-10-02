@@ -19,6 +19,7 @@ export function traceNavPipeline(input: {
   moduleNavMode: ModuleNavMode;
   isAdmin: boolean;
   role?: Role;
+  applicabilityModules?: ModuleApplicability[] | undefined;
 }): NavPipelineStage[] {
   const allItems = NAV_SECTIONS.flatMap((s) => s.items);
   const stages: NavPipelineStage[] = [
@@ -30,7 +31,14 @@ export function traceNavPipeline(input: {
   ];
 
   let items: NavLinkItem[] = allItems;
-  items = items.filter((item) => moduleNavItemVisible(input.moduleNavMode, input.modules, item.moduleKey));
+  items = items.filter((item) =>
+    moduleNavItemVisible(
+      input.moduleNavMode,
+      input.modules,
+      item.moduleKey,
+      input.applicabilityModules,
+    ),
+  );
   stages.push({
     stage: "AFTER_MODULE_FILTER",
     count: items.length,
@@ -56,7 +64,12 @@ export function traceNavPipeline(input: {
     items: section.items.filter((item) => {
       if (item.platformAdminOnly && input.role !== "SUPER_ADMIN") return false;
       if (item.adminOnly && !input.isAdmin) return false;
-      return moduleNavItemVisible(input.moduleNavMode, input.modules, item.moduleKey);
+      return moduleNavItemVisible(
+        input.moduleNavMode,
+        input.modules,
+        item.moduleKey,
+        input.applicabilityModules,
+      );
     }),
   })).filter((s) => s.items.length > 0);
 

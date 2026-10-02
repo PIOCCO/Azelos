@@ -32,21 +32,22 @@ describe("traceNavPipeline", () => {
       isAdmin: true,
       role: "ORG_ADMIN",
     });
-    const pending = traceNavPipeline({
+    const pendingWithAppl = traceNavPipeline({
       modules: undefined,
       moduleNavMode: "pending",
       isAdmin: true,
       role: "ORG_ADMIN",
+      applicabilityModules: allEnabled,
     });
 
     const allCount = ready[0].count;
     const readyFinal = ready[ready.length - 1].count;
-    const pendingFinal = pending[pending.length - 1].count;
+    const pendingFinal = pendingWithAppl[pendingWithAppl.length - 1].count;
 
     expect(allCount).toBeGreaterThan(30);
-    expect(readyFinal).toBeGreaterThan(pendingFinal);
-    expect(ready.find((s) => s.stage === "AFTER_MODULE_FILTER")!.count).toBeGreaterThan(
-      pending.find((s) => s.stage === "AFTER_MODULE_FILTER")!.count,
+    expect(pendingFinal).toBe(readyFinal);
+    expect(ready.find((s) => s.stage === "AFTER_MODULE_FILTER")!.count).toBe(
+      pendingWithAppl.find((s) => s.stage === "AFTER_MODULE_FILTER")!.count,
     );
   });
 });

@@ -125,6 +125,7 @@ export function filterNavSections(
   moduleNavMode: ModuleNavMode,
   isAdmin: boolean,
   role?: Role,
+  applicabilityModules?: ModuleApplicability[] | undefined,
 ): NavSection[] {
   return sections
     .map((section) => ({
@@ -132,7 +133,12 @@ export function filterNavSections(
       items: section.items.filter((item) => {
         if (item.platformAdminOnly && role !== "SUPER_ADMIN") return false;
         if (item.adminOnly && !isAdmin) return false;
-        return moduleNavItemVisible(moduleNavMode, modules, item.moduleKey);
+        return moduleNavItemVisible(
+          moduleNavMode,
+          modules,
+          item.moduleKey,
+          applicabilityModules,
+        );
       }),
     }))
     .filter((s) => s.items.length > 0);

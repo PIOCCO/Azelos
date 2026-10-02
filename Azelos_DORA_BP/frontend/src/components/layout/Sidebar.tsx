@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { useModuleNav, useModuleNavMode } from "../../contexts/OrgContext";
+import { useModuleNav, useModuleNavMode, useOrg } from "../../contexts/OrgContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { can } from "../../lib/permissions";
 import { filterNavSections, NAV_SECTIONS } from "../../lib/navigation";
@@ -11,9 +11,17 @@ export function Sidebar() {
   const { session } = useAuth();
   const modules = useModuleNav();
   const moduleNavMode = useModuleNavMode();
+  const { applicability } = useOrg();
   const location = useLocation();
   const isAdmin = can(session?.role, "org.admin");
-  const sections = filterNavSections(NAV_SECTIONS, modules, moduleNavMode, isAdmin, session?.role);
+  const sections = filterNavSections(
+    NAV_SECTIONS,
+    modules,
+    moduleNavMode,
+    isAdmin,
+    session?.role,
+    applicability?.modules,
+  );
   const allNavPaths = sections.flatMap((s) => s.items.map((i) => i.path));
   const [mobileOpen, setMobileOpen] = useState(false);
 
