@@ -12,7 +12,12 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  getRelationshipMapLayout,
+  saveRelationshipMapLayout,
+  type RelationshipMapLayoutPositions,
+} from "../../api/dora";
 import {
   detailPathForNode,
   fetchEntityGraph,
@@ -60,6 +65,9 @@ function GraphCanvas(props: {
   selectedNode: GraphNode | null;
   selectedEdge: GraphEdge | null;
   layoutResetKey: number;
+  layoutEpoch: number;
+  persistedPositions: RelationshipMapLayoutPositions;
+  onPersistPositions: (positions: RelationshipMapLayoutPositions) => void;
   onSelectNode: (n: GraphNode | null) => void;
   onSelectEdge: (e: GraphEdge | null) => void;
 }) {
@@ -130,7 +138,11 @@ function GraphCanvas(props: {
 
   useEffect(() => {
     manualPositionsRef.current.clear();
-  }, [props.layoutResetKey]);
+    for (const [id, pos] of Object.entries(props.persistedPositions)) {
+      manualPositionsRef.current.set(id, { x: pos.x, y: pos.y });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seed only on layout epoch / reset, not each save
+  }, [props.layoutEpoch, props.layoutResetKey]);
 
   useEffect(() => {
     setNodes((prev) => {
@@ -144,12 +156,19 @@ function GraphCanvas(props: {
     didDragRef.current = true;
   }, []);
 
-  const onNodeDragStop = useCallback((_evt: MouseEvent | TouchEvent, node: Node) => {
-    manualPositionsRef.current.set(node.id, { x: node.position.x, y: node.position.y });
-    window.setTimeout(() => {
-      didDragRef.current = false;
-    }, 0);
-  }, []);
+  const onNodeDragStop = useCallback(
+    (_evt: MouseEvent | TouchEvent, node: Node) => {
+      manualPositionsRef.current.set(node.id, { x: node.position.x, y: node.position.y });
+      const positions = Object.fromEntries(
+        [...manualPositionsRef.current.entries()].map(([id, p]) => [id, { x: p.x, y: p.y }]),
+      );
+      props.onPersistPositions(positions);
+      window.setTimeout(() => {
+        didDragRef.current = false;
+      }, 0);
+    },
+    [props.onPersistPositions],
+  );
 
   useEffect(() => {
     if (rawGraph.nodes.length) {
@@ -203,6 +222,7 @@ export function RelationshipMapPage() {
 function RelationshipMapInner() {
   const { session } = useAuth();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const { fitView } = useReactFlow();
   const [rawGraph, setRawGraph] = useState<EntityGraphResult | null>(null);
   const [search, setSearch] = useState("");
@@ -218,6 +238,42 @@ function RelationshipMapInner() {
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const initialLoaded = useRef(false);
   const [layoutResetKey, setLayoutResetKey] = useState(0);
+  const [layoutEpoch, setLayoutEpoch] = useState(0);
+  const layoutSeeded = useRef(false);
+
+  const layoutQ = useQuery({
+    queryKey: ["relationship-map-layout", session?.organizationId],
+    queryFn: getRelationshipMapLayout,
+    enabled: !!session?.token,
+  });
+
+  const saveLayoutM = useMutation({
+    mutationFn: saveRelationshipMapLayout,
+    onSuccess: (data) => {
+      queryClient.setQueryData(["relationship-map-layout", session?.organizationId], data);
+    },
+  });
+
+  useEffect(() => {
+    layoutSeeded.current = false;
+    setLayoutEpoch(0);
+  }, [session?.organizationId]);
+
+  useEffect(() => {
+    if (layoutQ.isSuccess && !layoutSeeded.current) {
+      layoutSeeded.current = true;
+      setLayoutEpoch(1);
+    }
+  }, [layoutQ.isSuccess, session?.organizationId]);
+
+  const persistedPositions = layoutQ.data?.positions ?? {};
+
+  const persistPositions = useCallback(
+    (positions: RelationshipMapLayoutPositions) => {
+      saveLayoutM.mutate(positions);
+    },
+    [saveLayoutM],
+  );
 
   const overviewQ = useQuery({
     queryKey: ["org-graph", depth, view],
@@ -391,9 +447,24 @@ function RelationshipMapInner() {
         <Button
           type="button"
           variant="secondary"
+          disabled={!rawGraph?.nodes.length || saveLayoutM.isPending}
           onClick={() => {
-            setLayoutResetKey((k) => k + 1);
-            overviewQ.refetch();
+            if (!rawGraph) return;
+            const laid = layoutNodes(rawGraph.nodes, rawGraph.edges);
+            const positions = Object.fromEntries(
+              laid.map((n) => [n.id, { x: n.position.x, y: n.position.y }]),
+            );
+            saveLayoutM.mutate(positions, {
+              onSuccess: (data) => {
+                queryClient.setQueryData(
+                  ["relationship-map-layout", session?.organizationId],
+                  data,
+                );
+                setLayoutEpoch((e) => e + 1);
+                setLayoutResetKey((k) => k + 1);
+                overviewQ.refetch();
+              },
+            });
           }}
         >
           Reset graph
@@ -457,6 +528,9 @@ function RelationshipMapInner() {
               selectedNode={selectedNode}
               selectedEdge={selectedEdge}
               layoutResetKey={layoutResetKey}
+              layoutEpoch={layoutEpoch}
+              persistedPositions={persistedPositions}
+              onPersistPositions={persistPositions}
               onSelectNode={setSelectedNode}
               onSelectEdge={setSelectedEdge}
             />

@@ -541,6 +541,24 @@ export function disableIntegration(id: string) {
   });
 }
 
+export type RelationshipMapLayoutPositions = Record<string, { x: number; y: number }>;
+
+export function getRelationshipMapLayout() {
+  return apiRequest<{ positions: RelationshipMapLayoutPositions }>(
+    "/api/v1/dora/relationship-map/layout",
+  );
+}
+
+export function saveRelationshipMapLayout(positions: RelationshipMapLayoutPositions) {
+  return apiRequest<{ positions: RelationshipMapLayoutPositions }>(
+    "/api/v1/dora/relationship-map/layout",
+    {
+      method: "PUT",
+      body: JSON.stringify({ positions }),
+    },
+  );
+}
+
 export type {
   BusinessFunction,
   Contract,
