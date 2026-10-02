@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import type { Contract, Supplier } from "../../api/types";
+import type { ContractWithEvidence, Supplier } from "../../api/types";
+import { EvidenceAttachmentsPanel } from "../../components/dora/EvidenceAttachmentsPanel";
 import { createContract, fetchPaginated } from "../../api/dora";
 import { EntityListPage } from "./EntityListPage";
 import { Button } from "../../components/ui/Button";
@@ -86,7 +87,7 @@ export function ContractsPage() {
         ) : null}
         {createM.isSuccess ? <p className="mt-2 text-sm text-green-700">Contract created.</p> : null}
       </Card>
-      <EntityListPage<Contract>
+      <EntityListPage<ContractWithEvidence>
         pageTitle="Contractual arrangements"
         tableTitle="Contracts"
         path="/api/v1/contracts"
@@ -114,6 +115,18 @@ export function ContractsPage() {
             ),
           },
           { key: "start", header: "Start", render: (r) => r.start_date },
+          {
+            key: "evidence",
+            header: "Evidence (PDF)",
+            render: (r) => (
+              <EvidenceAttachmentsPanel
+                entityType="contract"
+                entityId={r.id}
+                initialFiles={r.evidence_files}
+                invalidateQueryKeys={[["contracts"]]}
+              />
+            ),
+          },
         ]}
       />
     </>

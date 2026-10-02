@@ -10,6 +10,7 @@ from app.schemas.common import PaginatedResponse
 from app.schemas.contracts import ContractCreate, ContractOut, ContractUpdate
 from app.models.enums import AuditAction
 from app.services.contracts import ContractService
+from app.services.evidence_enrich import contract_with_evidence, contracts_with_evidence
 from app.services.platform_audit import record_platform_audit
 
 router = APIRouter(prefix="/contracts", tags=["Contracts"])
@@ -26,7 +27,7 @@ def list_contracts(
     service = ContractService(db, ctx.organization_id)
     items, total = service.list(page, page_size, q=q)
     return PaginatedResponse(
-        items=[ContractOut.model_validate(i) for i in items],
+        items=contracts_with_evidence(db, ctx.organization_id, items),
         page=page,
         page_size=page_size,
         total=total,
@@ -39,7 +40,8 @@ def get_contract(
     ctx: AuthContext = Depends(get_auth_context),
     db: Session = Depends(get_db),
 ):
-    return ContractOut.model_validate(ContractService(db, ctx.organization_id).get(contract_id))
+    svc = ContractService(db, ctx.organization_id)
+    return contract_with_evidence(db, ctx.organization_id, svc.get(contract_id))
 
 
 @router.post("", response_model=ContractOut, status_code=201)

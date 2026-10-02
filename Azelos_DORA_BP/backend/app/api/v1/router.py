@@ -9,6 +9,7 @@ from app.api.v1 import (
     controls,
     database,
     evidence,
+    evidence_attachments,
     extensions,
     ict_assets,
     ict_services,
@@ -60,6 +61,7 @@ api_v1_router.include_router(ict_assets.router)
 api_v1_router.include_router(controls.router)
 api_v1_router.include_router(risks.router)
 api_v1_router.include_router(evidence.router)
+api_v1_router.include_router(evidence_attachments.router)
 api_v1_router.include_router(configuration.router)
 api_v1_router.include_router(extensions.router)
 api_v1_router.include_router(regulatory_requirements.router)

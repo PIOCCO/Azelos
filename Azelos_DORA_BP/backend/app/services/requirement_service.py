@@ -1,11 +1,8 @@
-from collections import defaultdict
 from uuid import UUID
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
 from app.core.exceptions import AppError
-from app.models.requirement_evidence import RequirementEvidenceLink
 from app.repositories.requirements import RequirementRepository
 from app.schemas.requirements import (
     OrganizationRequirementDetailOut,
@@ -13,6 +10,7 @@ from app.schemas.requirements import (
     RegulatoryRequirementOut,
     RequirementEvidenceFileOut,
 )
+from app.services.evidence_attachment_service import EvidenceAttachmentService, EvidenceEntityType
 from app.models.enums import AuditAction
 from app.services.platform_audit import record_platform_audit
 
@@ -34,24 +32,21 @@ class RequirementService:
 
     def _evidence_by_requirement(self) -> dict[UUID, list[RequirementEvidenceFileOut]]:
         assert self.organization_id is not None
-        links = self.db.scalars(
-            select(RequirementEvidenceLink)
-            .where(RequirementEvidenceLink.financial_entity_id == self.organization_id)
-            .options(selectinload(RequirementEvidenceLink.evidence))
-            .order_by(RequirementEvidenceLink.created_at)
-        ).all()
-        grouped: dict[UUID, list[RequirementEvidenceFileOut]] = defaultdict(list)
-        for link in links:
-            ev = link.evidence
-            grouped[link.organization_requirement_id].append(
+        grouped = EvidenceAttachmentService(self.db, self.organization_id).grouped_for_entity_type(
+            EvidenceEntityType.ORGANIZATION_REQUIREMENT
+        )
+        return {
+            req_id: [
                 RequirementEvidenceFileOut(
-                    link_id=link.id,
-                    evidence_id=ev.id,
-                    file_name=ev.file_name,
-                    uploaded_at=ev.uploaded_at,
+                    link_id=f.link_id or f.evidence_id,
+                    evidence_id=f.evidence_id,
+                    file_name=f.file_name,
+                    uploaded_at=f.uploaded_at,
                 )
-            )
-        return grouped
+                for f in files
+            ]
+            for req_id, files in grouped.items()
+        }
 
     def list_organization_status(self) -> list[OrganizationRequirementDetailOut]:
         if self.organization_id is None:

@@ -203,12 +203,21 @@ export interface RegulatoryRequirement {
   description: string | null;
 }
 
-export interface RequirementEvidenceFile {
-  link_id: string;
+export interface EvidenceAttachmentFile {
+  link_id?: string | null;
   evidence_id: string;
   file_name: string;
   uploaded_at: string;
 }
+
+/** @deprecated Use EvidenceAttachmentFile */
+export type RequirementEvidenceFile = EvidenceAttachmentFile;
+
+export type EvidenceEntityType =
+  | "organization_requirement"
+  | "ict_provider"
+  | "contract"
+  | "contract_control";
 
 export interface OrganizationRequirement {
   id: string;
@@ -219,7 +228,24 @@ export interface OrganizationRequirement {
   implementation_status: string;
   owner: string | null;
   notes: string | null;
-  evidence_files?: RequirementEvidenceFile[];
+  evidence_files?: EvidenceAttachmentFile[];
+}
+
+export interface SupplierWithEvidence extends Supplier {
+  evidence_files?: EvidenceAttachmentFile[];
+}
+
+export interface ContractWithEvidence extends Contract {
+  evidence_files?: EvidenceAttachmentFile[];
+}
+
+export interface ContractControlRow {
+  id: string;
+  contract_id: string;
+  control_definition_id: string;
+  compliance_status: string;
+  notes?: string | null;
+  evidence_files?: EvidenceAttachmentFile[];
 }
 
 export interface ApiErrorBody {

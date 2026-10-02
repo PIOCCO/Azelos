@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import type { Supplier } from "../../api/types";
+import type { SupplierWithEvidence } from "../../api/types";
+import { EvidenceAttachmentsPanel } from "../../components/dora/EvidenceAttachmentsPanel";
 import { createProvider } from "../../api/dora";
 import { getApiBase, getTokenProvider } from "../../api/client";
 import { EntityListPage } from "./EntityListPage";
@@ -110,7 +111,7 @@ export function ProvidersPage() {
           {importMsg ? <span className="text-gray-600">{importMsg}</span> : null}
         </div>
       </Card>
-      <EntityListPage<Supplier>
+      <EntityListPage<SupplierWithEvidence>
       pageTitle="Third-Party Provider Portfolio"
       tableTitle="Providers"
       path="/api/v1/ict-providers"
@@ -132,6 +133,18 @@ export function ProvidersPage() {
         { key: "country", header: "Country", render: (r) => r.country_code },
         { key: "lei", header: "LEI", render: (r) => r.lei ?? "—" },
         { key: "trade", header: "Trading name", render: (r) => r.trading_name ?? "—" },
+        {
+          key: "evidence",
+          header: "Evidence (PDF)",
+          render: (r) => (
+            <EvidenceAttachmentsPanel
+              entityType="ict_provider"
+              entityId={r.id}
+              initialFiles={r.evidence_files}
+              invalidateQueryKeys={[["ict-providers"]]}
+            />
+          ),
+        },
       ]}
     />
     </>

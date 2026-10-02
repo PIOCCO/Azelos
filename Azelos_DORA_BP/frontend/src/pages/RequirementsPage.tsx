@@ -5,7 +5,7 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { Card } from "../components/ui/Card";
 import { LoadingSkeleton, ErrorState } from "../components/ui/States";
 import { StatusBadge } from "../components/ui/Badge";
-import { RequirementEvidenceCell } from "../components/dora/RequirementEvidenceCell";
+import { EvidenceAttachmentsPanel } from "../components/dora/EvidenceAttachmentsPanel";
 
 export function RequirementsPage() {
   const { organizationId } = useOrg();
@@ -70,11 +70,12 @@ export function RequirementsPage() {
                       <div className="font-medium">{r.title}</div>
                     </td>
                     <td className="min-w-[220px] py-3 align-top">
-                      {organizationId ? (
-                        <RequirementEvidenceCell organizationId={organizationId} requirement={r} />
-                      ) : (
-                        <span className="text-gray-400">—</span>
-                      )}
+                      <EvidenceAttachmentsPanel
+                        entityType="organization_requirement"
+                        entityId={r.id}
+                        initialFiles={r.evidence_files}
+                        invalidateQueryKeys={[["org-requirements", organizationId ?? ""]]}
+                      />
                     </td>
                     <td className="py-3 align-top">
                       <select

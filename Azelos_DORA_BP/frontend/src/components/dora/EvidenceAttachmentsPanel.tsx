@@ -1,25 +1,39 @@
 import { useRef, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { OrganizationRequirement, RequirementEvidenceFile } from "../../api/types";
-import { uploadRequirementEvidence } from "../../api/dora";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { EvidenceAttachmentFile, EvidenceEntityType } from "../../api/types";
+import { listEvidenceAttachments, uploadEvidenceAttachment } from "../../api/dora";
 import { Button } from "../ui/Button";
 import { downloadEvidenceFile, viewEvidenceFile } from "../../lib/evidenceFile";
 
-export function RequirementEvidenceCell(props: {
-  organizationId: string;
-  requirement: OrganizationRequirement;
+export function EvidenceAttachmentsPanel(props: {
+  entityType: EvidenceEntityType;
+  entityId: string;
+  /** When provided (e.g. list API), skip initial fetch. */
+  initialFiles?: EvidenceAttachmentFile[];
+  invalidateQueryKeys?: string[][];
 }) {
-  const { organizationId, requirement } = props;
+  const { entityType, entityId, initialFiles, invalidateQueryKeys = [] } = props;
   const inputRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
   const [error, setError] = useState<string | null>(null);
-  const files = requirement.evidence_files ?? [];
+
+  const listQ = useQuery({
+    queryKey: ["evidence-attachments", entityType, entityId],
+    queryFn: () => listEvidenceAttachments(entityType, entityId),
+    enabled: initialFiles === undefined,
+    initialData: initialFiles,
+  });
+
+  const files = listQ.data ?? [];
 
   const uploadM = useMutation({
-    mutationFn: (file: File) => uploadRequirementEvidence(organizationId, requirement.id, file),
+    mutationFn: (file: File) => uploadEvidenceAttachment(entityType, entityId, file),
     onSuccess: () => {
       setError(null);
-      qc.invalidateQueries({ queryKey: ["org-requirements", organizationId] });
+      qc.invalidateQueries({ queryKey: ["evidence-attachments", entityType, entityId] });
+      for (const key of invalidateQueryKeys) {
+        qc.invalidateQueries({ queryKey: key });
+      }
     },
     onError: (e: Error) => setError(e.message),
   });
@@ -39,8 +53,8 @@ export function RequirementEvidenceCell(props: {
         <p className="text-gray-500">No evidence</p>
       ) : (
         <ul className="space-y-1">
-          {files.map((f: RequirementEvidenceFile) => (
-            <li key={f.link_id} className="flex flex-wrap items-center gap-2">
+          {files.map((f) => (
+            <li key={f.evidence_id} className="flex flex-wrap items-center gap-2">
               <span className="font-medium text-gray-800">{f.file_name}</span>
               <Button
                 type="button"

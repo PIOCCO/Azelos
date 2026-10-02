@@ -12,17 +12,23 @@ from app.schemas.common import PaginatedResponse
 from app.schemas.suppliers import SupplierCreate, SupplierOut, SupplierUpdate
 from app.models.enums import AuditAction
 from app.services.platform_audit import record_platform_audit
+from app.services.evidence_enrich import supplier_with_evidence, suppliers_with_evidence
 from app.services.suppliers import SupplierService
 
 router = APIRouter(tags=["ICT Providers"])
 
 
 def _paginated(
-    service: SupplierService, page: int, page_size: int, *, q: str | None = None
+    service: SupplierService,
+    page: int,
+    page_size: int,
+    *,
+    q: str | None = None,
 ) -> PaginatedResponse:
     items, total = service.list(page, page_size, q=q)
+    enriched = suppliers_with_evidence(service.repo.db, service.repo.organization_id, items)
     return PaginatedResponse(
-        items=[SupplierOut.model_validate(i) for i in items],
+        items=enriched,
         page=page,
         page_size=page_size,
         total=total,
@@ -46,7 +52,8 @@ def get_provider(
     ctx: AuthContext = Depends(get_auth_context),
     db: Session = Depends(get_db),
 ):
-    return SupplierOut.model_validate(SupplierService(db, ctx.organization_id).get(provider_id))
+    svc = SupplierService(db, ctx.organization_id)
+    return supplier_with_evidence(db, ctx.organization_id, svc.get(provider_id))
 
 
 @router.post("/ict-providers", response_model=SupplierOut, status_code=201)

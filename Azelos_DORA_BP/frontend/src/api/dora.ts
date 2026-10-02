@@ -7,6 +7,8 @@ import type {
   Contract,
   CustomField,
   Evidence,
+  EvidenceAttachmentFile,
+  EvidenceEntityType,
   ICTAsset,
   ICTService,
   InformationAsset,
@@ -99,28 +101,41 @@ export function linkEvidenceToRequirement(evidenceId: string, organizationRequir
   });
 }
 
-export async function uploadRequirementEvidence(
-  organizationId: string,
-  organizationRequirementId: string,
+export function listEvidenceAttachments(entityType: EvidenceEntityType, entityId: string) {
+  return apiRequest<EvidenceAttachmentFile[]>(
+    `/api/v1/evidence-attachments/${entityType}/${entityId}`,
+  );
+}
+
+export async function uploadEvidenceAttachment(
+  entityType: EvidenceEntityType,
+  entityId: string,
   file: File,
 ) {
   const form = new FormData();
   form.append("file", file);
   const token = (await import("./client")).getTokenProvider()();
   const base = (await import("./client")).getApiBase();
-  const res = await fetch(
-    `${base}/api/v1/organizations/${organizationId}/requirements/${organizationRequirementId}/evidence`,
-    {
-      method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: form,
-    },
-  );
+  const res = await fetch(`${base}/api/v1/evidence-attachments/${entityType}/${entityId}`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || "Upload failed");
   }
   return res.json() as Promise<Evidence>;
+}
+
+/** @deprecated Prefer uploadEvidenceAttachment("organization_requirement", id, file) */
+export async function uploadRequirementEvidence(
+  organizationId: string,
+  organizationRequirementId: string,
+  file: File,
+) {
+  void organizationId;
+  return uploadEvidenceAttachment("organization_requirement", organizationRequirementId, file);
 }
 
 export async function downloadDoraAssessmentPdf(): Promise<void> {
@@ -312,15 +327,13 @@ export function createAssetFunctionMap(body: {
 }
 
 export function listContractControls() {
-  return apiRequest<
-    { id: string; contract_id: string; control_definition_id: string; compliance_status: string }[]
-  >("/api/v1/controls");
+  return apiRequest<import("./types").ContractControlRow[]>("/api/v1/controls");
 }
 
 export function listControlDefinitions() {
-  return apiRequest<{ id: string; code: string; title: string; description: string | null }[]>(
-    "/api/v1/controls/definitions",
-  );
+  return apiRequest<
+    { id: string; code: string; name: string; category: string; description: string | null }[]
+  >("/api/v1/controls/definitions");
 }
 
 export function createProvider(body: {

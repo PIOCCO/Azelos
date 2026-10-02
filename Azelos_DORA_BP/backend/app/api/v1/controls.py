@@ -10,6 +10,8 @@ from app.core.dependencies import AuthContext, get_auth_context, require_role
 from app.core.rbac import Role
 from app.models.dora_control import ContractDoraControl, DoraControlDefinition
 from app.models.enums import AuditAction, ComplianceStatus
+from app.schemas.evidence_attachment import EvidenceAttachmentOut
+from app.services.evidence_attachment_service import EvidenceAttachmentService, EvidenceEntityType
 from app.services.platform_audit import record_platform_audit
 
 router = APIRouter(prefix="/controls", tags=["Controls"])
@@ -31,6 +33,7 @@ class ContractControlOut(BaseModel):
     control_definition_id: UUID
     compliance_status: str
     notes: str | None = None
+    evidence_files: list[EvidenceAttachmentOut] = []
 
     model_config = {"from_attributes": True}
 
@@ -65,11 +68,22 @@ def list_contract_controls(
     ctx: AuthContext = Depends(get_auth_context),
     db: Session = Depends(get_db),
 ):
-    return db.scalars(
+    rows = db.scalars(
         select(ContractDoraControl).where(
             ContractDoraControl.financial_entity_id == ctx.organization_id
         )
     ).all()
+    attach = EvidenceAttachmentService(db, ctx.organization_id)
+    grouped = attach.grouped_for_entity_type(
+        EvidenceEntityType.CONTRACT_CONTROL, {r.id for r in rows}
+    )
+    out: list[ContractControlOut] = []
+    for row in rows:
+        base = ContractControlOut.model_validate(row)
+        out.append(
+            base.model_copy(update={"evidence_files": grouped.get(row.id, [])})
+        )
+    return out
 
 
 @router.patch("/contract-controls/{control_id}", response_model=ContractControlOut)

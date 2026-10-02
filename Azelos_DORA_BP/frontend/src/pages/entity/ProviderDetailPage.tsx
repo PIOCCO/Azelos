@@ -5,6 +5,8 @@ import type { Supplier } from "../../api/types";
 import { ModuleGate } from "../../components/auth/ModuleGate";
 import { EntityDetailPage } from "./EntityDetailPage";
 import { EntityRelationshipsPanel } from "../../components/dora/EntityRelationshipsPanel";
+import { EvidenceAttachmentsPanel } from "../../components/dora/EvidenceAttachmentsPanel";
+import { Card } from "../../components/ui/Card";
 
 export function ProviderDetailPage() {
   const { providerId } = useParams();
@@ -36,6 +38,15 @@ export function ProviderDetailPage() {
             : []
         }
       />
+      {providerId ? (
+        <Card title="Evidence (PDF)" className="mt-6">
+          <EvidenceAttachmentsPanel
+            entityType="ict_provider"
+            entityId={providerId}
+            invalidateQueryKeys={[["provider", providerId], ["ict-providers"]]}
+          />
+        </Card>
+      ) : null}
       {providerId ? (
         <div className="mt-6">
           <EntityRelationshipsPanel

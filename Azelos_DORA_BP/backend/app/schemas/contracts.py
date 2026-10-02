@@ -4,6 +4,7 @@ from datetime import date
 from pydantic import BaseModel, Field
 
 from app.models.enums import ContractStatus, ContractType
+from app.schemas.evidence_attachment import EvidenceAttachmentOut
 
 
 class ContractCreate(BaseModel):
@@ -28,5 +29,6 @@ class ContractOut(BaseModel):
     status: ContractStatus
     start_date: date
     end_date: date | None
+    evidence_files: list[EvidenceAttachmentOut] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}

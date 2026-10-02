@@ -8,6 +8,7 @@ import { ModuleGate } from "../../components/auth/ModuleGate";
 import { EntityDetailPage } from "./EntityDetailPage";
 import { EntityRelationshipsPanel } from "../../components/dora/EntityRelationshipsPanel";
 import { Card } from "../../components/ui/Card";
+import { EvidenceAttachmentsPanel } from "../../components/dora/EvidenceAttachmentsPanel";
 import { Button } from "../../components/ui/Button";
 
 export function ContractDetailPage() {
@@ -82,6 +83,15 @@ export function ContractDetailPage() {
             <p className="mt-2 text-sm text-red-600">{(patchM.error as Error).message}</p>
           ) : null}
           {patchM.isSuccess ? <p className="mt-2 text-sm text-green-700">Updated.</p> : null}
+        </Card>
+      ) : null}
+      {contractId ? (
+        <Card title="Evidence (PDF)" className="mt-6">
+          <EvidenceAttachmentsPanel
+            entityType="contract"
+            entityId={contractId}
+            invalidateQueryKeys={[["contract", contractId], ["contracts"]]}
+          />
         </Card>
       ) : null}
       {contractId ? (

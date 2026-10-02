@@ -1,5 +1,8 @@
 import uuid
+
 from pydantic import BaseModel, Field
+
+from app.schemas.evidence_attachment import EvidenceAttachmentOut
 
 
 class SupplierCreate(BaseModel):
@@ -21,5 +24,6 @@ class SupplierOut(BaseModel):
     trading_name: str | None
     lei: str | None
     country_code: str
+    evidence_files: list[EvidenceAttachmentOut] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}

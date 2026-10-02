@@ -146,6 +146,62 @@ def test_requirement_evidence_idor_denied(client, db_session):
     assert r.status_code == 403
 
 
+def test_provider_pdf_evidence_isolated(client, db_session):
+    org, user, org_req_a, org_req_b = _seed_org_with_requirement(db_session)
+    from app.models.contract import Contract
+    from app.models.enums import ContractStatus, ContractType, ProviderStatus, ProviderType
+    from app.models.provider import ICTProvider
+
+    provider = ICTProvider(
+        financial_entity_id=org.id,
+        legal_name="Ev Co",
+        country_code="DE",
+        provider_type=ProviderType.ICT_THIRD_PARTY,
+        status=ProviderStatus.ACTIVE,
+    )
+    db_session.add(provider)
+    db_session.flush()
+    contract = Contract(
+        financial_entity_id=org.id,
+        provider_id=provider.id,
+        reference_number="C-1",
+        contract_type=ContractType.OUTSOURCING,
+        status=ContractStatus.ACTIVE,
+        start_date=__import__("datetime").date.today(),
+    )
+    db_session.add(contract)
+    db_session.flush()
+    headers = _login(client, user, org)
+
+    p_up = client.post(
+        f"/api/v1/evidence-attachments/ict_provider/{provider.id}",
+        headers=headers,
+        files={"file": ("due-diligence.pdf", io.BytesIO(MIN_PDF), "application/pdf")},
+    )
+    assert p_up.status_code == 201
+
+    c_up = client.post(
+        f"/api/v1/evidence-attachments/contract/{contract.id}",
+        headers=headers,
+        files={"file": ("contract.pdf", io.BytesIO(MIN_PDF), "application/pdf")},
+    )
+    assert c_up.status_code == 201
+
+    providers = client.get("/api/v1/ict-providers?page=1&page_size=20", headers=headers)
+    assert providers.status_code == 200
+    p_item = next(i for i in providers.json()["items"] if i["id"] == str(provider.id))
+    assert len(p_item["evidence_files"]) == 1
+    assert p_item["evidence_files"][0]["file_name"] == "due-diligence.pdf"
+
+    contracts = client.get("/api/v1/contracts?page=1&page_size=20", headers=headers)
+    c_item = next(i for i in contracts.json()["items"] if i["id"] == str(contract.id))
+    assert c_item["evidence_files"][0]["file_name"] == "contract.pdf"
+
+    listed = client.get(f"/api/v1/organizations/{org.id}/requirements", headers=headers)
+    by_id = {row["id"]: row for row in listed.json()}
+    assert len(by_id[str(org_req_a.id)]["evidence_files"]) == 0
+
+
 def test_dora_assessment_pdf_export(client, db_session):
     org, user, _, _ = _seed_org_with_requirement(db_session)
     headers = _login(client, user, org)

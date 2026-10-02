@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { listContractControls, listControlDefinitions, patchContractControl } from "../../api/dora";
+import type { ContractControlRow } from "../../api/types";
+import { EvidenceAttachmentsPanel } from "../../components/dora/EvidenceAttachmentsPanel";
 import { ModuleGate } from "../../components/auth/ModuleGate";
 import { ErrorPanel, LoadingPanel } from "../../components/ui/StatePanel";
 
@@ -27,7 +29,7 @@ export function ControlsPage() {
         <ul className="mt-2 text-sm">
           {(defs.data ?? []).map((d) => (
             <li key={d.id} className="border-b py-2">
-              <span className="font-mono text-xs">{d.code}</span> — {d.title}
+              <span className="font-mono text-xs">{d.code}</span> — {d.name}
             </li>
           ))}
         </ul>
@@ -38,23 +40,32 @@ export function ControlsPage() {
           <thead className="text-slate-500">
             <tr>
               <th>Control</th>
+              <th>Evidence (PDF)</th>
               <th>Compliance</th>
             </tr>
           </thead>
           <tbody>
             {(org.data ?? []).length === 0 ? (
               <tr>
-                <td colSpan={2} className="py-4 text-slate-500">
+                <td colSpan={3} className="py-4 text-slate-500">
                   No contract controls recorded.
                 </td>
               </tr>
             ) : (
-              (org.data ?? []).map((c) => {
+              (org.data ?? []).map((c: ContractControlRow) => {
                 const d = defById.get(c.control_definition_id);
                 return (
                   <tr key={c.id} className="border-t">
-                    <td className="py-2">{d ? `${d.code} — ${d.title}` : c.control_definition_id}</td>
-                    <td>
+                    <td className="py-2 align-top">{d ? `${d.code} — ${d.name}` : c.control_definition_id}</td>
+                    <td className="min-w-[220px] py-2 align-top">
+                      <EvidenceAttachmentsPanel
+                        entityType="contract_control"
+                        entityId={c.id}
+                        initialFiles={c.evidence_files}
+                        invalidateQueryKeys={[["contract-controls"]]}
+                      />
+                    </td>
+                    <td className="align-top">
                       <select
                         className="rounded border px-1 py-0.5 text-xs"
                         value={c.compliance_status}
