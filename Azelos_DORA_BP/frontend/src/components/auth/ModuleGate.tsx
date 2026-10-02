@@ -16,8 +16,15 @@ export function ModuleGate({
   if (moduleNavMode === "pending") {
     return <LoadingSkeleton rows={4} />;
   }
-  const allowed =
-    moduleNavMode === "error" ? true : moduleAllowsAccess(modules, item.moduleKey);
+  if (moduleNavMode === "error") {
+    return (
+      <EmptyState
+        title="Module settings unavailable"
+        description="Could not load module configuration. Refresh the page or try again shortly."
+      />
+    );
+  }
+  const allowed = moduleAllowsAccess(modules, item.moduleKey);
   if (!allowed) {
     return (
       <EmptyState

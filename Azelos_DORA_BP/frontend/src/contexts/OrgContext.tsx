@@ -13,7 +13,8 @@ import {
   getProfile,
 } from "../api/dora";
 import type { ApplicabilityResult, ModuleApplicability, OrganizationProfile } from "../api/types";
-import { resolveModuleNavMode, type ModuleNavMode } from "../lib/moduleNav";
+import type { ModuleNavMode } from "../lib/moduleNav";
+import { deriveOrgModuleNavState } from "./orgModuleNavState";
 import { useAuth } from "./AuthContext";
 
 interface OrgContextValue {
@@ -55,31 +56,26 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     queryKey: ["org", orgId, "applicability"],
     queryFn: () => getApplicability(orgId!),
     enabled,
-    placeholderData: (previous) => previous,
   });
 
   const modulesQ = useQuery({
     queryKey: ["org", orgId, "modules"],
     queryFn: () => getOrgModules(orgId!),
     enabled,
-    placeholderData: (previous) => previous,
   });
 
-  const modulesNavList = modulesQ.data ?? applQ.data?.modules;
-  const modulesNavPending =
-    enabled && modulesNavList === undefined && (modulesQ.isPending || applQ.isPending);
-  const modulesNavFailed =
-    enabled &&
-    modulesNavList === undefined &&
-    !modulesNavPending &&
-    modulesQ.isError &&
-    applQ.isError;
-
-  const moduleNavMode = resolveModuleNavMode({
+  const { modulesNavList, moduleNavMode } = deriveOrgModuleNavState({
     orgContextEnabled: enabled,
-    modulesNavList,
-    modulesPending: modulesNavPending,
-    modulesFailed: modulesNavFailed,
+    modulesData: modulesQ.data,
+    modulesSuccess: modulesQ.isSuccess,
+    applModules: applQ.data?.modules,
+    applSuccess: applQ.isSuccess,
+    modulesFetched: modulesQ.isFetched,
+    applFetched: applQ.isFetched,
+    modulesError: modulesQ.isError,
+    applError: applQ.isError,
+    modulesFetching: modulesQ.isFetching,
+    applFetching: applQ.isFetching,
   });
 
   const refreshOrg = useCallback(async () => {
@@ -108,10 +104,14 @@ export function OrgProvider({ children }: { children: ReactNode }) {
       modulesQ.data,
       modulesNavList,
       moduleNavMode,
-      modulesQ.isPending,
+      modulesQ.isSuccess,
+      modulesQ.isFetched,
       modulesQ.isError,
-      applQ.isPending,
+      modulesQ.isFetching,
+      applQ.isSuccess,
+      applQ.isFetched,
       applQ.isError,
+      applQ.isFetching,
       enabled,
       orgQ.isLoading,
       profileQ.isLoading,

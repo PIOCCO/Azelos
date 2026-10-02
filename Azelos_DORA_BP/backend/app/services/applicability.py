@@ -89,11 +89,17 @@ class ApplicabilityService:
         raw = self.evaluate()
         catalogue = self._modules.list_catalogue()
         assignments = self._modules.assignment_map()
+        has_assignments = len(assignments) > 0
         applicable_keys = raw.module_keys
 
         modules_out: list[ModuleApplicabilityOut] = []
         for module in catalogue:
-            enabled = assignments.get(module.id, False)
+            # Missing rows: treat modules as enabled until org_module assignments exist.
+            # (ensure_default_module_assignments runs above; this avoids deny-all if rows are not yet visible.)
+            if module.id in assignments:
+                enabled = assignments[module.id]
+            else:
+                enabled = not has_assignments
             applicable = not applicable_keys or module.key in applicable_keys
             required = module.key in applicable_keys
             modules_out.append(

@@ -61,8 +61,8 @@ describe("moduleNavItemVisible", () => {
     expect(moduleNavItemVisible("pending", undefined, "ICT_RISK")).toBe(false);
   });
 
-  it("fail-open gated routes on error", () => {
-    expect(moduleNavItemVisible("error", undefined, "ICT_RISK")).toBe(true);
+  it("hides gated routes on error (no fail-open flash)", () => {
+    expect(moduleNavItemVisible("error", undefined, "ICT_RISK")).toBe(false);
   });
 
   it("respects disabled modules when ready", () => {

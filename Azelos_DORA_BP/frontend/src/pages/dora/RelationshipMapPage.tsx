@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Node, XYPosition } from "@xyflow/react";
+import type { Node, NodeChange, XYPosition } from "@xyflow/react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Background,
@@ -133,16 +133,42 @@ function GraphCanvas(props: {
     [filtered.edges, selectedEdge, highlight, hiddenRelationships],
   );
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(flowNodes);
+  const [nodes, setNodes, onNodesChangeInternal] = useNodesState(flowNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
 
+  const flushPersistedPositions = useCallback(() => {
+    const positions = Object.fromEntries(
+      [...manualPositionsRef.current.entries()].map(([id, p]) => [id, { x: p.x, y: p.y }]),
+    );
+    props.onPersistPositions(positions);
+  }, [props.onPersistPositions]);
+
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      onNodesChangeInternal(changes);
+      let dragEnded = false;
+      for (const ch of changes) {
+        if (ch.type === "position" && ch.position) {
+          if (ch.dragging) {
+            manualPositionsRef.current.set(ch.id, { x: ch.position.x, y: ch.position.y });
+          } else {
+            manualPositionsRef.current.set(ch.id, { x: ch.position.x, y: ch.position.y });
+            dragEnded = true;
+          }
+        }
+      }
+      if (dragEnded) flushPersistedPositions();
+    },
+    [onNodesChangeInternal, flushPersistedPositions],
+  );
+
+  // Seed manual positions only when persisted layout changes — never on highlight/filter recalc.
   useEffect(() => {
     manualPositionsRef.current.clear();
     for (const [id, pos] of Object.entries(props.persistedPositions)) {
       manualPositionsRef.current.set(id, { x: pos.x, y: pos.y });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- seed only on layout epoch / reset, not each save
-  }, [props.layoutEpoch, props.layoutResetKey]);
+  }, [props.layoutEpoch, props.layoutResetKey, props.persistedPositions]);
 
   useEffect(() => {
     setNodes((prev) => {
@@ -150,7 +176,7 @@ function GraphCanvas(props: {
       return mergeFlowNodePositions(flowNodes, manualPositionsRef.current, prevPositions);
     });
     setEdges(flowEdges);
-  }, [flowNodes, flowEdges, setNodes, setEdges]);
+  }, [flowNodes, flowEdges, props.layoutEpoch, props.layoutResetKey, setNodes, setEdges]);
 
   const onNodeDragStart = useCallback(() => {
     didDragRef.current = true;
@@ -159,15 +185,12 @@ function GraphCanvas(props: {
   const onNodeDragStop = useCallback(
     (_evt: MouseEvent | TouchEvent, node: Node) => {
       manualPositionsRef.current.set(node.id, { x: node.position.x, y: node.position.y });
-      const positions = Object.fromEntries(
-        [...manualPositionsRef.current.entries()].map(([id, p]) => [id, { x: p.x, y: p.y }]),
-      );
-      props.onPersistPositions(positions);
+      flushPersistedPositions();
       window.setTimeout(() => {
         didDragRef.current = false;
       }, 0);
     },
-    [props.onPersistPositions],
+    [flushPersistedPositions],
   );
 
   useEffect(() => {
@@ -251,6 +274,9 @@ function RelationshipMapInner() {
     mutationFn: saveRelationshipMapLayout,
     onSuccess: (data) => {
       queryClient.setQueryData(["relationship-map-layout", session?.organizationId], data);
+    },
+    onError: (err: Error) => {
+      console.error("Failed to persist relationship map layout:", err.message);
     },
   });
 
@@ -512,6 +538,13 @@ function RelationshipMapInner() {
             <LoadingSkeleton rows={8} />
           ) : error ? (
             <ErrorState message={error.message} onRetry={() => overviewQ.refetch()} />
+          ) : layoutQ.isError ? (
+            <ErrorState
+              message={`Could not load saved layout: ${(layoutQ.error as Error).message}`}
+              onRetry={() => layoutQ.refetch()}
+            />
+          ) : !layoutQ.isFetched ? (
+            <LoadingSkeleton rows={8} />
           ) : !rawGraph?.nodes.length ? (
             <p className="p-6 text-sm text-gray-500">
               No relationship data yet. Add business functions, ICT assets, or providers in DORA modules, then

@@ -18,8 +18,7 @@ export function resolveModuleNavMode(input: {
 }
 
 /**
- * Sidebar module filter. Pending: hide gated items (never allow-all flash).
- * Error: fail open so the nav does not collapse to non-module links only.
+ * Sidebar module filter. Pending/error: hide module-gated items (never allow-all flash).
  * Ready: enforce backend module rules.
  */
 export function moduleNavItemVisible(
@@ -28,7 +27,6 @@ export function moduleNavItemVisible(
   moduleKey: string | undefined,
 ): boolean {
   if (!moduleKey) return true;
-  if (mode === "pending") return false;
-  if (mode === "error") return true;
+  if (mode === "pending" || mode === "error") return false;
   return moduleAllowsAccess(modules, moduleKey);
 }
