@@ -3,6 +3,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import type { Contract, ICTService } from "../../api/types";
 import { createIctService, fetchPaginated } from "../../api/dora";
+import {
+  EvidenceAttachmentsPanel,
+  EvidencePdfColumnSubHeader,
+} from "../../components/dora/EvidenceAttachmentsPanel";
 import { EntityListPage } from "./EntityListPage";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -117,6 +121,27 @@ export function ICTServicesPage() {
             ),
           },
           { key: "status", header: "Status", render: (r) => r.status },
+          {
+            key: "evidence",
+            header: "Evidence (PDF)",
+            subHeader: (
+              <div>
+                <EvidencePdfColumnSubHeader />
+                <p className="mt-0.5 text-[10px] font-normal normal-case tracking-normal text-gray-400">
+                  Contract-level evidence for this service
+                </p>
+              </div>
+            ),
+            className: "min-w-[300px] align-top",
+            render: (r) => (
+              <EvidenceAttachmentsPanel
+                entityType="contract"
+                entityId={r.contract_id}
+                initialFiles={r.evidence_files}
+                invalidateQueryKeys={[["ict-services"], ["contracts"]]}
+              />
+            ),
+          },
         ]}
       />
     </>

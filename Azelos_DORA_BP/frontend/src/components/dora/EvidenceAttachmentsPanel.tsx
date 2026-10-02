@@ -29,14 +29,16 @@ export function EvidenceAttachmentsPanel(props: {
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  const useListFromApi = initialFiles === undefined;
+
   const listQ = useQuery({
     queryKey: ["evidence-attachments", entityType, entityId],
     queryFn: () => listEvidenceAttachments(entityType, entityId),
-    enabled: initialFiles === undefined,
-    initialData: initialFiles,
+    enabled: useListFromApi,
   });
 
-  const files = listQ.data ?? [];
+  /** When list APIs embed evidence_files, always render from props (React Query initialData does not track prop updates). */
+  const files = useListFromApi ? (listQ.data ?? []) : (initialFiles ?? []);
 
   const uploadM = useMutation({
     mutationFn: (file: File) => uploadEvidenceAttachment(entityType, entityId, file),
@@ -100,7 +102,7 @@ export function EvidenceAttachmentsPanel(props: {
     />
   );
 
-  if (listQ.isLoading && initialFiles === undefined) {
+  if (listQ.isLoading && useListFromApi) {
     return <p className="text-sm text-gray-400">Loading evidence…</p>;
   }
 
@@ -179,31 +181,14 @@ export function EvidenceAttachmentsPanel(props: {
                   busy={busyId === f.evidence_id}
                   onView={() => onView(f)}
                   onDownload={() => onDownload(f)}
-                  includeImport={files.length === 1}
+                  includeImport
                   onImport={openImport}
                   importPending={uploadM.isPending}
                 />
               }
             />
           ))}
-          {files.length > 1 ? (
-            <EvidenceTableRow
-              evidence={null}
-              actions={
-                <>
-                  {hiddenInput}
-                  <ImportButton
-                    label="Import"
-                    pending={uploadM.isPending}
-                    onClick={openImport}
-                    compact
-                  />
-                </>
-              }
-            />
-          ) : (
-            hiddenInput
-          )}
+          {hiddenInput}
         </div>
       )}
       {error ? <p className="mt-1 text-xs text-red-600">{error}</p> : null}

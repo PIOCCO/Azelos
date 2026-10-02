@@ -202,6 +202,63 @@ def test_provider_pdf_evidence_isolated(client, db_session):
     assert len(by_id[str(org_req_a.id)]["evidence_files"]) == 0
 
 
+def test_ict_service_lists_contract_evidence_without_filtering_services(client, db_session):
+    org, user, _, _ = _seed_org_with_requirement(db_session)
+    from app.models.contract import Contract
+    from app.models.enums import ContractStatus, ContractType, ProviderStatus, ProviderType
+    from app.models.provider import ICTProvider
+    from app.models.service import ICTService
+
+    provider = ICTProvider(
+        financial_entity_id=org.id,
+        legal_name="Svc Ev Co",
+        country_code="DE",
+        provider_type=ProviderType.ICT_THIRD_PARTY,
+        status=ProviderStatus.ACTIVE,
+    )
+    db_session.add(provider)
+    db_session.flush()
+    contract = Contract(
+        financial_entity_id=org.id,
+        provider_id=provider.id,
+        reference_number="SVC-1",
+        contract_type=ContractType.OUTSOURCING,
+        status=ContractStatus.ACTIVE,
+        start_date=__import__("datetime").date.today(),
+    )
+    db_session.add(contract)
+    db_session.flush()
+    svc_with = ICTService(
+        financial_entity_id=org.id,
+        contract_id=contract.id,
+        name="Critical API",
+        supports_critical_or_important=__import__("app.models.enums", fromlist=["CriticalOrImportant"]).CriticalOrImportant.CRITICAL,
+    )
+    svc_without = ICTService(
+        financial_entity_id=org.id,
+        contract_id=contract.id,
+        name="Batch jobs",
+        supports_critical_or_important=__import__("app.models.enums", fromlist=["CriticalOrImportant"]).CriticalOrImportant.NEITHER,
+    )
+    db_session.add_all([svc_with, svc_without])
+    db_session.flush()
+    headers = _login(client, user, org)
+
+    c_up = client.post(
+        f"/api/v1/evidence-attachments/contract/{contract.id}",
+        headers=headers,
+        files={"file": ("contract.pdf", io.BytesIO(MIN_PDF), "application/pdf")},
+    )
+    assert c_up.status_code == 201
+
+    listed = client.get("/api/v1/ict-services?page=1&page_size=20", headers=headers)
+    assert listed.status_code == 200
+    assert listed.json()["total"] == 2
+    for item in listed.json()["items"]:
+        assert len(item["evidence_files"]) == 1
+        assert item["evidence_files"][0]["file_name"] == "contract.pdf"
+
+
 def test_dora_assessment_pdf_export(client, db_session):
     org, user, _, _ = _seed_org_with_requirement(db_session)
     headers = _login(client, user, org)

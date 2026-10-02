@@ -81,6 +81,7 @@ export interface ICTService {
   contract_id: string;
   status: string;
   supports_critical_or_important: string;
+  evidence_files?: EvidenceAttachmentFile[];
 }
 
 export interface SubOutsourcing {

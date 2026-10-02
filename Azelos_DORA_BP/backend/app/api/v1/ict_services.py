@@ -8,6 +8,7 @@ from app.core.dependencies import AuthContext, get_auth_context, require_role
 from app.core.rbac import Role
 from app.schemas.common import PaginatedResponse
 from app.schemas.ict_services import ICTServiceCreate, ICTServiceOut, ICTServiceUpdate
+from app.services.evidence_enrich import ict_services_with_contract_evidence
 from app.services.ict_service_domain import ICTServiceDomainService
 
 router = APIRouter(prefix="/ict-services", tags=["ICT Services"])
@@ -22,8 +23,9 @@ def list_ict_services(
 ):
     service = ICTServiceDomainService(db, ctx.organization_id)
     items, total = service.list(page, page_size)
+    enriched = ict_services_with_contract_evidence(db, ctx.organization_id, items)
     return PaginatedResponse(
-        items=[ICTServiceOut.model_validate(i) for i in items],
+        items=enriched,
         page=page,
         page_size=page_size,
         total=total,
@@ -36,9 +38,8 @@ def get_ict_service(
     ctx: AuthContext = Depends(get_auth_context),
     db: Session = Depends(get_db),
 ):
-    return ICTServiceOut.model_validate(
-        ICTServiceDomainService(db, ctx.organization_id).get(service_id)
-    )
+    row = ICTServiceDomainService(db, ctx.organization_id).get(service_id)
+    return ict_services_with_contract_evidence(db, ctx.organization_id, [row])[0]
 
 
 @router.post("", response_model=ICTServiceOut, status_code=201)

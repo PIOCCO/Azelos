@@ -11,6 +11,7 @@ from app.schemas.requirements import (
     RequirementEvidenceFileOut,
 )
 from app.services.evidence_attachment_service import EvidenceAttachmentService, EvidenceEntityType
+from app.services.org_requirement_defaults import ensure_organization_requirements
 from app.models.enums import AuditAction
 from app.services.platform_audit import record_platform_audit
 
@@ -51,6 +52,7 @@ class RequirementService:
     def list_organization_status(self) -> list[OrganizationRequirementDetailOut]:
         if self.organization_id is None:
             raise AppError("FORBIDDEN", "Organization required", 403)
+        ensure_organization_requirements(self.db, self.organization_id)
         rows = RequirementRepository(self.db, self.organization_id).list_organization_implementation()
         evidence_map = self._evidence_by_requirement()
         out: list[OrganizationRequirementDetailOut] = []

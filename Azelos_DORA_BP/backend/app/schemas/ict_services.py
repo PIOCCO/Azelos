@@ -1,8 +1,9 @@
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.models.enums import CriticalOrImportant, ServiceStatus
+from app.schemas.evidence_attachment import EvidenceAttachmentOut
 
 
 class ICTServiceCreate(BaseModel):
@@ -24,5 +25,6 @@ class ICTServiceOut(BaseModel):
     name: str
     status: ServiceStatus
     supports_critical_or_important: CriticalOrImportant
+    evidence_files: list[EvidenceAttachmentOut] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
