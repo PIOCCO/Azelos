@@ -68,8 +68,13 @@ describe("moduleNavItemVisible", () => {
     );
   });
 
-  it("hides gated routes on error when no fallback", () => {
-    expect(moduleNavItemVisible("error", undefined, "ICT_RISK")).toBe(false);
+  it("shows gated routes on error when no module configuration is available", () => {
+    expect(moduleNavItemVisible("error", undefined, "ICT_RISK")).toBe(true);
+  });
+
+  it("shows ICT nav when ready but /modules returned an empty list", () => {
+    expect(moduleNavItemVisible("ready", [], "ICT_RISK", [enabledModule])).toBe(true);
+    expect(moduleNavItemVisible("ready", [], "ICT_RISK")).toBe(true);
   });
 
   it("respects disabled modules when ready", () => {

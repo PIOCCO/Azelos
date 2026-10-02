@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { moduleAllowsAccess } from "./nav";
 import type { ModuleNavMode } from "./moduleNav";
+import { moduleAccessAllowed } from "./moduleNav";
 
-/** Mirrors ModuleGate: deny only when module nav is ready and access check fails. */
+/** Mirrors ModuleGate. */
 function modulePageBlocked(
   mode: ModuleNavMode,
-  modules: Parameters<typeof moduleAllowsAccess>[0],
+  modules: Parameters<typeof moduleAccessAllowed>[1],
   moduleKey: string | undefined,
+  applicabilityModules?: Parameters<typeof moduleAccessAllowed>[3],
 ): boolean {
-  if (mode !== "ready") return false;
-  return !moduleAllowsAccess(modules, moduleKey);
+  return !moduleAccessAllowed(mode, modules, moduleKey, applicabilityModules);
 }
 
 describe("module page gate", () => {
@@ -22,7 +22,7 @@ describe("module page gate", () => {
       available: true,
       disabled: false,
     },
-  ] as Parameters<typeof moduleAllowsAccess>[0];
+  ] as NonNullable<Parameters<typeof moduleAccessAllowed>[1]>;
 
   it("does not block while module nav is pending", () => {
     expect(modulePageBlocked("pending", undefined, "ASSET_MANAGEMENT")).toBe(false);
@@ -33,8 +33,13 @@ describe("module page gate", () => {
     expect(modulePageBlocked("error", undefined, "ASSET_MANAGEMENT")).toBe(false);
   });
 
-  it("blocks when ready and module is disabled", () => {
-    expect(modulePageBlocked("ready", [], "ASSET_MANAGEMENT")).toBe(true);
+  it("blocks when ready and module is explicitly disabled in /modules", () => {
+    const disabled = [{ ...assetModule[0]!, enabled: false }];
+    expect(modulePageBlocked("ready", disabled, "ASSET_MANAGEMENT")).toBe(true);
     expect(modulePageBlocked("ready", assetModule, "ASSET_MANAGEMENT")).toBe(false);
+  });
+
+  it("does not block when ready with empty /modules (uses fail-open)", () => {
+    expect(modulePageBlocked("ready", [], "ASSET_MANAGEMENT")).toBe(false);
   });
 });
