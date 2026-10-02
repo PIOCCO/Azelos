@@ -6,10 +6,13 @@
 
 @layer base {
   html {
-    @apply antialiased;
+    @apply h-full antialiased;
   }
   body {
-    @apply bg-surface-canvas text-gray-900 font-sans;
+    @apply h-full overflow-hidden bg-surface-canvas text-gray-900 font-sans;
+  }
+  #root {
+    @apply h-full;
   }
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-primary;

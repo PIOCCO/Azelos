@@ -90,7 +90,7 @@ export function Sidebar() {
           </aside>
         </div>
       ) : null}
-      <aside className="hidden w-64 shrink-0 bg-sidebar md:sticky md:top-0 md:self-start md:flex md:flex-col lg:w-72">
+      <aside className="hidden h-dvh w-64 shrink-0 overflow-y-auto overscroll-y-contain bg-sidebar md:flex md:flex-col lg:w-72">
         {navBody}
       </aside>
     </>

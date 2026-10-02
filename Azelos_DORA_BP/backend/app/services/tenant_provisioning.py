@@ -15,6 +15,7 @@ from app.models.enums_saas import SubscriptionStatus
 from app.models.financial_entity import FinancialEntity
 from app.models.organization_profile import OrganizationProfile
 from app.models.saas import OrganizationSubscription
+from app.services.org_module_defaults import ensure_default_module_assignments
 from app.services.profile_service import ProfileService
 
 
@@ -69,6 +70,7 @@ class TenantProvisioningService:
             )
         )
         ProfileService(self.db, entity.id).get_or_create()
+        ensure_default_module_assignments(self.db, entity.id)
         self._seed_org_requirements(entity.id)
         user = self.db.scalar(select(User).where(User.email == admin_email))
         if user is None:

@@ -22,8 +22,26 @@ def login_options():
 
 @router.post("/login", response_model=TokenResponse, summary="Obtain access token")
 def login_json(body: LoginRequest, db: Session = Depends(get_db)):
+    from app.models.enums import AuditAction
+    from app.services.platform_audit import record_platform_audit
+
+    from sqlalchemy import select
+
+    from app.models.auth import User
+
     service = AuthService(db)
     token, org_id, role = service.login(body.email, body.password, body.organization_id)
+    user = db.scalar(select(User).where(User.email == body.email))
+    if user is not None:
+        record_platform_audit(
+            db,
+            organization_id=org_id,
+            actor=body.email,
+            entity_type="user",
+            entity_id=user.id,
+            action=AuditAction.LOGIN,
+            new_value={"role": role.value},
+        )
     return TokenResponse(access_token=token, organization_id=org_id, role=role.value)
 
 

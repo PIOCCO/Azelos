@@ -8,11 +8,11 @@ export function AppLayout() {
   const { error } = useOrg();
 
   return (
-    <div className="flex min-h-screen bg-surface-canvas">
+    <div className="flex h-dvh overflow-hidden bg-surface-canvas">
       <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar />
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
+        <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4 md:p-6 lg:p-8">
           {error ? (
             <div className="mb-4">
               <ErrorState title="Organization context" message={error.message} />

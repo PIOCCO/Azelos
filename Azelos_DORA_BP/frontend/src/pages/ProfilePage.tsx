@@ -14,12 +14,18 @@ import { ErrorPanel, LoadingPanel } from "../components/ui/StatePanel";
 
 export function ProfilePage() {
   const { session } = useAuth();
-  const { organizationId, profile, isLoading, refreshOrg } = useOrg();
+  const { organizationId, profile, isLoading, error: orgError, refreshOrg } = useOrg();
   const readOnly = isReadOnlyAuditor(session?.role) || !can(session?.role, "org.admin");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (isLoading || !profile) return <LoadingPanel label="Loading profile…" />;
+  if (isLoading) return <LoadingPanel label="Loading profile…" />;
+  if (orgError) return <ErrorPanel message={orgError.message} />;
+  if (!profile) {
+    return (
+      <ErrorPanel message="Organization profile is not available. Check your login organization or contact an administrator." />
+    );
+  }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
