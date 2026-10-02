@@ -14,8 +14,6 @@ import {
   Settings,
   Shield,
   ShieldAlert,
-  Sliders,
-  Wrench,
   Activity,
   AlertTriangle,
   CheckSquare,
@@ -47,7 +45,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Dashboard", path: "/", icon: LayoutDashboard },
       { label: "Get started", path: "/onboarding", icon: ClipboardCheck },
-      { label: "Organization", path: "/onboarding/profile", icon: Building2 },
+      { label: "Organization profile", path: "/organization/profile", icon: Building2 },
     ],
   },
   {
@@ -74,7 +72,6 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Business Functions", path: "/business-functions", icon: Home, moduleKey: "ASSET_MANAGEMENT" },
       { label: "BIA", path: "/bia", icon: Activity, moduleKey: "ASSET_MANAGEMENT" },
       { label: "Dependencies", path: "/dependencies", icon: Link2, moduleKey: "ASSET_MANAGEMENT" },
-      { label: "Team", path: "/admin/members", icon: Settings, adminOnly: true },
     ],
   },
   {
@@ -103,10 +100,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Administration",
     items: [
-      { label: "Integrations", path: "/configuration/integrations", icon: Link2, adminOnly: true },
-      { label: "Modules", path: "/configuration/modules", icon: Sliders, adminOnly: true },
-      { label: "Custom Fields", path: "/configuration/custom-fields", icon: Wrench, adminOnly: true },
-      { label: "Settings", path: "/onboarding/profile", icon: Settings },
+      { label: "Settings", path: "/settings", icon: Settings, adminOnly: true },
       { label: "Audit log", path: "/audit-log", icon: ClipboardCheck },
       {
         label: "Provision customer org",

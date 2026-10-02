@@ -5,7 +5,7 @@ import { PageHeader } from "../../components/ui/PageHeader";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 
-export function MembersPage() {
+export function MembersPage({ embedded = false }: { embedded?: boolean }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("USER");
   const [lastToken, setLastToken] = useState<string | null>(null);
@@ -16,7 +16,13 @@ export function MembersPage() {
 
   return (
     <div>
-      <PageHeader title="Team members" subtitle="Invite colleagues to this organization." />
+      {embedded ? (
+        <p className="mb-4 text-sm text-gray-600">
+          Manage who can access this tenant and their RBAC role. Invitations are organization-scoped.
+        </p>
+      ) : (
+        <PageHeader title="Team members" subtitle="Invite colleagues to this organization." />
+      )}
       <Card title="Send invitation">
         <form
           className="flex flex-wrap gap-2"

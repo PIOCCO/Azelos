@@ -47,9 +47,31 @@ export function loginWithOidcIdToken(idToken: string, organizationId?: string) {
 }
 
 export function getOrganization(orgId: string) {
-  return apiRequest<{ id: string; legal_name: string; short_name: string | null }>(
-    `/api/v1/organizations/${orgId}`,
-  );
+  return apiRequest<{
+    id: string;
+    legal_name: string;
+    short_name: string | null;
+    country_code: string;
+    lei: string | null;
+    status: string;
+  }>(`/api/v1/organizations/${orgId}`);
+}
+
+export function patchOrganization(
+  orgId: string,
+  data: { legal_name?: string; short_name?: string | null },
+) {
+  return apiRequest<{
+    id: string;
+    legal_name: string;
+    short_name: string | null;
+    country_code: string;
+    lei: string | null;
+    status: string;
+  }>(`/api/v1/organizations/${orgId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
 }
 
 export function getProfile(orgId: string) {

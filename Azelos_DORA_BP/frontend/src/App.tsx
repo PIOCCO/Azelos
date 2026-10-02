@@ -5,6 +5,14 @@ import { LoginPage } from "./pages/LoginPage";
 import { AcceptInvitePage } from "./pages/AcceptInvitePage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import { OrganizationProfilePage } from "./pages/organization/OrganizationProfilePage";
+import { SettingsLayout } from "./pages/settings/SettingsLayout";
+import { SettingsOverviewPage } from "./pages/settings/SettingsOverviewPage";
+import { DoraSettingsPage } from "./pages/settings/DoraSettingsPage";
+import { SettingsAccessPage } from "./pages/settings/SettingsAccessPage";
+import { SettingsIntegrationsPage } from "./pages/settings/SettingsIntegrationsPage";
+import { SettingsCloudPage } from "./pages/settings/SettingsCloudPage";
+import { SettingsCustomFieldsPage } from "./pages/settings/SettingsCustomFieldsPage";
 import { ApplicabilityPage } from "./pages/ApplicabilityPage";
 import { RequirementsPage } from "./pages/RequirementsPage";
 import { IncidentsPage } from "./pages/entity/IncidentsPage";
@@ -25,9 +33,6 @@ import { SubOutsourcingPage } from "./pages/entity/SubOutsourcingPage";
 import { ProvisionTenantPage } from "./pages/admin/ProvisionTenantPage";
 import { RisksPage } from "./pages/entity/RisksPage";
 import { RiskDetailPage } from "./pages/entity/RiskDetailPage";
-import { ModulesConfigPage } from "./pages/config/ModulesConfigPage";
-import { CustomFieldsPage } from "./pages/config/CustomFieldsPage";
-import { IntegrationsConfigPage } from "./pages/config/IntegrationsConfigPage";
 import type { InformationAsset } from "./api/types";
 import { BusinessServicesPage } from "./pages/resilience/BusinessServicesPage";
 import { CloudEnvironmentPage } from "./pages/resilience/CloudEnvironmentPage";
@@ -169,7 +174,16 @@ export default function App() {
           />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="onboarding" element={<OnboardingWizardPage />} />
+          <Route path="organization/profile" element={<OrganizationProfilePage />} />
           <Route path="onboarding/profile" element={<ProfilePage />} />
+          <Route path="settings" element={<SettingsLayout />}>
+            <Route index element={<SettingsOverviewPage />} />
+            <Route path="dora" element={<DoraSettingsPage />} />
+            <Route path="access" element={<SettingsAccessPage />} />
+            <Route path="integrations" element={<SettingsIntegrationsPage />} />
+            <Route path="cloud" element={<SettingsCloudPage />} />
+            <Route path="custom-fields" element={<SettingsCustomFieldsPage />} />
+          </Route>
           <Route path="dependencies" element={<DependenciesPage />} />
           <Route path="onboarding/applicability" element={<ApplicabilityPage />} />
           <Route path="requirements" element={<RequirementsPage />} />
@@ -267,9 +281,10 @@ export default function App() {
           <Route path="admin/members" element={<MembersPage />} />
           <Route path="admin/provision" element={<ProvisionTenantPage />} />
           <Route path="audit-log" element={<AuditLogPage />} />
-          <Route path="configuration/integrations" element={<IntegrationsConfigPage />} />
-          <Route path="configuration/modules" element={<ModulesConfigPage />} />
-          <Route path="configuration/custom-fields" element={<CustomFieldsPage />} />
+          <Route path="configuration/integrations" element={<Navigate to="/settings/integrations" replace />} />
+          <Route path="configuration/modules" element={<Navigate to="/settings/dora" replace />} />
+          <Route path="configuration/custom-fields" element={<Navigate to="/settings/custom-fields" replace />} />
+          <Route path="admin/members" element={<Navigate to="/settings/access" replace />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
