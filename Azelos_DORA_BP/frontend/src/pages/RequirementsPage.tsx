@@ -44,6 +44,12 @@ export function RequirementsPage() {
       <PageHeader title="Regulatory Requirements" subtitle="Baseline is read-only; implementation is organization-specific." />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="DORA regulatory baseline">
+          {(baseline.data ?? []).length === 0 ? (
+            <p className="text-sm text-gray-600">
+              No regulatory baseline rows in the database. Run database migrations (Alembic) on this environment to
+              load reference data.
+            </p>
+          ) : null}
           <ul className="space-y-3 text-sm">
             {(baseline.data ?? []).map((r) => (
               <li key={r.id} className="border-b border-gray-100 pb-3">
@@ -69,6 +75,14 @@ export function RequirementsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
+                {(orgReq.data ?? []).length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-6 text-center text-gray-500">
+                      No organization requirements yet. They are created when a tenant is provisioned or when baseline
+                      seed data is applied.
+                    </td>
+                  </tr>
+                ) : null}
                 {(orgReq.data ?? []).map((r) => (
                   <tr key={r.id}>
                     <td className="py-3 align-top">

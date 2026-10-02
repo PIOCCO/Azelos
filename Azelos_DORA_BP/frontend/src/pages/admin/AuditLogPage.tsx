@@ -41,6 +41,8 @@ export function AuditLogPage() {
         subtitle="Immutable platform audit trail for your organization (auditor access)."
       />
       <DataTable
+        emptyTitle="No audit events yet"
+        emptyDescription="Actions such as login, record changes, evidence upload, and configuration updates appear here when recorded for your organization."
         columns={[
           { key: "at", header: "When", render: (r) => new Date(r.created_at).toLocaleString() },
           { key: "actor", header: "Actor", render: (r) => r.actor },

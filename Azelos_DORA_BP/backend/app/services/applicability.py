@@ -14,6 +14,7 @@ from app.models.profile_rules import ProfileRule
 from app.repositories.modules import ModuleRepository
 from app.rules.applicability_engine import conditions_match, merge_outcomes
 from app.schemas.applicability import ApplicabilityOut, ModuleApplicabilityOut
+from app.services.org_module_defaults import ensure_default_module_assignments
 from app.services.profile_service import ProfileService
 
 
@@ -84,6 +85,7 @@ class ApplicabilityService:
         return result
 
     def build_response(self) -> ApplicabilityOut:
+        ensure_default_module_assignments(self.db, self.organization_id)
         raw = self.evaluate()
         catalogue = self._modules.list_catalogue()
         assignments = self._modules.assignment_map()

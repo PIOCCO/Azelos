@@ -11,7 +11,7 @@ export function TopBar() {
   const displayName = session?.email?.split("@")[0] ?? "User";
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-gray-200 bg-surface px-4 md:px-6">
+    <header className="z-30 flex h-16 shrink-0 items-center gap-4 border-b border-gray-200 bg-surface px-4 md:px-6">
       <div className="flex min-w-0 items-center gap-2 pl-10 md:pl-0">
         <button
           type="button"

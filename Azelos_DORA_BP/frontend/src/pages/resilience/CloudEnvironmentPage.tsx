@@ -17,6 +17,8 @@ export function CloudEnvironmentPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="Connected accounts">
           <DataTable
+            emptyTitle="No cloud accounts"
+            emptyDescription="Register Azure subscriptions under Configuration → Integrations or via the API, then run discovery."
             columns={[
               { key: "name", header: "Name", render: (r) => r.display_name },
               { key: "sub", header: "Subscription", render: (r) => r.subscription_id },
@@ -36,6 +38,8 @@ export function CloudEnvironmentPage() {
         </Card>
         <Card title="Resource inventory">
           <DataTable
+            emptyTitle="No cloud resources"
+            emptyDescription="Resources appear after connecting a cloud account and running discovery."
             columns={[
               { key: "name", header: "Resource", render: (r) => r.name },
               { key: "type", header: "Type", render: (r) => r.resource_type },

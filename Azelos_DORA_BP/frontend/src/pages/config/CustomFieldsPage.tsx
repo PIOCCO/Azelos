@@ -66,14 +66,22 @@ export function CustomFieldsPage() {
           </tr>
         </thead>
         <tbody>
-          {(q.data ?? []).map((f) => (
-            <tr key={f.id} className="border-t">
-              <td className="py-2">{f.entity_type}</td>
-              <td>{f.display_name}</td>
-              <td>{f.field_type}</td>
-              <td>{f.active ? "yes" : "no"}</td>
+          {(q.data ?? []).length === 0 ? (
+            <tr>
+              <td colSpan={4} className="py-6 text-center text-slate-500">
+                No custom fields defined yet. Use the form above to add field definitions for your tenant.
+              </td>
             </tr>
-          ))}
+          ) : (
+            (q.data ?? []).map((f) => (
+              <tr key={f.id} className="border-t">
+                <td className="py-2">{f.entity_type}</td>
+                <td>{f.display_name}</td>
+                <td>{f.field_type}</td>
+                <td>{f.active ? "yes" : "no"}</td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>
