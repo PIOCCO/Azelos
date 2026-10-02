@@ -104,14 +104,11 @@ function GraphCanvas(props: {
     return { nodes: new Set<string>(), edges: new Set<string>(), dim: false };
   }, [selectedEdge, selectedNode, filtered.edges]);
 
-  const flowNodes = useMemo(() => {
-    const laid = layoutNodes(filtered.nodes, filtered.edges);
-    return toFlowNodes(laid, {
-      highlightNodeIds: highlight.nodes,
-      dimUnrelated: highlight.dim,
-      selectedId: selectedNode?.id ?? null,
-    });
-  }, [filtered, highlight, selectedNode?.id]);
+  /** Auto-layout from graph data only — must not depend on selection/highlight. */
+  const layoutBase = useMemo(
+    () => layoutNodes(filtered.nodes, filtered.edges),
+    [filtered.nodes, filtered.edges],
+  );
 
   const flowEdges = useMemo(
     () =>
@@ -125,20 +122,54 @@ function GraphCanvas(props: {
     [filtered.edges, selectedEdge, highlight, hiddenRelationships],
   );
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(flowNodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState(layoutBase);
   const [edges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
 
   useEffect(() => {
     manualPositionsRef.current.clear();
   }, [props.layoutResetKey]);
 
+  /** Graph data / filters changed: merge session positions onto auto-layout (no selection deps). */
   useEffect(() => {
     setNodes((prev) => {
       const prevPositions = new Map(prev.map((n) => [n.id, n.position]));
-      return mergeFlowNodePositions(flowNodes, manualPositionsRef.current, prevPositions);
+      return mergeFlowNodePositions(
+        layoutBase,
+        manualPositionsRef.current,
+        prevPositions,
+      );
     });
+  }, [layoutBase, setNodes]);
+
+  useEffect(() => {
     setEdges(flowEdges);
-  }, [flowNodes, flowEdges, setNodes, setEdges]);
+  }, [flowEdges, setEdges]);
+
+  /** Selection/highlight: restyle nodes only — positions come from React Flow state / manualPositionsRef. */
+  useEffect(() => {
+    setNodes((prev) =>
+      toFlowNodes(prev, {
+        highlightNodeIds: highlight.nodes,
+        dimUnrelated: highlight.dim,
+        selectedId: selectedNode?.id ?? null,
+      }),
+    );
+  }, [highlight, selectedNode?.id, layoutBase, setNodes]);
+
+  const handleNodesChange = useCallback(
+    (changes: Parameters<typeof onNodesChange>[0]) => {
+      onNodesChange(changes);
+      for (const change of changes) {
+        if (change.type === "position" && "position" in change && change.position) {
+          manualPositionsRef.current.set(change.id, {
+            x: change.position.x,
+            y: change.position.y,
+          });
+        }
+      }
+    },
+    [onNodesChange],
+  );
 
   const onNodeDragStart = useCallback(() => {
     didDragRef.current = true;
@@ -165,7 +196,7 @@ function GraphCanvas(props: {
       nodesDraggable
       nodeDragThreshold={6}
       panOnDrag
-      onNodesChange={onNodesChange}
+      onNodesChange={handleNodesChange}
       onEdgesChange={onEdgesChange}
       onNodeDragStart={onNodeDragStart}
       onNodeDragStop={onNodeDragStop}

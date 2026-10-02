@@ -5,6 +5,7 @@ import {
   mergeGraphs,
   relationshipTypesInGraph,
   RELATIONSHIP_PRESETS,
+  toFlowNodes,
 } from "./relationshipMapUtils";
 import type { Node } from "@xyflow/react";
 import type { GraphEdge, GraphNode } from "../../api/graphql";
@@ -47,6 +48,20 @@ describe("relationshipMapUtils", () => {
       e("2", "b", "c", "PROVIDED_BY"),
     ]);
     expect(types).toEqual(["PROVIDED_BY", "SUPPORTS"]);
+  });
+
+  it("toFlowNodes keeps x/y when selection highlight changes", () => {
+    const nodes: Node[] = [
+      { id: "a", position: { x: 111, y: 222 }, data: { label: "A" } },
+      { id: "b", position: { x: 333, y: 444 }, data: { label: "B" } },
+    ];
+    const styled = toFlowNodes(nodes, {
+      highlightNodeIds: new Set(["a"]),
+      dimUnrelated: true,
+      selectedId: "a",
+    });
+    expect(styled[0]!.position).toEqual({ x: 111, y: 222 });
+    expect(styled[1]!.position).toEqual({ x: 333, y: 444 });
   });
 
   it("prefers manual positions over auto layout", () => {
