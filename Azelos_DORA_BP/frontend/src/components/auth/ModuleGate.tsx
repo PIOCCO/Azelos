@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useModuleNav, useModuleNavMode, useOrg } from "../../contexts/OrgContext";
-import { moduleAccessAllowed } from "../../lib/moduleNav";
+import { moduleNavSidebarItemVisible } from "../../lib/moduleNav";
 import type { NavItem } from "../../lib/nav";
 import { EmptyState } from "../ui/States";
 
@@ -15,7 +15,7 @@ export function ModuleGate({
   const modules = useModuleNav();
   const moduleNavMode = useModuleNavMode();
   const { applicability } = useOrg();
-  const allowed = moduleAccessAllowed(
+  const allowed = moduleNavSidebarItemVisible(
     moduleNavMode,
     modules,
     item.moduleKey,

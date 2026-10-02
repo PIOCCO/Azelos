@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { filterNavSections, NAV_SECTIONS } from "./navigation";
-import { moduleNavItemVisible, resolveModuleNavMode } from "./moduleNav";
+import { moduleNavItemVisible, moduleNavSidebarItemVisible, resolveModuleNavMode } from "./moduleNav";
 import type { ModuleApplicability } from "../api/types";
 
 const enabledModule: ModuleApplicability = {
@@ -75,6 +75,14 @@ describe("moduleNavItemVisible", () => {
   it("shows ICT nav when ready but /modules returned an empty list", () => {
     expect(moduleNavItemVisible("ready", [], "ICT_RISK", [enabledModule])).toBe(true);
     expect(moduleNavItemVisible("ready", [], "ICT_RISK")).toBe(true);
+  });
+
+  it("sidebar keeps ICT visible when /modules denies but applicability allows (no flash collapse)", () => {
+    const disabledInModules = [{ ...enabledModule, enabled: false, disabled: true }];
+    expect(moduleNavSidebarItemVisible("ready", disabledInModules, "ICT_RISK", [enabledModule])).toBe(
+      true,
+    );
+    expect(moduleNavItemVisible("ready", disabledInModules, "ICT_RISK", [enabledModule])).toBe(false);
   });
 
   it("respects disabled modules when ready", () => {

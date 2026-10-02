@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import type { ModuleApplicability, Role } from "../api/types";
 import type { ModuleNavMode } from "./moduleNav";
-import { moduleNavItemVisible } from "./moduleNav";
+import { moduleNavSidebarItemVisible } from "./moduleNav";
 
 export interface NavLinkItem {
   label: string;
@@ -133,7 +133,7 @@ export function filterNavSections(
       items: section.items.filter((item) => {
         if (item.platformAdminOnly && role !== "SUPER_ADMIN") return false;
         if (item.adminOnly && !isAdmin) return false;
-        return moduleNavItemVisible(
+        return moduleNavSidebarItemVisible(
           moduleNavMode,
           modules,
           item.moduleKey,

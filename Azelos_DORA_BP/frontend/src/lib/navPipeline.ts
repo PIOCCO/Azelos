@@ -1,6 +1,6 @@
 import type { Role, ModuleApplicability } from "../api/types";
 import type { ModuleNavMode } from "./moduleNav";
-import { moduleNavItemVisible } from "./moduleNav";
+import { moduleNavSidebarItemVisible } from "./moduleNav";
 import { NAV_SECTIONS, type NavLinkItem, type NavSection } from "./navigation";
 
 export type NavPipelineStage = {
@@ -32,7 +32,7 @@ export function traceNavPipeline(input: {
 
   let items: NavLinkItem[] = allItems;
   items = items.filter((item) =>
-    moduleNavItemVisible(
+    moduleNavSidebarItemVisible(
       input.moduleNavMode,
       input.modules,
       item.moduleKey,
@@ -64,7 +64,7 @@ export function traceNavPipeline(input: {
     items: section.items.filter((item) => {
       if (item.platformAdminOnly && input.role !== "SUPER_ADMIN") return false;
       if (item.adminOnly && !input.isAdmin) return false;
-      return moduleNavItemVisible(
+      return moduleNavSidebarItemVisible(
         input.moduleNavMode,
         input.modules,
         item.moduleKey,

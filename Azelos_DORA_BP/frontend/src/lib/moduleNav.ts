@@ -58,9 +58,35 @@ export function resolveModuleNavMode(input: {
 }
 
 /**
- * Sidebar module filter. While /modules is loading, use applicability when available.
- * Do not treat "still loading" as "module disabled" (that emptied the DORA ICT nav).
+ * Sidebar only: show a link if either /modules or applicability allows it.
+ * Prevents ICT items from flashing on load then vanishing when /modules settles
+ * ahead of applicability (or the two responses briefly disagree).
  */
+export function moduleNavSidebarItemVisible(
+  mode: ModuleNavMode,
+  modules: ModuleApplicability[] | undefined,
+  moduleKey: string | undefined,
+  applicabilityModules?: ModuleApplicability[] | undefined,
+): boolean {
+  if (!moduleKey) return true;
+
+  const fromModules =
+    mode === "ready" && modules !== undefined && modules.length > 0
+      ? moduleAllowsAccess(modules, moduleKey)
+      : undefined;
+  const fromApplicability =
+    applicabilityModules !== undefined && applicabilityModules.length > 0
+      ? moduleAllowsAccess(applicabilityModules, moduleKey)
+      : undefined;
+
+  if (fromModules === true || fromApplicability === true) return true;
+  if (fromModules === false && fromApplicability === false) return false;
+  if (fromModules === false && fromApplicability === undefined) return false;
+  if (fromModules === undefined && fromApplicability === false) return false;
+  return true;
+}
+
+/** Page gates and non-sidebar checks — single authoritative list with fallback. */
 export function moduleNavItemVisible(
   mode: ModuleNavMode,
   modules: ModuleApplicability[] | undefined,
