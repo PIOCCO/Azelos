@@ -70,7 +70,8 @@ export function OrgProvider({ children }: { children: ReactNode }) {
       profile: profileQ.data,
       applicability: applQ.data,
       modules: modulesQ.data,
-      isLoading: orgQ.isLoading || profileQ.isLoading || applQ.isLoading,
+      isLoading:
+        orgQ.isLoading || profileQ.isLoading || applQ.isLoading || modulesQ.isLoading,
       error: (profileQ.error ?? applQ.error) as Error | null,
       refreshOrg,
     }),
@@ -83,6 +84,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
       orgQ.isLoading,
       profileQ.isLoading,
       applQ.isLoading,
+      modulesQ.isLoading,
       profileQ.error,
       applQ.error,
       refreshOrg,
@@ -99,8 +101,8 @@ export function useOrg() {
 }
 
 /** Module nav: backend drives enabled/applicable — no client-side sector rules. */
-export function useModuleNav() {
-  const { modules, applicability } = useOrg();
-  const list = modules ?? applicability?.modules ?? [];
-  return list;
+export function useModuleNav(): import("../api/types").ModuleApplicability[] | undefined {
+  const { modules, applicability, isLoading } = useOrg();
+  if (isLoading) return undefined;
+  return modules ?? applicability?.modules ?? [];
 }
