@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { Paginated } from "../../api/types";
+import { useTranslation } from "../../i18n/LocaleContext";
 import { EmptyState } from "./States";
 import { LoadingSkeleton } from "./States";
 
@@ -22,7 +23,7 @@ export function DataTable<T>({
   isLoading,
   error,
   onRetry,
-  emptyTitle = "No records yet",
+  emptyTitle,
   emptyDescription,
 }: {
   title?: string;
@@ -37,6 +38,8 @@ export function DataTable<T>({
   emptyTitle?: string;
   emptyDescription?: string;
 }) {
+  const { t } = useTranslation();
+  const resolvedEmptyTitle = emptyTitle ?? t("common.noRecords");
   if (isLoading) {
     return (
       <div className="rounded-lg border border-gray-200 bg-surface shadow-card p-5">
@@ -84,7 +87,7 @@ export function DataTable<T>({
             {!data || data.items.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="p-0">
-                  <EmptyState title={emptyTitle} description={emptyDescription} />
+                  <EmptyState title={resolvedEmptyTitle} description={emptyDescription} />
                 </td>
               </tr>
             ) : (
@@ -104,14 +107,18 @@ export function DataTable<T>({
       {data && data.items.length > 0 ? (
         <div className="flex items-center justify-between border-t border-gray-100 px-5 py-3 text-sm text-gray-600">
           <span>
-            Page {data.page} of {totalPages} · {data.total} total
+            {t("common.pageOfTotal", {
+              page: data.page,
+              totalPages,
+              total: data.total,
+            })}
           </span>
           <nav className="flex gap-1" aria-label="Pagination">
             <PaginationBtn disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
-              Previous
+              {t("common.previous")}
             </PaginationBtn>
             <PaginationBtn disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>
-              Next
+              {t("common.next")}
             </PaginationBtn>
           </nav>
         </div>

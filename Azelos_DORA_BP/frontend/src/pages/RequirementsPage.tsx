@@ -9,8 +9,10 @@ import {
   EvidenceAttachmentsPanel,
   EvidencePdfColumnSubHeader,
 } from "../components/dora/EvidenceAttachmentsPanel";
+import { useTranslation } from "../i18n/LocaleContext";
 
 export function RequirementsPage() {
+  const { t } = useTranslation();
   const { organizationId } = useOrg();
   const qc = useQueryClient();
   const patchM = useMutation({
@@ -31,7 +33,7 @@ export function RequirementsPage() {
   if (baseline.isLoading || orgReq.isLoading) {
     return (
       <>
-        <PageHeader title="Regulatory Requirements" />
+        <PageHeader title={t("pages.requirements.title")} />
         <LoadingSkeleton rows={6} />
       </>
     );

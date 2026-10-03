@@ -6,8 +6,10 @@ import { filterNavSections, NAV_SECTIONS } from "../../lib/navigation";
 import { isNavItemActive } from "../../lib/navActive";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { useTranslation } from "../../i18n/LocaleContext";
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const { session } = useAuth();
   const modules = useModuleNav();
   const moduleNavMode = useModuleNavMode();
@@ -31,13 +33,13 @@ export function Sidebar() {
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-lg font-bold text-white">
           D
         </div>
-        <span className="text-base font-semibold text-white">DORA Blueprint</span>
+        <span className="text-base font-semibold text-white">{t("app.name")}</span>
       </div>
       <nav className="space-y-6 px-3 pb-6" aria-label="Main">
         {sections.map((section) => (
-          <div key={section.title}>
+          <div key={section.titleKey}>
             <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted">
-              {section.title}
+              {t(section.titleKey)}
             </p>
             <ul className="space-y-0.5">
               {section.items.map((item) => {
@@ -56,7 +58,7 @@ export function Sidebar() {
                       aria-current={active ? "page" : undefined}
                     >
                       <Icon className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                      <span className="truncate">{item.label}</span>
+                      <span className="truncate">{t(item.labelKey)}</span>
                     </Link>
                   </li>
                 );

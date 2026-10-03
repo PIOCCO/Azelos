@@ -6,6 +6,7 @@ import App from "./App";
 import { AuthSessionSync } from "./components/auth/AuthSessionSync";
 import { AuthProvider } from "./contexts/AuthContext";
 import { OrgProvider } from "./contexts/OrgContext";
+import { LocaleProvider } from "./i18n/LocaleContext";
 import "./index.css";
 
 const queryClient = new QueryClient({
@@ -19,10 +20,12 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <OrgProvider>
-            <AuthSessionSync />
-            <App />
-          </OrgProvider>
+          <LocaleProvider>
+            <OrgProvider>
+              <AuthSessionSync />
+              <App />
+            </OrgProvider>
+          </LocaleProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

@@ -5,6 +5,7 @@ import { PageHeader } from "../../components/ui/PageHeader";
 import { DataTable, type Column } from "../../components/ui/DataTable";
 import { usePaginatedResource } from "../../hooks/usePaginatedResource";
 import type { NavItem } from "../../lib/nav";
+import { useTranslation } from "../../i18n/LocaleContext";
 
 export function EntityListPage<T>({
   pageTitle,
@@ -31,6 +32,7 @@ export function EntityListPage<T>({
   emptyTitle?: string;
   emptyDescription?: string;
 }) {
+  const { t } = useTranslation();
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const { data, page, setPage, isLoading, error, refetch } = usePaginatedResource<T>(
@@ -51,12 +53,12 @@ export function EntityListPage<T>({
     >
       <input
         className="min-w-[180px] rounded border px-2 py-1"
-        placeholder="Search…"
+        placeholder={t("common.searchPlaceholder")}
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
       />
       <button type="submit" className="rounded border px-3 py-1 hover:bg-gray-50">
-        Filter
+        {t("common.filter")}
       </button>
     </form>
   ) : null;

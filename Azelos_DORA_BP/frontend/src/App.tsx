@@ -13,6 +13,7 @@ import { SettingsAccessPage } from "./pages/settings/SettingsAccessPage";
 import { SettingsIntegrationsPage } from "./pages/settings/SettingsIntegrationsPage";
 import { SettingsCloudPage } from "./pages/settings/SettingsCloudPage";
 import { SettingsCustomFieldsPage } from "./pages/settings/SettingsCustomFieldsPage";
+import { SettingsLanguagePage } from "./pages/settings/SettingsLanguagePage";
 import { ApplicabilityPage } from "./pages/ApplicabilityPage";
 import { RequirementsPage } from "./pages/RequirementsPage";
 import { IncidentsPage } from "./pages/entity/IncidentsPage";
@@ -177,6 +178,7 @@ export default function App() {
           <Route path="onboarding/profile" element={<ProfilePage />} />
           <Route path="settings" element={<SettingsLayout />}>
             <Route index element={<SettingsOverviewPage />} />
+            <Route path="language" element={<SettingsLanguagePage />} />
             <Route path="dora" element={<DoraSettingsPage />} />
             <Route path="access" element={<SettingsAccessPage />} />
             <Route path="integrations" element={<SettingsIntegrationsPage />} />

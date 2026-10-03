@@ -3,8 +3,10 @@ import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { useOrg } from "../../contexts/OrgContext";
 import { ErrorState } from "../ui/States";
+import { useTranslation } from "../../i18n/LocaleContext";
 
 export function AppLayout() {
+  const { t } = useTranslation();
   const { error } = useOrg();
 
   return (
@@ -15,7 +17,7 @@ export function AppLayout() {
         <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4 md:p-6 lg:p-8">
           {error ? (
             <div className="mb-4">
-              <ErrorState title="Organization context" message={error.message} />
+              <ErrorState title={t("errors.orgContext")} message={error.message} />
             </div>
           ) : null}
           <Outlet />

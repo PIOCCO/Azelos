@@ -9,8 +9,10 @@ import { Button } from "../../components/ui/Button";
 import { useAuth } from "../../contexts/AuthContext";
 import { can, isReadOnlyAuditor } from "../../lib/permissions";
 import { usePaginatedResource } from "../../hooks/usePaginatedResource";
+import { useTranslation } from "../../i18n/LocaleContext";
 
 export function BusinessFunctionsPage() {
+  const { t, translateStatus } = useTranslation();
   const { session } = useAuth();
   const { data, page, setPage, isLoading, refetch, error } = usePaginatedResource<BusinessFunction>(
     "business-functions",
@@ -32,13 +34,17 @@ export function BusinessFunctionsPage() {
   }
 
   return (
-    <ModuleGate item={{ label: "Business Functions", moduleKey: "ASSET_MANAGEMENT" }}>
+    <ModuleGate
+      item={{ label: "Business Functions", labelKey: "pages.businessFunctions.title", moduleKey: "ASSET_MANAGEMENT" }}
+    >
       <PageHeader
-        title="Business Functions"
-        subtitle="Function critical or important — distinct from ICT asset inherent criticality."
+        title={t("pages.businessFunctions.title")}
+        subtitle={t("pages.businessFunctions.subtitle")}
         actions={
           canWrite ? (
-            <Button onClick={() => setFormOpen(!formOpen)}>{formOpen ? "Cancel" : "New function"}</Button>
+            <Button onClick={() => setFormOpen(!formOpen)}>
+              {formOpen ? t("common.cancel") : t("pages.businessFunctions.new")}
+            </Button>
           ) : null
         }
       />
@@ -47,36 +53,51 @@ export function BusinessFunctionsPage() {
           onSubmit={onCreate}
           className="mb-6 grid max-w-2xl gap-3 rounded-lg border bg-surface p-5 shadow-card md:grid-cols-2"
         >
-          <input name="name" placeholder="Name" required className="rounded-lg border px-3 py-2 text-sm" />
+          <input
+            name="name"
+            placeholder={t("pages.businessFunctions.colName")}
+            required
+            className="rounded-lg border px-3 py-2 text-sm"
+          />
           <input
             name="function_identifier"
-            placeholder="Identifier"
+            placeholder={t("pages.businessFunctions.colIdentifier")}
             required
             className="rounded-lg border px-3 py-2 text-sm"
           />
           <select name="critical_or_important" className="rounded-lg border px-3 py-2 text-sm md:col-span-2">
-            <option value="critical">Critical</option>
-            <option value="important">Important</option>
-            <option value="neither">Neither</option>
+            <option value="critical">{translateStatus("critical")}</option>
+            <option value="important">{translateStatus("important")}</option>
+            <option value="neither">{translateStatus("neither")}</option>
           </select>
           <Button type="submit" className="w-fit">
-            Create
+            {t("common.create")}
           </Button>
         </form>
       ) : null}
       <DataTable
-        title="Functions"
+        title={t("pages.businessFunctions.table")}
         columns={[
-          { key: "name", header: "Name", render: (r) => r.name },
-          { key: "id", header: "Identifier", render: (r) => r.function_identifier },
+          { key: "name", header: t("pages.businessFunctions.colName"), render: (r) => r.name },
+          {
+            key: "id",
+            header: t("pages.businessFunctions.colIdentifier"),
+            render: (r) => r.function_identifier,
+          },
           {
             key: "crit",
-            header: "Critical / important",
+            header: t("pages.businessFunctions.colCritical"),
             render: (r) => (
-              <StatusBadge tone={toneFromLevel(r.critical_or_important)}>{r.critical_or_important}</StatusBadge>
+              <StatusBadge tone={toneFromLevel(r.critical_or_important)}>
+                {translateStatus(r.critical_or_important)}
+              </StatusBadge>
             ),
           },
-          { key: "status", header: "Status", render: (r) => r.status },
+          {
+            key: "status",
+            header: t("pages.businessFunctions.colStatus"),
+            render: (r) => translateStatus(r.status),
+          },
         ]}
         data={data}
         page={page}

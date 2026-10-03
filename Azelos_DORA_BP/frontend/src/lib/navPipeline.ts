@@ -9,7 +9,7 @@ export type NavPipelineStage = {
 };
 
 function flattenLabels(sections: NavSection[]): string[] {
-  return sections.flatMap((s) => s.items.map((i) => i.label));
+  return sections.flatMap((s) => s.items.map((i) => i.labelKey));
 }
 
 /** Trace sidebar filtering stages (for debugging and regression tests). */
@@ -25,14 +25,14 @@ export function traceNavPipeline(input: {
     {
       stage: "ALL_NAV",
       count: allItems.length,
-      labels: allItems.map((i) => i.label),
+      labels: allItems.map((i) => i.labelKey),
     },
   ];
 
   stages.push({
     stage: "AFTER_MODULE_FILTER",
     count: allItems.length,
-    labels: allItems.map((i) => i.label),
+    labels: allItems.map((i) => i.labelKey),
   });
 
   const sections = filterNavSections(

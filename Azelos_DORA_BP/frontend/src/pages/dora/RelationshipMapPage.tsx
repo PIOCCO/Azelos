@@ -33,6 +33,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { Button } from "../../components/ui/Button";
 import { ErrorState, LoadingSkeleton } from "../../components/ui/States";
+import { useTranslation } from "../../i18n/LocaleContext";
 import {
   TYPE_STYLES,
   RELATIONSHIP_COLORS,
@@ -248,6 +249,7 @@ export function RelationshipMapPage() {
 }
 
 function RelationshipMapInner() {
+  const { t } = useTranslation();
   const { session } = useAuth();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -435,8 +437,8 @@ function RelationshipMapInner() {
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col gap-2">
       <PageHeader
-        title="Relationship map"
-        subtitle="Explore DORA dependencies from live data — graph loads automatically."
+        title={t("pages.relationshipMap.title")}
+        subtitle={t("pages.relationshipMap.subtitle")}
       />
 
       <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-surface px-3 py-2 text-sm shadow-card">

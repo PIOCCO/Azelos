@@ -3,8 +3,10 @@ import { GlobalSearchBar } from "./GlobalSearchBar";
 import { useAuth } from "../../contexts/AuthContext";
 import { useOrg } from "../../contexts/OrgContext";
 import { useState } from "react";
+import { useTranslation } from "../../i18n/LocaleContext";
 
 export function TopBar() {
+  const { t } = useTranslation();
   const { session, logout } = useAuth();
   const { organizationName, isLoading } = useOrg();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -17,11 +19,13 @@ export function TopBar() {
           type="button"
           className="flex max-w-[200px] items-center gap-1 truncate rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-800"
           aria-haspopup="listbox"
-          aria-label="Organization"
+          aria-label={t("common.organization")}
           disabled
           title="Organization is determined by your login; switching requires backend support."
         >
-          <span className="truncate">{isLoading ? "Loading…" : organizationName ?? "Organization"}</span>
+          <span className="truncate">
+            {isLoading ? `${t("common.loading")}…` : organizationName ?? t("common.organization")}
+          </span>
           <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
         </button>
       </div>
@@ -70,7 +74,9 @@ export function TopBar() {
               className="absolute right-0 mt-1 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
             >
               <p className="px-3 py-2 text-xs text-gray-500">{session?.email}</p>
-              <p className="px-3 pb-2 text-xs text-gray-500">Role: {session?.role}</p>
+              <p className="px-3 pb-2 text-xs text-gray-500">
+                {t("common.role")}: {session?.role}
+              </p>
               <button
                 type="button"
                 role="menuitem"
@@ -81,7 +87,7 @@ export function TopBar() {
                 }}
               >
                 <LogOut className="h-4 w-4" aria-hidden />
-                Sign out
+                {t("common.signOut")}
               </button>
             </div>
           ) : null}

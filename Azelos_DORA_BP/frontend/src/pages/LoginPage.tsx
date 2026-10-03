@@ -11,8 +11,10 @@ import {
   parseIdTokenFromHash,
   storeOidcNonce,
 } from "../lib/oidc";
+import { useTranslation } from "../i18n/LocaleContext";
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const { session, login, loginWithOidc } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -91,7 +93,7 @@ export function LoginPage() {
       <div className="hidden w-1/2 flex-col justify-between bg-sidebar p-10 text-white lg:flex">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-xl font-bold">D</div>
-          <span className="text-xl font-semibold">DORA Blueprint</span>
+          <span className="text-xl font-semibold">{t("app.name")}</span>
         </div>
         <div>
           <h1 className="text-3xl font-semibold leading-tight">Business resilience & ICT risk</h1>
@@ -103,8 +105,8 @@ export function LoginPage() {
       </div>
       <div className="flex flex-1 items-center justify-center p-6">
         <form onSubmit={onSubmit} className="w-full max-w-md">
-          <h2 className="text-2xl font-semibold text-gray-900">Sign in</h2>
-          <p className="mt-1 text-sm text-gray-500">Use your organization credentials</p>
+          <h2 className="text-2xl font-semibold text-gray-900">{t("login.title")}</h2>
+          <p className="mt-1 text-sm text-gray-500">{t("login.subtitle")}</p>
           {error ? (
             <div className="mt-4">
               <ErrorState title="Sign in failed" message={error} />
@@ -119,13 +121,13 @@ export function LoginPage() {
                 disabled={loading}
                 onClick={startMicrosoftSignIn}
               >
-                Sign in with Microsoft
+                {t("login.signInWithMicrosoft")}
               </Button>
-              <p className="my-4 text-center text-xs text-gray-400">or continue with email</p>
+              <p className="my-4 text-center text-xs text-gray-400">{t("login.orEmail")}</p>
             </>
           ) : null}
           <label className="mt-2 block text-sm font-medium text-gray-700">
-            Email
+            {t("common.email")}
             <input
               type="email"
               required
@@ -136,7 +138,7 @@ export function LoginPage() {
             />
           </label>
           <label className="mt-4 block text-sm font-medium text-gray-700">
-            Password
+            {t("common.password")}
             <input
               type="password"
               required
@@ -147,7 +149,7 @@ export function LoginPage() {
             />
           </label>
           <Button type="submit" disabled={loading} className="mt-6 w-full">
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? `${t("common.signIn")}…` : t("common.signIn")}
           </Button>
           <p className="mt-4 text-center text-sm text-gray-500">
             Invited by your team?{" "}
