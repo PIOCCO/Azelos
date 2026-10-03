@@ -11,6 +11,7 @@ class PolicyStatusItem(BaseModel):
 
 class PolicyStatusOut(BaseModel):
     app_version: str
+    enforcement_enabled: bool
     all_accepted: bool
     missing_policy_keys: list[str]
     policies: list[PolicyStatusItem]

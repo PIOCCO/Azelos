@@ -10,6 +10,7 @@ export interface PolicyStatusItem {
 
 export interface PolicyStatus {
   app_version: string;
+  enforcement_enabled: boolean;
   all_accepted: boolean;
   missing_policy_keys: string[];
   policies: PolicyStatusItem[];

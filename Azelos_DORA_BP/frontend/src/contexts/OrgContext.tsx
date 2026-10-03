@@ -3,9 +3,13 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   type ReactNode,
 } from "react";
+import { useNavigate } from "react-router-dom";
+import { ApiError } from "../api/client";
+import { isPolicyAcceptanceRequired } from "../api/parseApiError";
 import {
   getApplicability,
   getOrganization,
@@ -35,6 +39,7 @@ const OrgContext = createContext<OrgContextValue | null>(null);
 
 export function OrgProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth();
+  const navigate = useNavigate();
   const orgId = session?.organizationId ?? null;
   const qc = useQueryClient();
 
@@ -82,6 +87,16 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     await qc.invalidateQueries({ queryKey: ["org", orgId] });
   }, [qc, orgId]);
 
+  const policyBlock =
+    (profileQ.error instanceof ApiError && isPolicyAcceptanceRequired(profileQ.error.code)) ||
+    (applQ.error instanceof ApiError && isPolicyAcceptanceRequired(applQ.error.code));
+
+  useEffect(() => {
+    if (policyBlock) {
+      navigate("/policy-acceptance", { replace: true });
+    }
+  }, [policyBlock, navigate]);
+
   const value = useMemo(
     (): OrgContextValue => ({
       organizationId: orgId,
@@ -93,7 +108,9 @@ export function OrgProvider({ children }: { children: ReactNode }) {
       moduleNavMode,
       isLoading:
         orgQ.isLoading || profileQ.isLoading || applQ.isLoading || modulesQ.isLoading,
-      error: (profileQ.error ?? applQ.error) as Error | null,
+      error: policyBlock
+        ? null
+        : ((profileQ.error ?? applQ.error) as Error | null),
       refreshOrg,
     }),
     [

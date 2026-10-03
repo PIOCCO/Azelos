@@ -264,5 +264,8 @@ export interface ContractControlRow {
 
 export interface ApiErrorBody {
   error?: { code: string; message: string };
-  detail?: string | { msg: string; loc: string[] }[];
+  detail?:
+    | string
+    | { code?: string; message?: string; missing_policies?: string[] }
+    | { msg: string; loc: string[] }[];
 }

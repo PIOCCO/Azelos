@@ -2,6 +2,9 @@
 
 from functools import lru_cache
 
+import os
+
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.config.database import load_database_settings
@@ -25,6 +28,12 @@ class Settings(BaseSettings):
     oidc_client_secret: str = ""
     allow_tenant_self_signup: bool = False
     policy_acceptance_enforced: bool = True
+
+    @model_validator(mode="after")
+    def _default_policy_enforcement_for_dev(self) -> "Settings":
+        if os.getenv("POLICY_ACCEPTANCE_ENFORCED") is None and self.app_env == "development":
+            self.policy_acceptance_enforced = False
+        return self
 
 
 @lru_cache

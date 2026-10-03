@@ -1,5 +1,6 @@
 import type { ApiErrorBody } from "./types";
 import { notifyUnauthorized } from "./authHandler";
+import { parseApiErrorBody } from "./parseApiError";
 
 export class ApiError extends Error {
   status: number;
@@ -56,10 +57,9 @@ export async function apiRequest<T>(
   }
 
   if (!res.ok) {
-    const msg =
-      body?.error?.message ??
-      (typeof body?.detail === "string" ? body.detail : res.statusText);
-    const err = new ApiError(res.status, msg || "Request failed", body);
+    const parsed = parseApiErrorBody(body, res.statusText);
+    const err = new ApiError(res.status, parsed.message || "Request failed", body);
+    if (parsed.code) err.code = parsed.code;
     if (res.status === 401) notifyUnauthorized();
     throw err;
   }

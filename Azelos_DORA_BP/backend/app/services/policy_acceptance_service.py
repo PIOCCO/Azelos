@@ -133,10 +133,14 @@ class PolicyAcceptanceService:
                     "accepted": p.key not in missing,
                 }
             )
+        from app.core.config import get_settings
+
+        enforced = get_settings().policy_acceptance_enforced
         return {
             "app_version": APP_RELEASE_VERSION,
-            "all_accepted": len(missing) == 0,
-            "missing_policy_keys": missing,
+            "enforcement_enabled": enforced,
+            "all_accepted": len(missing) == 0 if enforced else True,
+            "missing_policy_keys": missing if enforced else [],
             "policies": policies,
         }
 
