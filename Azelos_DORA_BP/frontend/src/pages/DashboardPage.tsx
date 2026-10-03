@@ -9,8 +9,10 @@ import { useOrg } from "../contexts/OrgContext";
 import { Card, KpiCard } from "../components/ui/Card";
 import { PageHeader } from "../components/ui/PageHeader";
 import { ErrorState, LoadingSkeleton } from "../components/ui/States";
+import { useTranslation } from "../i18n/LocaleContext";
 
 export function DashboardPage() {
+  const { t } = useTranslation();
   const { session } = useAuth();
   const { organizationId, organizationName, applicability, isLoading: orgLoading } = useOrg();
   const firstName = organizationName?.split(" ")[0] ?? "there";
@@ -62,7 +64,7 @@ export function DashboardPage() {
   if (orgLoading || counts.some((q) => q.isLoading)) {
     return (
       <div>
-        <PageHeader title="Dashboard" />
+        <PageHeader title={t("dashboard.title")} />
         <LoadingSkeleton rows={5} />
       </div>
     );
@@ -80,25 +82,25 @@ export function DashboardPage() {
   return (
     <div>
       <PageHeader
-        title="Dashboard"
-        subtitle={`Welcome back, ${firstName}. Organization: ${organizationName ?? "—"}.`}
+        title={t("dashboard.title")}
+        subtitle={`${t("dashboard.welcome", { name: firstName })} ${t("dashboard.orgLine", { org: organizationName ?? "—" })}`}
       />
 
       {providers === 0 && functions === 0 ? (
         <div className="mb-6 rounded-lg border border-primary/30 bg-blue-50 px-4 py-3 text-sm text-gray-800">
-          <p className="font-medium">First time here?</p>
+          <p className="font-medium">{t("dashboard.firstTimeTitle")}</p>
           <p className="mt-1 text-gray-700">
-            Start with{" "}
+            {t("dashboard.firstTimePrefix")}{" "}
             <Link to="/onboarding" className="font-medium text-primary hover:underline">
-              Get started
+              {t("dashboard.getStartedLink")}
             </Link>{" "}
-            to confirm your organization profile, then register{" "}
+            {t("dashboard.firstTimeMid")}{" "}
             <Link to="/business-functions" className="text-primary hover:underline">
-              business functions
+              {t("dashboard.businessFunctionsLink")}
             </Link>{" "}
-            and{" "}
+            {t("dashboard.firstTimeAnd")}{" "}
             <Link to="/ict-providers" className="text-primary hover:underline">
-              ICT providers
+              {t("dashboard.ictProvidersLink")}
             </Link>
             .
           </p>
@@ -106,65 +108,67 @@ export function DashboardPage() {
       ) : null}
 
       <section className="mb-6">
-        <h2 className="text-sm font-semibold text-gray-900">Cloud business resilience</h2>
-        <p className="text-sm text-gray-500">Live KPIs from your organization&apos;s stored data.</p>
+        <h2 className="text-sm font-semibold text-gray-900">{t("dashboard.resilienceHeading")}</h2>
+        <p className="text-sm text-gray-500">{t("dashboard.resilienceSub")}</p>
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <KpiCard
-          label="Critical services"
+          label={t("dashboard.kpiCriticalServices")}
           value={resilienceQ.data?.critical_business_services ?? "—"}
           tone="primary"
         />
         <KpiCard
-          label="Services with gaps"
+          label={t("dashboard.kpiServicesWithGaps")}
           value={resilienceQ.data?.services_with_gaps ?? "—"}
           tone="warning"
         />
-        <KpiCard label="High findings" value={resilienceQ.data?.high_findings ?? "—"} tone="danger" />
-        <KpiCard label="Cloud resources" value={resilienceQ.data?.cloud_resources ?? "—"} />
-        <KpiCard label="Open remediations" value={resilienceQ.data?.open_remediations ?? "—"} />
+        <KpiCard label={t("dashboard.kpiHighFindings")} value={resilienceQ.data?.high_findings ?? "—"} tone="danger" />
+        <KpiCard label={t("dashboard.kpiCloudResources")} value={resilienceQ.data?.cloud_resources ?? "—"} />
+        <KpiCard label={t("dashboard.kpiOpenRemediations")} value={resilienceQ.data?.open_remediations ?? "—"} />
       </div>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <KpiCard label="ICT providers" value={providers} />
-        <KpiCard label="ICT assets" value={ictAssets} />
-        <KpiCard label="Open risks" value={risks} tone="warning" />
-        <KpiCard label="Business functions (DORA)" value={functions} />
-        <KpiCard label="Incidents (total)" value={incidentsQ.data?.total ?? "—"} tone="danger" />
+        <KpiCard label={t("dashboard.kpiIctProviders")} value={providers} />
+        <KpiCard label={t("dashboard.kpiIctAssets")} value={ictAssets} />
+        <KpiCard label={t("dashboard.kpiOpenRisks")} value={risks} tone="warning" />
+        <KpiCard label={t("dashboard.kpiBusinessFunctions")} value={functions} />
+        <KpiCard label={t("dashboard.kpiIncidents")} value={incidentsQ.data?.total ?? "—"} tone="danger" />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <Card title="Action center" className="lg:col-span-1">
+        <Card title={t("dashboard.actionCenter")} className="lg:col-span-1">
           <ul className="space-y-4 text-sm">
             {risks > 0 ? (
               <li>
-                <span className="font-semibold text-red-600">High</span>
-                <p className="text-gray-700">{risks} risk assessment(s) on record.</p>
+                <span className="font-semibold text-red-600">{t("status.high")}</span>
+                <p className="text-gray-700">
+                  {risks} {t("pages.risks.title").toLowerCase()}.
+                </p>
                 <Link to="/risks" className="text-primary text-sm font-medium hover:underline">
-                  Review risks
+                  {t("dashboard.reviewRisks")}
                 </Link>
               </li>
             ) : (
-              <li className="text-gray-500">No risks recorded yet.</li>
+              <li className="text-gray-500">{t("dashboard.noRisks")}</li>
             )}
             {applicability?.requirements_hint?.slice(0, 2).map((code) => (
               <li key={code}>
-                <span className="font-semibold text-amber-600">Hint</span>
-                <p className="text-gray-700">Requirement {code} influenced by applicability rules.</p>
+                <span className="font-semibold text-amber-600">{t("dashboard.hint")}</span>
+                <p className="text-gray-700">{t("dashboard.requirementHint", { code })}</p>
                 <Link to="/requirements" className="text-primary text-sm font-medium hover:underline">
-                  View requirements
+                  {t("dashboard.viewRequirements")}
                 </Link>
               </li>
             )) ?? null}
           </ul>
         </Card>
 
-        <Card title="Requirement implementation" className="lg:col-span-1">
+        <Card title={t("dashboard.reqImplementation")} className="lg:col-span-1">
           {requirementsQ.isLoading ? (
             <LoadingSkeleton rows={3} />
           ) : reqs.length === 0 ? (
-            <p className="text-sm text-gray-500">No organization requirements returned by API.</p>
+            <p className="text-sm text-gray-500">{t("dashboard.noRequirements")}</p>
           ) : (
             <div className="flex items-center gap-6">
               <div
@@ -173,27 +177,31 @@ export function DashboardPage() {
                   background: `conic-gradient(#2563eb 0 ${(implemented / reqs.length) * 100}%, #93c5fd ${(implemented / reqs.length) * 100}% ${((implemented + partial) / reqs.length) * 100}%, #e5e7eb ${((implemented + partial) / reqs.length) * 100}% 100%)`,
                 }}
                 role="img"
-                aria-label={`Implemented ${implemented}, partial ${partial}, not started ${notStarted}`}
+                aria-label={t("dashboard.chartAria", {
+                  implemented,
+                  partial,
+                  notStarted,
+                })}
               />
               <ul className="space-y-2 text-sm text-gray-700">
                 <li>
                   <span className="inline-block h-2 w-2 rounded-full bg-primary mr-2" />
-                  Implemented: {implemented}
+                  {t("dashboard.implemented")}: {implemented}
                 </li>
                 <li>
                   <span className="inline-block h-2 w-2 rounded-full bg-blue-300 mr-2" />
-                  Partial: {partial}
+                  {t("dashboard.partial")}: {partial}
                 </li>
                 <li>
                   <span className="inline-block h-2 w-2 rounded-full bg-gray-300 mr-2" />
-                  Other / not started: {notStarted}
+                  {t("dashboard.otherNotStarted")}: {notStarted}
                 </li>
               </ul>
             </div>
           )}
         </Card>
 
-        <Card title="Enabled modules" className="lg:col-span-1">
+        <Card title={t("dashboard.enabledModules")} className="lg:col-span-1">
           <ul className="space-y-2 text-sm text-gray-700">
             {(applicability?.modules ?? [])
               .filter((m) => m.enabled && m.applicable)
@@ -202,17 +210,19 @@ export function DashboardPage() {
                 <li key={m.key} className="flex justify-between gap-2">
                   <span>{m.name}</span>
                   {m.required ? (
-                    <span className="text-xs font-medium text-primary">Required</span>
+                    <span className="text-xs font-medium text-primary">{t("dashboard.required")}</span>
                   ) : null}
                 </li>
               ))}
           </ul>
-          <Link to="/onboarding/applicability" className="mt-4 inline-block text-sm font-medium text-primary hover:underline">
-            View applicability
+          <Link
+            to="/onboarding/applicability"
+            className="mt-4 inline-block text-sm font-medium text-primary hover:underline"
+          >
+            {t("dashboard.viewApplicability")}
           </Link>
         </Card>
       </div>
-
     </div>
   );
 }

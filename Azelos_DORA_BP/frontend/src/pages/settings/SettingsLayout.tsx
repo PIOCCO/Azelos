@@ -33,7 +33,7 @@ export function SettingsLayout() {
     <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
       <div className="shrink-0 lg:w-56">
         <PageHeader title={t("settings.title")} subtitle={t("settings.subtitle")} />
-        <nav className="mt-4 space-y-0.5 text-sm" aria-label="Settings sections">
+        <nav className="mt-4 space-y-0.5 text-sm" aria-label={t("settings.sectionsNav")}>
           {links.map((l) => (
             <NavLink
               key={l.to}

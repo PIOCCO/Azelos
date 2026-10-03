@@ -36,7 +36,8 @@ export function TopBar() {
         <button
           type="button"
           className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100"
-          aria-label="Notifications (not configured)"
+          aria-label={t("common.notifications")}
+          title={t("common.notifications")}
           disabled
         >
           <Bell className="h-5 w-5" />
@@ -44,7 +45,8 @@ export function TopBar() {
         <button
           type="button"
           className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
-          aria-label="Help"
+          aria-label={t("common.help")}
+          title={t("common.help")}
           disabled
         >
           <HelpCircle className="h-5 w-5" />

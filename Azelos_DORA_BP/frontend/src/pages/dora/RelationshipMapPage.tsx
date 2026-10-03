@@ -500,14 +500,14 @@ function RelationshipMapInner() {
             });
           }}
         >
-          Reset graph
+          {t("pages.relationshipMap.resetGraph")}
         </Button>
         <button
           type="button"
           className="text-primary underline"
           onClick={() => setShowAdvancedSearch((v) => !v)}
         >
-          {showAdvancedSearch ? "Hide search" : "Search (optional)"}
+          {showAdvancedSearch ? t("pages.relationshipMap.toggleSearchHide") : t("pages.relationshipMap.toggleSearchShow")}
         </button>
       </div>
 
@@ -518,10 +518,10 @@ function RelationshipMapInner() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && search.length >= 2 && searchMut.mutate()}
-            placeholder="Optional search…"
+            placeholder={t("pages.relationshipMap.searchPlaceholder")}
           />
           <Button type="button" onClick={() => searchMut.mutate()} disabled={search.length < 2}>
-            Find
+            {t("pages.relationshipMap.find")}
           </Button>
           {searchMut.data?.map((n) => (
             <button
