@@ -141,11 +141,10 @@ export function GlobalSearchBar() {
                 <button
                   key={hit.entry.id}
                   type="button"
-                  className="flex w-full flex-col px-3 py-2 text-left text-sm hover:bg-gray-50"
+                  className="block w-full px-3 py-2 text-left text-sm font-medium text-gray-900 hover:bg-gray-50"
                   onClick={() => goNav(hit.entry.route, hit.label)}
                 >
-                  <span className="font-medium text-gray-900">{hit.label}</span>
-                  <span className="text-xs text-gray-500">{hit.entry.route}</span>
+                  {hit.label}
                 </button>
               ))}
             </div>

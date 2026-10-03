@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import en from "../i18n/translations/en";
+import fr from "../i18n/translations/fr";
 import { createTranslator } from "../i18n/translate";
 import { bestNavigationMatch, searchNavigation } from "./navSearch";
 
 const t = createTranslator(en);
+const tFr = createTranslator(fr);
 
 describe("navSearch", () => {
   const base = { isAdmin: true, role: "ORG_ADMIN" as const, t };
@@ -11,11 +13,15 @@ describe("navSearch", () => {
   it("matches language to settings language route", () => {
     const hit = bestNavigationMatch("language", base);
     expect(hit?.entry.route).toBe("/settings/language");
+    expect(hit?.label).toBe("Language");
+    expect(hit?.label).not.toMatch(/\//);
   });
 
   it("matches French langue to language settings", () => {
-    const hit = bestNavigationMatch("langue", base);
+    const hit = bestNavigationMatch("langue", { ...base, t: tFr });
     expect(hit?.entry.route).toBe("/settings/language");
+    expect(hit?.label).toBe("Langue");
+    expect(hit?.label).not.toMatch(/\//);
   });
 
   it("matches partial lang to language settings", () => {
