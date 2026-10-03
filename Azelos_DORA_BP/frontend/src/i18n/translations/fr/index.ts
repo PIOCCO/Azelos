@@ -53,6 +53,28 @@ const fr: TranslationDict = {
     auditLog: "Journal d'audit",
     provisionOrg: "Provisionner un client",
   },
+  policies: {
+    acceptanceTitle: "Consultation et acceptation des politiques",
+    acceptanceIntro: "Avant de continuer, veuillez lire et confirmer ce qui suit.",
+    legalNotice:
+      "Ces documents sont des modèles informatifs et ne constituent pas un conseil juridique. Faites-les valider par un conseil qualifié avant une utilisation en production.",
+    checkboxTerms: "J'ai lu et j'accepte les Conditions d'utilisation.",
+    checkboxPrivacy: "J'ai lu et j'accepte la Politique de confidentialité.",
+    checkboxDataLoss:
+      "Je comprends l'Avertissement relatif à la perte de données et à la disponibilité du service (y compris que la plateforme ne garantit pas l'absence de perte de données ou d'interruption de service, dans la mesure permise par le droit applicable).",
+    checkboxDataResponsibility:
+      "Je comprends mes responsabilités concernant les données que je téléverse et traite (y compris le fait que je dois disposer des droits et autorisations appropriés).",
+    viewPolicies: "Consulter les politiques",
+    linkTerms: "Conditions d'utilisation",
+    linkPrivacy: "Politique de confidentialité",
+    linkDataLoss: "Avertissement — perte de données et disponibilité",
+    linkAcceptableUse: "Politique d'utilisation acceptable",
+    linkSecurity: "Avertissement — sécurité et responsabilités",
+    acceptAndContinue: "Accepter et continuer",
+    acceptFailed: "Impossible d'enregistrer l'acceptation. Veuillez réessayer.",
+    backToAcceptance: "Retour à l'acceptation",
+    versionLabel: "Version",
+  },
   globalSearch: {
     label: "Rechercher des pages et des données",
     placeholder: "Rechercher pages, paramètres, prestataires…",

@@ -1,5 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { PolicyAcceptanceGate } from "./components/auth/PolicyAcceptanceGate";
+import { LegalPolicyPage } from "./pages/legal/LegalPolicyPage";
+import { PolicyAcceptancePage } from "./pages/PolicyAcceptancePage";
 import { AppLayout } from "./components/layout/AppLayout";
 import { LoginPage } from "./pages/LoginPage";
 import { AcceptInvitePage } from "./pages/AcceptInvitePage";
@@ -89,7 +92,10 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/accept-invite" element={<AcceptInvitePage />} />
       <Route element={<ProtectedRoute />}>
-        <Route element={<AppLayout />}>
+        <Route element={<PolicyAcceptanceGate />}>
+          <Route path="policy-acceptance" element={<PolicyAcceptancePage />} />
+          <Route path="legal/:policyKey" element={<LegalPolicyPage />} />
+          <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="business-services" element={<BusinessServicesPage />} />
           <Route path="cloud-environment" element={<CloudEnvironmentPage />} />
@@ -285,6 +291,7 @@ export default function App() {
           <Route path="configuration/integrations" element={<Navigate to="/settings/integrations" replace />} />
           <Route path="configuration/modules" element={<Navigate to="/settings/dora" replace />} />
           <Route path="configuration/custom-fields" element={<Navigate to="/settings/custom-fields" replace />} />
+          </Route>
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -53,6 +53,28 @@ const en: TranslationDict = {
     auditLog: "Audit log",
     provisionOrg: "Provision customer org",
   },
+  policies: {
+    acceptanceTitle: "Review and accept platform policies",
+    acceptanceIntro: "Before continuing, please review and confirm the following.",
+    legalNotice:
+      "These documents are informational templates and are not legal advice. Have qualified counsel review them before production use.",
+    checkboxTerms: "I have read and agree to the Terms of Service.",
+    checkboxPrivacy: "I have read and agree to the Privacy Policy.",
+    checkboxDataLoss:
+      "I understand the Data Loss and Service Availability Disclaimer (including that the platform does not guarantee against data loss or service interruption, to the extent permitted by applicable law).",
+    checkboxDataResponsibility:
+      "I understand my responsibilities regarding the data I upload and process (including that I must have appropriate rights and permissions).",
+    viewPolicies: "View policies",
+    linkTerms: "Terms of Service",
+    linkPrivacy: "Privacy Policy",
+    linkDataLoss: "Data Loss & Service Availability Disclaimer",
+    linkAcceptableUse: "Acceptable Use Policy",
+    linkSecurity: "Security & Responsibility Disclaimer",
+    acceptAndContinue: "Accept and continue",
+    acceptFailed: "Could not record acceptance. Please try again.",
+    backToAcceptance: "Back to acceptance",
+    versionLabel: "Version",
+  },
   globalSearch: {
     label: "Search pages and organization data",
     placeholder: "Search pages, settings, providers…",

@@ -20,6 +20,7 @@ from app.models.custom_fields import CustomFieldDefinition, CustomFieldValue
 from app.models.dora_baseline import DoraDomain, DoraRequirement, OrganizationRequirement
 from app.models.configuration_audit import ConfigurationAuditLog
 from app.models.auth import OrganizationMembership, User
+from app.models.policy_acceptance import UserPolicyAcceptance
 from app.models.bia import BusinessImpactAssessment
 from app.models.requirement_evidence import RequirementEvidenceLink
 from app.models.saas import OrganizationSubscription, UserInvitation

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from sqlalchemy import select
@@ -40,6 +40,7 @@ def get_current_user(
 
 
 def get_auth_context(
+    request: Request,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     token: str = Depends(oauth2_scheme),
@@ -60,7 +61,17 @@ def get_auth_context(
     )
     if membership is None:
         raise HTTPException(status_code=403, detail="Not a member of organization")
-    return AuthContext(user=user, organization_id=org_id, role=membership.role)
+    ctx = AuthContext(user=user, organization_id=org_id, role=membership.role)
+    from app.services.policy_acceptance_service import (
+        PolicyAcceptanceService,
+        is_policy_exempt_path,
+    )
+
+    from app.core.config import get_settings
+
+    if get_settings().policy_acceptance_enforced and not is_policy_exempt_path(request.url.path):
+        PolicyAcceptanceService(db).require_current_acceptance(user.id, org_id)
+    return ctx
 
 
 def require_role(minimum: Role):

@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     oidc_client_id: str = ""
     oidc_client_secret: str = ""
     allow_tenant_self_signup: bool = False
+    policy_acceptance_enforced: bool = True
 
 
 @lru_cache

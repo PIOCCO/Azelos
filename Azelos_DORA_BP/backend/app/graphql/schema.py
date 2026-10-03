@@ -62,6 +62,13 @@ def _require_auth(info: Info[GraphQLContext, None]) -> GraphQLContext:
     ctx = info.context
     if ctx.auth is None:
         raise Exception("Authentication required")
+    from app.core.config import get_settings
+    from app.services.policy_acceptance_service import PolicyAcceptanceService
+
+    if get_settings().policy_acceptance_enforced:
+        PolicyAcceptanceService(ctx.db).require_current_acceptance(
+            ctx.auth.user.id, ctx.auth.organization_id
+        )
     return ctx
 
 
