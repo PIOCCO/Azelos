@@ -16,12 +16,38 @@ require_cmd() {
   done
 }
 
-require_azure_session() {
-  if ! az account show -o none 2>/dev/null; then
-    echo "No active Azure CLI session in this environment." >&2
-    echo "Run: az login   (or az login --use-device-code in Cloud Agent)" >&2
-    exit 1
+try_az_login_from_env() {
+  if az account show -o none 2>/dev/null; then
+    return 0
   fi
+  local client_id="${AZURE_CLIENT_ID:-${ARM_CLIENT_ID:-}}"
+  local client_secret="${AZURE_CLIENT_SECRET:-${ARM_CLIENT_SECRET:-}}"
+  local tenant_id="${AZURE_TENANT_ID:-${ARM_TENANT_ID:-}}"
+  local subscription_id="${AZURE_SUBSCRIPTION_ID:-${ARM_SUBSCRIPTION_ID:-}}"
+  if [[ -z "$client_id" || -z "$client_secret" || -z "$tenant_id" ]]; then
+    return 1
+  fi
+  az login --service-principal \
+    -u "$client_id" \
+    -p "$client_secret" \
+    --tenant "$tenant_id" \
+    -o none
+  if [[ -n "$subscription_id" ]]; then
+    az account set --subscription "$subscription_id"
+  fi
+}
+
+require_azure_session() {
+  try_az_login_from_env || true
+  if az account show -o none 2>/dev/null; then
+    return 0
+  fi
+  echo "No active Azure CLI session in this environment." >&2
+  echo "Options:" >&2
+  echo "  1) az login --use-device-code   (interactive, in this agent terminal)" >&2
+  echo "  2) Set env secrets on the Cloud Agent environment (not Git):" >&2
+  echo "     AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID" >&2
+  exit 1
 }
 
 print_azure_context() {
