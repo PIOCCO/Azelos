@@ -9,7 +9,7 @@ Operator scripts for **incremental** deployment of the DORA BP stack defined in 
 - Docker (for image build/push after infra apply)
 - `terraform.tfvars` in `infra/terraform/environments/dev/` (from `terraform.tfvars.example`)
 
-**Cloud Agents:** Azure login on your laptop does not propagate to the agent VM. Run `az login --use-device-code` in the agent terminal once, or configure a service principal via environment secrets.
+**Cloud Agents:** See [docs/azure/CLOUD-AGENT-AUTH.md](../docs/azure/CLOUD-AGENT-AUTH.md). Laptop `az login` does not propagate; use device code in the agent or `AZURE_*` environment secrets.
 
 ## Commands
 
