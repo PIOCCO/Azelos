@@ -48,7 +48,6 @@ export const NAV_SECTIONS: NavSection[] = [
       { labelKey: "nav.dashboard", path: "/", icon: LayoutDashboard },
       { labelKey: "nav.getStarted", path: "/onboarding", icon: ClipboardCheck },
       { labelKey: "nav.organizationProfile", path: "/organization/profile", icon: Building2 },
-      { labelKey: "settings.language", path: "/settings/language", icon: Sliders },
     ],
   },
   {
