@@ -32,6 +32,7 @@ flowchart LR
 
 - Terraform >= 1.5
 - Azure CLI (`az login`)
+- Optional: `./scripts/azure/inspect-subscription.sh` and `./scripts/azure/deploy-dev.sh` for incremental dev deploy (see `scripts/azure/README.md`)
 - Subscription with permissions to create RGs, networking, PostgreSQL, ACA, ACR, KV, Storage
 - **Container image** built and pushed to ACR before the app will start:
 
