@@ -12,7 +12,7 @@ export function DoraSettingsPage() {
           <Link to="/organization/profile" className="text-primary underline">
             regulatory profile
           </Link>
-          . Review the effective modules and matched rules (read-only).
+          . Review matched rules and configure optional modules on the applicability page.
         </p>
         <Link
           to="/onboarding/applicability"

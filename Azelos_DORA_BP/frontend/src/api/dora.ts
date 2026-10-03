@@ -89,6 +89,16 @@ export function getApplicability(orgId: string) {
   return apiRequest<ApplicabilityResult>(`/api/v1/organizations/${orgId}/applicability`);
 }
 
+export function patchApplicabilityModule(orgId: string, moduleKey: string, enabled: boolean) {
+  return apiRequest<ApplicabilityResult["modules"][number]>(
+    `/api/v1/organizations/${orgId}/applicability/modules/${moduleKey}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ enabled }),
+    },
+  );
+}
+
 export function getOrgModules(orgId: string) {
   return apiRequest<ApplicabilityResult["modules"]>(
     `/api/v1/organizations/${orgId}/modules`,

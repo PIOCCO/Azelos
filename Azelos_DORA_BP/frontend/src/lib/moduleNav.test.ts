@@ -2,24 +2,18 @@ import { describe, expect, it } from "vitest";
 import { filterNavSections, NAV_SECTIONS } from "./navigation";
 import { moduleNavItemVisible, moduleNavSidebarItemVisible, resolveModuleNavMode } from "./moduleNav";
 import type { ModuleApplicability } from "../api/types";
+import { moduleApplicabilityFixture } from "./moduleApplicabilityFixture";
 
-const enabledModule: ModuleApplicability = {
-  key: "ICT_RISK",
-  name: "ICT risk",
-  description: null,
-  available: true,
-  enabled: true,
-  applicable: true,
-  required: false,
-  disabled: false,
-};
+const enabledModule = moduleApplicabilityFixture({ key: "ICT_RISK", name: "ICT risk" });
 
-const disabledModule: ModuleApplicability = {
-  ...enabledModule,
+const disabledModule = moduleApplicabilityFixture({
   key: "INCIDENT_MANAGEMENT",
   name: "Incidents",
   enabled: false,
-};
+  admin_enabled: false,
+  final_status: "not_enabled",
+  enable_reason: "not_enabled",
+});
 
 describe("resolveModuleNavMode", () => {
   it("pending while module list not yet available", () => {

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any
 from uuid import UUID
@@ -13,7 +14,13 @@ from app.models.organization_profile import OrganizationProfile
 from app.models.profile_rules import ProfileRule
 from app.repositories.modules import ModuleRepository
 from app.rules.applicability_engine import conditions_match, merge_outcomes
-from app.schemas.applicability import ApplicabilityOut, ModuleApplicabilityOut
+from app.schemas.applicability import (
+    ApplicabilityOut,
+    ModuleApplicabilityOut,
+    ModuleEnableReason,
+    ModuleFinalStatus,
+    ModuleRuleResult,
+)
 from app.services.org_module_defaults import ensure_default_module_assignments
 from app.services.profile_service import ProfileService
 
@@ -24,6 +31,7 @@ class ApplicabilityResult:
     module_keys: set[str] = field(default_factory=set)
     matched_rules: list[str] = field(default_factory=list)
     enabled_modules: list[str] = field(default_factory=list)
+    module_matched_rules: dict[str, list[str]] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -31,6 +39,7 @@ class ApplicabilityResult:
             "module_keys": sorted(self.module_keys),
             "matched_rules": self.matched_rules,
             "enabled_modules": self.enabled_modules,
+            "module_matched_rules": self.module_matched_rules,
         }
 
 
@@ -66,6 +75,7 @@ class ApplicabilityService:
         profile = ProfileService(self.db, self.organization_id).get_or_create()
         env = {**self._profile_payload(profile), **self._context()}
         result = ApplicabilityResult()
+        module_rules: dict[str, list[str]] = defaultdict(list)
 
         rules = self.db.scalars(
             select(ProfileRule).where(ProfileRule.active.is_(True)).order_by(ProfileRule.rule_key)
@@ -74,6 +84,14 @@ class ApplicabilityService:
             if conditions_match(rule.conditions, env):
                 result.matched_rules.append(rule.rule_key)
                 merge_outcomes(rule.outcomes, flags=result.flags, module_keys=result.module_keys)
+                module_key_outcomes = rule.outcomes.get("module_keys")
+                if isinstance(module_key_outcomes, list):
+                    for key in module_key_outcomes:
+                        key_str = str(key)
+                        if rule.rule_key not in module_rules[key_str]:
+                            module_rules[key_str].append(rule.rule_key)
+
+        result.module_matched_rules = {k: sorted(v) for k, v in module_rules.items()}
 
         enabled_ids = self._modules.enabled_module_ids()
         catalogue = self._modules.list_catalogue()
@@ -83,6 +101,9 @@ class ApplicabilityService:
             if key not in result.enabled_modules:
                 result.flags.setdefault(f"module_{key.lower()}_recommended", True)
         return result
+
+    def module_required_by_rules(self, module_key: str) -> bool:
+        return module_key in self.evaluate().module_keys
 
     def build_response(self) -> ApplicabilityOut:
         ensure_default_module_assignments(self.db, self.organization_id)
@@ -94,24 +115,61 @@ class ApplicabilityService:
 
         modules_out: list[ModuleApplicabilityOut] = []
         for module in catalogue:
-            # Missing rows: treat modules as enabled until org_module assignments exist.
-            # (ensure_default_module_assignments runs above; this avoids deny-all if rows are not yet visible.)
             if module.id in assignments:
-                enabled = assignments[module.id]
+                admin_enabled = assignments[module.id]
             else:
-                enabled = not has_assignments
-            applicable = not applicable_keys or module.key in applicable_keys
-            required = module.key in applicable_keys
+                admin_enabled = not has_assignments
+
+            rule_required = module.key in applicable_keys
+            recommended_flag = bool(raw.flags.get(f"module_{module.key.lower()}_recommended", False))
+            rule_recommended = recommended_flag and not rule_required
+
+            if rule_required:
+                rule_result = ModuleRuleResult.REQUIRED
+            elif rule_recommended:
+                rule_result = ModuleRuleResult.RECOMMENDED
+            else:
+                rule_result = ModuleRuleResult.NOT_REQUIRED
+
+            effective_enabled = rule_required or admin_enabled
+            if rule_required:
+                final_status = ModuleFinalStatus.REQUIRED
+                enable_reason = ModuleEnableReason.RULES_REQUIRED
+                admin_can_disable = False
+            elif effective_enabled:
+                final_status = ModuleFinalStatus.OPTIONAL
+                enable_reason = (
+                    ModuleEnableReason.RULES_RECOMMENDED
+                    if rule_recommended and admin_enabled
+                    else ModuleEnableReason.ADMIN
+                )
+                admin_can_disable = True
+            else:
+                final_status = ModuleFinalStatus.NOT_ENABLED
+                enable_reason = ModuleEnableReason.NOT_ENABLED
+                admin_can_disable = True
+
+            applicable = effective_enabled or (
+                not applicable_keys or module.key in applicable_keys
+            )
+
             modules_out.append(
                 ModuleApplicabilityOut(
                     key=module.key,
                     name=module.name,
                     description=module.description,
                     available=True,
-                    enabled=enabled,
+                    enabled=effective_enabled,
                     applicable=applicable,
-                    required=required,
-                    disabled=not enabled,
+                    required=rule_required,
+                    disabled=not effective_enabled,
+                    rule_result=rule_result,
+                    recommended=rule_recommended,
+                    admin_enabled=admin_enabled,
+                    admin_can_disable=admin_can_disable,
+                    final_status=final_status,
+                    enable_reason=enable_reason,
+                    matched_rules=raw.module_matched_rules.get(module.key, []),
                 )
             )
 

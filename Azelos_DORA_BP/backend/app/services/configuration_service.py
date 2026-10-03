@@ -10,6 +10,7 @@ from app.domain.entity_types import ALLOWED_ENTITY_TYPES
 from app.models.custom_fields import CustomFieldDefinition
 from app.models.enums_config import ConfigAuditAction, CustomFieldType
 from app.models.platform_config import OrganizationModule, OrganizationSetting, PlatformModule
+from app.services.applicability import ApplicabilityService
 from app.services.config_audit import log_config_change
 from app.services.custom_field_validation import (
     CustomFieldValidationError,
@@ -139,12 +140,23 @@ class ConfigurationService:
         module = self.db.scalar(select(PlatformModule).where(PlatformModule.key == module_key))
         if module is None:
             raise AppError("NOT_FOUND", "Unknown module", 404)
+
+        applicability = ApplicabilityService(self.db, self.organization_id)
+        rule_required = applicability.module_required_by_rules(module_key)
+        if not enabled and rule_required:
+            raise AppError(
+                "MODULE_REQUIRED",
+                "This module is required by applicability rules and cannot be disabled",
+                403,
+            )
+
         row = self.db.scalar(
             select(OrganizationModule).where(
                 OrganizationModule.financial_entity_id == self.organization_id,
                 OrganizationModule.platform_module_id == module.id,
             )
         )
+        previous_enabled = row.enabled if row is not None else None
         if row is None:
             row = OrganizationModule(
                 financial_entity_id=self.organization_id,
@@ -164,7 +176,16 @@ class ConfigurationService:
             else ConfigAuditAction.MODULE_DISABLED,
             object_type="platform_module",
             object_id=module.id,
-            new_value={"key": module_key},
+            old_value={
+                "key": module_key,
+                "enabled": previous_enabled,
+                "source": "rules_engine" if rule_required else "organization_configuration",
+            },
+            new_value={
+                "key": module_key,
+                "enabled": enabled,
+                "source": "rules_engine" if rule_required else "organization_configuration",
+            },
         )
         return module
 

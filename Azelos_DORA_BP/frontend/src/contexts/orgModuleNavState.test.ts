@@ -1,17 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { deriveOrgModuleNavState } from "./orgModuleNavState";
-import type { ModuleApplicability } from "../api/types";
+import { moduleApplicabilityFixture } from "../lib/moduleApplicabilityFixture";
 
-const mod: ModuleApplicability = {
-  key: "ICT_RISK",
-  name: "ICT risk",
-  description: null,
-  available: true,
-  enabled: true,
-  applicable: true,
-  required: false,
-  disabled: false,
-};
+const mod = moduleApplicabilityFixture({ key: "ICT_RISK", name: "ICT risk" });
 
 describe("deriveOrgModuleNavState", () => {
   it("pending until a successful modules/applicability fetch", () => {

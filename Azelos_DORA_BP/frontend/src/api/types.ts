@@ -191,6 +191,14 @@ export interface AssetFunctionMap {
   supports_critical_function: boolean;
 }
 
+export type ModuleRuleResult = "required" | "recommended" | "not_required";
+export type ModuleFinalStatus = "required" | "optional" | "not_enabled";
+export type ModuleEnableReason =
+  | "required_by_applicability_rules"
+  | "recommended_by_applicability_rules"
+  | "enabled_by_organization_administrator"
+  | "not_enabled";
+
 export interface ModuleApplicability {
   key: string;
   name: string;
@@ -200,6 +208,13 @@ export interface ModuleApplicability {
   applicable: boolean;
   required: boolean;
   disabled: boolean;
+  rule_result: ModuleRuleResult;
+  recommended: boolean;
+  admin_enabled: boolean;
+  admin_can_disable: boolean;
+  final_status: ModuleFinalStatus;
+  enable_reason: ModuleEnableReason;
+  matched_rules: string[];
 }
 
 export interface ApplicabilityResult {

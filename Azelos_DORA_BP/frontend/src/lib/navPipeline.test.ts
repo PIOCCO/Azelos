@@ -1,17 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { traceNavPipeline } from "./navPipeline";
-import type { ModuleApplicability } from "../api/types";
+import { moduleApplicabilityFixture } from "./moduleApplicabilityFixture";
 
-const enabled = (key: string): ModuleApplicability => ({
-  key,
-  name: key,
-  description: null,
-  available: true,
-  enabled: true,
-  applicable: true,
-  required: false,
-  disabled: false,
-});
+const enabled = (key: string) => moduleApplicabilityFixture({ key, name: key });
 
 describe("traceNavPipeline", () => {
   it("shows module filter as the stage that removes gated DORA links", () => {

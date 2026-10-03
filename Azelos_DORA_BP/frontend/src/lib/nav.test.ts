@@ -1,28 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { moduleAllowsAccess, moduleOrganizationEnabled } from "./nav";
-import type { ModuleApplicability } from "../api/types";
+import { moduleApplicabilityFixture } from "./moduleApplicabilityFixture";
 
-const modules: ModuleApplicability[] = [
-  {
-    key: "ICT_RISK",
-    name: "ICT risk",
-    description: null,
-    available: true,
-    enabled: true,
-    applicable: true,
-    required: false,
-    disabled: false,
-  },
-  {
+const modules = [
+  moduleApplicabilityFixture({ key: "ICT_RISK", name: "ICT risk" }),
+  moduleApplicabilityFixture({
     key: "INCIDENT_MANAGEMENT",
     name: "Incidents",
-    description: null,
-    available: true,
     enabled: false,
-    applicable: true,
-    required: false,
-    disabled: false,
-  },
+    admin_enabled: false,
+    final_status: "not_enabled",
+    enable_reason: "not_enabled",
+  }),
 ];
 
 describe("moduleAllowsAccess", () => {

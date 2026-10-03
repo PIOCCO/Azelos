@@ -8,7 +8,7 @@ import { Navigate } from "react-router-dom";
 
 export function ModulesConfigPage({ embedded = false }: { embedded?: boolean }) {
   const { session } = useAuth();
-  const { refreshOrg } = useOrg();
+  const { refreshOrg, applicability } = useOrg();
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["config-modules"], queryFn: listConfigModules });
   const mut = useMutation({
@@ -45,7 +45,10 @@ export function ModulesConfigPage({ embedded = false }: { embedded?: boolean }) 
         </>
       )}
       <ul className="mt-6 space-y-2">
-        {(q.data ?? []).map((m) => (
+        {(q.data ?? []).map((m) => {
+          const appl = applicability?.modules.find((x) => x.key === m.key);
+          const locked = appl?.final_status === "required" || appl?.admin_can_disable === false;
+          return (
           <li
             key={m.key}
             className="flex items-center justify-between rounded border bg-white px-4 py-3 text-sm"
@@ -53,17 +56,21 @@ export function ModulesConfigPage({ embedded = false }: { embedded?: boolean }) 
             <div>
               <p className="font-medium">{m.name}</p>
               <p className="text-slate-500">{m.description}</p>
+              {locked ? (
+                <p className="mt-1 text-xs text-amber-800">Required by applicability rules</p>
+              ) : null}
             </div>
             <button
               type="button"
-              disabled={mut.isPending}
+              disabled={mut.isPending || (locked && m.enabled)}
               className={`rounded px-3 py-1 ${m.enabled ? "bg-slate-800 text-white" : "border"}`}
               onClick={() => mut.mutate({ key: m.key, enabled: !m.enabled })}
             >
-              {m.enabled ? "Enabled" : "Disabled"}
+              {locked && m.enabled ? "Required" : m.enabled ? "Enabled" : "Disabled"}
             </button>
           </li>
-        ))}
+        );
+        })}
       </ul>
     </div>
   );
