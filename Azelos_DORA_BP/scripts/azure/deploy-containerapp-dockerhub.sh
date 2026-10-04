@@ -35,8 +35,7 @@ if [[ -n "$url" ]]; then
 fi
 
 echo "Building and pushing ${PUBLIC_IMAGE} (public pull — no ACR/Entra) ..."
-docker build -f "$ROOT/Dockerfile.app" -t "$PUBLIC_IMAGE" "$ROOT"
-docker push "$PUBLIC_IMAGE"
+docker_build_push_for_container_apps "$ROOT/Dockerfile.app" "$ROOT" "$PUBLIC_IMAGE"
 
 echo "Removing ACR registry bindings from ${APP} (they trigger Entra identity proxy) ..."
 while IFS= read -r server; do

@@ -17,7 +17,7 @@ ACR_NAME="$RESOLVED_ACR_NAME"
 FULL_IMAGE="${LOGIN_SERVER}/${IMAGE_NAME}"
 
 echo "Building ${FULL_IMAGE} ..."
-docker build -f "$ROOT/Dockerfile.app" -t "$FULL_IMAGE" "$ROOT"
+docker_build_push_for_container_apps "$ROOT/Dockerfile.app" "$ROOT" "$FULL_IMAGE"
 
 echo "Logging in to ACR (admin credentials; requires admin enabled on registry) ..."
 ACR_USER="$(az acr credential show --name "$ACR_NAME" --query username -o tsv)"

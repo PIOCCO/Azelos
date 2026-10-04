@@ -177,3 +177,35 @@ resolve_dev_acr() {
     RESOLVED_ACR_LOGIN="$(az acr show -g "$RESOLVED_RG" -n "$RESOLVED_ACR_NAME" --query loginServer -o tsv)"
   fi
 }
+
+# Azure Container Apps (containerd/crun) rejects some legacy-builder manifests
+# ("unsupported MIME type for compression: application/vnd.docker.image.rootfs.diff.tar.gzip").
+docker_build_push_for_container_apps() {
+  local dockerfile="$1"
+  local context="$2"
+  local image="$3"
+
+  export DOCKER_BUILDKIT=1
+
+  if docker buildx version >/dev/null 2>&1; then
+    if ! docker buildx inspect azelos-acr-builder >/dev/null 2>&1; then
+      docker buildx create --name azelos-acr-builder --driver docker-container --use >/dev/null
+    else
+      docker buildx use azelos-acr-builder >/dev/null
+    fi
+    echo "Building with buildx (linux/amd64, OCI-friendly, no attestations) ..."
+    docker buildx build \
+      --platform linux/amd64 \
+      --provenance=false \
+      --sbom=false \
+      -f "$dockerfile" \
+      -t "$image" \
+      --push \
+      "$context"
+    return 0
+  fi
+
+  echo "WARNING: docker buildx not found; using legacy builder (may fail on Container Apps)." >&2
+  docker build --platform linux/amd64 -f "$dockerfile" -t "$image" "$context"
+  docker push "$image"
+}
