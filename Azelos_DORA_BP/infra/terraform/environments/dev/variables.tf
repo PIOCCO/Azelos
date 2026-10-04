@@ -40,3 +40,9 @@ variable "acr_admin_enabled" {
   description = "Enable ACR admin user: local docker push + Container App pull without Entra ACR tokens (dev only)."
   default     = true
 }
+
+variable "storage_provider" {
+  type        = string
+  default     = "azure_blob"
+  description = "Use local with docker.io images when Entra blocks all azurecr.io pulls."
+}

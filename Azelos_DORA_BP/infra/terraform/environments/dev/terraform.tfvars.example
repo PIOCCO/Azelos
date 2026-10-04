@@ -4,9 +4,15 @@ location        = "spaincentral"
 # Leave false if ManagedEnvironmentInvalidNetworkConfiguration persists with custom VNet.
 integrate_container_apps_with_vnet = false
 owner           = "your-team"
-# When ACR Tasks / Entra MI are blocked: build on your machine (see scripts/azure/push-app-image.sh), then:
+# If Entra blocks ACR (AADSTS500014 even after fix-containerapp-acr-admin.sh), use Docker Hub:
+#   DOCKERHUB_USER=you ./scripts/azure/deploy-containerapp-dockerhub.sh
+# acr_admin_enabled = false
+# storage_provider  = "local"
+# container_image   = "docker.io/you/dora-bp-app:latest"
+#
+# Otherwise ACR (when Entra works):
 acr_admin_enabled = true
-container_image   = "dorabpdevacrXXXXX.azurecr.io/dora-bp-app:latest"  # replace with: terraform output container_registry_login_server
+container_image   = "dorabpdevacrXXXXX.azurecr.io/dora-bp-app:latest"
 cors_origins    = "https://your-app.azurecontainerapps.io"
 
 # Optional: your public IP for Key Vault access during first deploy

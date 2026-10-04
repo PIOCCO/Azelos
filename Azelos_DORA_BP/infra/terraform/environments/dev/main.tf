@@ -25,4 +25,5 @@ module "platform" {
   # Spain Central / some subscriptions fail CAE + custom VNet with a vague 400; dev uses managed network + public PG.
   integrate_container_apps_with_vnet = var.integrate_container_apps_with_vnet
   acr_admin_enabled                  = var.acr_admin_enabled
+  storage_provider                   = var.storage_provider
 }

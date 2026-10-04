@@ -113,3 +113,9 @@ variable "tenant_id" {
   type        = string
   description = "Azure AD tenant ID for Key Vault."
 }
+
+variable "storage_provider" {
+  type        = string
+  default     = "azure_blob"
+  description = "Evidence storage backend: azure_blob or local (use local with Docker Hub images when Entra blocks ACR)."
+}

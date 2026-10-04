@@ -144,14 +144,20 @@ module "compute" {
     database_url   = azurerm_key_vault_secret.database_url.value
     jwt_secret_key = random_password.jwt_secret.result
   }
-  app_environment_variables = {
-    DB_SSL_MODE             = "require"
-    SERVE_FRONTEND          = "1"
-    STORAGE_PROVIDER        = "azure_blob"
-    AZURE_STORAGE_ACCOUNT   = module.storage.account_name
-    AZURE_STORAGE_CONTAINER = module.storage.evidence_container_name
-    CORS_ORIGINS            = var.cors_origins
-  }
+  app_environment_variables = merge(
+    {
+      DB_SSL_MODE    = "require"
+      SERVE_FRONTEND = "1"
+      STORAGE_PROVIDER = var.storage_provider
+      CORS_ORIGINS     = var.cors_origins
+    },
+    var.storage_provider == "azure_blob" ? {
+      AZURE_STORAGE_ACCOUNT   = module.storage.account_name
+      AZURE_STORAGE_CONTAINER = module.storage.evidence_container_name
+    } : {
+      STORAGE_LOCAL_PATH = "/tmp/evidence"
+    }
+  )
   min_replicas = var.container_min_replicas
   max_replicas = var.container_max_replicas
   tags         = local.tags
