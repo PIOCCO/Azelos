@@ -58,6 +58,8 @@ Use the same region for bootstrap and app stacks unless your cloud team explicit
 
 Bootstrap tfstate storage defaults to **LRS** because **GRS is not available in every region** (e.g. `spaincentral` returns `RedundancyConfigurationNotAvailableInRegion` with `Standard_GRS`).
 
+PostgreSQL Flexible Server: if apply fails with `zone can only be changed when exchanged with…`, the server already exists with an Azure-assigned zone. Pull the latest `postgres` module (`lifecycle { ignore_changes = [zone] }`) or set `zone` in the module call to match `az postgres flexible-server show … --query availabilityZone`.
+
 ## Remote state bootstrap (once per subscription)
 
 ```bash

@@ -18,6 +18,11 @@ resource "azurerm_postgresql_flexible_server" "this" {
   sku_name = var.sku_name
 
   tags = var.tags
+
+  # Azure assigns a zone on first create; later applies must not send null/different zone.
+  lifecycle {
+    ignore_changes = [zone]
+  }
 }
 
 resource "azurerm_postgresql_flexible_server_database" "app" {
