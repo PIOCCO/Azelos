@@ -1,59 +1,96 @@
-# ACR pull fails — `AADSTS500014` / disabled service principal
+# ACR pull / push blocked (Entra, Tasks, or both)
 
-## Symptom
+## Symptoms
 
-Container App revision fails with `ContainerAppOperationError` / `BuildFailed`, and the message includes:
+| Error | Meaning |
+|--------|---------|
+| `AADSTS500014` … service principal … **disabled** | Entra blocks ACR token exchange (managed identity / `az acr login`). |
+| `TasksOperationsNotAllowed` | **ACR Tasks** (`az acr build`) disabled on this subscription/registry. |
 
-- `Identity proxy returned HTTP BadGateway for ACR token request`
-- `AADSTS500014: The service principal for resource '…' is disabled`
+You do **not** need `az acr build`. Build with **Docker on your machine** (or GitHub Actions) and **push** with the registry **admin user**.
 
-This is a **Microsoft Entra ID** tenant issue: the enterprise application used for Azure Container Registry token exchange is disabled (subscription lapsed, tenant admin disabled the app, or a policy blocks it). **Terraform cannot fix this** inside your subscription.
+---
 
-## Dev workaround (deploy without ACR auth)
+## Fast path (dev)
 
-Use a **public** image so the Container App does not configure managed-identity ACR pull.
+### 1. Turn on ACR admin (once)
 
-In `environments/dev/terraform.tfvars`:
+Either in Terraform (`environments/dev/terraform.tfvars`):
 
 ```hcl
-integrate_container_apps_with_vnet = false   # if you already use express CAE
-container_image = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+acr_admin_enabled = true
 ```
 
-When `container_image` does **not** contain `.azurecr.io/`, Terraform sets `use_acr_registry = false`: no app `registry { identity = … }` block and no `AcrPull` role assignment.
+and `terraform apply`, **or** one-off:
 
 ```bash
-cd infra/terraform/environments/dev
-terraform apply -var-file=terraform.tfvars
+az acr update --name dorabpdevacr8jw38 --admin-enabled true
 ```
 
-The placeholder image listens on **port 80**; this stack’s probes use **port 8000** (`/health`, `/ready`). The revision may deploy but stay **not ready** until you use your real app image.
+(Use your real ACR name from `terraform output container_registry_name`.)
 
-## Fix ACR for real images (tenant admin)
-
-1. **Azure portal** → **Microsoft Entra ID** → **Enterprise applications** → search **Azure Container Registry**.
-2. Ensure the application is **Enabled** (not disabled by admin or subscription state).
-3. Confirm your subscription is **Active** (not disabled or expired).
-4. Retry: `az acr login --name <acr-name>`, then build/push your image.
-
-When `az acr login` works, set:
-
-```hcl
-container_image = "<terraform output container_registry_login_server>/dora-bp-app:latest"
-```
-
-Re-apply so managed identity ACR pull is configured again.
-
-## Push the DORA app image (after Entra is fixed)
+### 2. Build and push locally (no ACR Tasks)
 
 From repo root:
 
 ```bash
-cd infra/terraform/environments/dev
-LOGIN=$(terraform output -raw container_registry_login_server)
-ACR_NAME=$(echo "$LOGIN" | cut -d. -f1)
-cd ../../../..
-az acr build -r "$ACR_NAME" -f Dockerfile.app -t dora-bp-app:latest .
+chmod +x scripts/azure/push-app-image.sh
+./scripts/azure/push-app-image.sh
 ```
 
-Update `container_image` to `$LOGIN/dora-bp-app:latest` and apply.
+Or manually:
+
+```bash
+cd infra/terraform/environments/dev
+LOGIN=$(terraform output -raw container_registry_login_server)
+ACR=$(terraform output -raw container_registry_name)
+cd ../../..
+docker build -f Dockerfile.app -t "$LOGIN/dora-bp-app:latest" .
+az acr credential show -n "$ACR" --query username -o tsv   # needs admin enabled
+PASS=$(az acr credential show -n "$ACR" --query 'passwords[0].value' -o tsv)
+echo "$PASS" | docker login "$LOGIN" -u "$(az acr credential show -n "$ACR" --query username -o tsv)" --password-stdin
+docker push "$LOGIN/dora-bp-app:latest"
+```
+
+`az acr credential show` uses **your** Azure CLI login (RBAC on the registry), not the broken Entra “Container Registry” enterprise app.
+
+### 3. Point Container Apps at your image
+
+In `terraform.tfvars`:
+
+```hcl
+acr_admin_enabled = true
+container_image   = "<login-server>/dora-bp-app:latest"
+integrate_container_apps_with_vnet = false   # if you use express CAE
+```
+
+`terraform apply`. With `acr_admin_enabled = true`, the app pulls ACR using **username/password** secrets (not managed identity).
+
+---
+
+## Public image smoke test (no ACR at all)
+
+If you only need infra up before any push:
+
+```hcl
+acr_admin_enabled = false
+container_image = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+```
+
+Probes target port **8000**; hello-world uses **80** — revision may show not ready until you deploy the real app.
+
+---
+
+## When Entra is fixed (production-style)
+
+1. Re-enable the **Azure Container Registry** enterprise application in Entra.
+2. Set `acr_admin_enabled = false`, use `container_image` on `*.azurecr.io`, apply (managed identity + `AcrPull`).
+3. Prefer `az acr login` + `docker push` or CI with a service principal — still **local/CI build**, not `az acr build`, if Tasks stay disabled.
+
+---
+
+## Still stuck?
+
+- **No Docker locally:** use GitHub Actions (build + push with ACR admin secrets or OIDC).
+- **TasksOperationsNotAllowed:** Azure Support or use push-only (this doc); Tasks are optional.
+- **Subscription lapsed:** renew subscription before any auth path works reliably.

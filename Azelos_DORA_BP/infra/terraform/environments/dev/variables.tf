@@ -34,3 +34,9 @@ variable "integrate_container_apps_with_vnet" {
   description = "false = Container Apps default network + PostgreSQL public (recommended for dev when VNet CAE fails)."
   default     = false
 }
+
+variable "acr_admin_enabled" {
+  type        = bool
+  description = "Enable ACR admin user: local docker push + Container App pull without Entra ACR tokens (dev only)."
+  default     = true
+}

@@ -6,7 +6,7 @@ resource "azurerm_user_assigned_identity" "app" {
 }
 
 resource "azurerm_role_assignment" "acr_pull" {
-  count                = var.use_acr_registry ? 1 : 0
+  count                = var.use_acr_registry && var.acr_pull_auth == "managed_identity" ? 1 : 0
   scope                = var.acr_id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_user_assigned_identity.app.principal_id
@@ -56,10 +56,27 @@ resource "azurerm_container_app" "app" {
   }
 
   dynamic "registry" {
-    for_each = var.use_acr_registry ? [1] : []
+    for_each = var.use_acr_registry && var.acr_pull_auth == "managed_identity" ? [1] : []
     content {
       server   = var.acr_login_server
       identity = azurerm_user_assigned_identity.app.id
+    }
+  }
+
+  dynamic "registry" {
+    for_each = var.use_acr_registry && var.acr_pull_auth == "admin" ? [1] : []
+    content {
+      server               = var.acr_login_server
+      username             = var.acr_admin_username
+      password_secret_name = "acr-password"
+    }
+  }
+
+  dynamic "secret" {
+    for_each = var.use_acr_registry && var.acr_pull_auth == "admin" ? [1] : []
+    content {
+      name  = "acr-password"
+      value = var.acr_admin_password
     }
   }
 

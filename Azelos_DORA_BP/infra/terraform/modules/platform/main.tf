@@ -39,6 +39,7 @@ module "container_registry" {
   location            = var.location
   resource_group_name = module.resource_group.name
   sku                 = var.acr_sku
+  admin_enabled       = var.acr_admin_enabled
   tags                = local.tags
 }
 
@@ -118,7 +119,10 @@ module "compute" {
   acr_id                     = module.container_registry.id
   acr_login_server           = module.container_registry.login_server
   container_image            = var.container_image
-  use_acr_registry           = can(regex("\\.azurecr\\.io/", var.container_image))
+  use_acr_registry           = local.container_uses_acr
+  acr_pull_auth              = local.acr_pull_auth
+  acr_admin_username         = var.acr_admin_enabled ? module.container_registry.admin_username : null
+  acr_admin_password         = var.acr_admin_enabled ? module.container_registry.admin_password : null
   key_vault_id               = module.key_vault.id
   secret_ids = {
     database_url   = azurerm_key_vault_secret.database_url.id

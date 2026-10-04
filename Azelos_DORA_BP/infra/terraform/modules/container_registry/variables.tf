@@ -15,6 +15,12 @@ variable "sku" {
   default = "Basic"
 }
 
+variable "admin_enabled" {
+  type        = bool
+  default     = false
+  description = "Dev only: enables username/password for docker push when Entra/ACR Tasks are blocked."
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

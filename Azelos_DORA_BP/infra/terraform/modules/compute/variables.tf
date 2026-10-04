@@ -45,6 +45,29 @@ variable "use_acr_registry" {
   description = "When false, image is public (e.g. MCR) — skip ACR registry auth (needed if Entra blocks ACR tokens)."
 }
 
+variable "acr_pull_auth" {
+  type        = string
+  default     = "managed_identity"
+  description = "How Container Apps pulls from ACR: managed_identity, admin (username/password), or none (with use_acr_registry false)."
+  validation {
+    condition     = contains(["managed_identity", "admin", "none"], var.acr_pull_auth)
+    error_message = "acr_pull_auth must be managed_identity, admin, or none."
+  }
+}
+
+variable "acr_admin_username" {
+  type        = string
+  default     = null
+  description = "ACR admin user when acr_pull_auth = admin."
+}
+
+variable "acr_admin_password" {
+  type        = string
+  default     = null
+  sensitive   = true
+  description = "ACR admin password when acr_pull_auth = admin."
+}
+
 variable "key_vault_id" {
   type = string
 }

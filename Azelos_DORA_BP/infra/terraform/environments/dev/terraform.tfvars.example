@@ -4,8 +4,9 @@ location        = "spaincentral"
 # Leave false if ManagedEnvironmentInvalidNetworkConfiguration persists with custom VNet.
 integrate_container_apps_with_vnet = false
 owner           = "your-team"
-# Use MCR until Entra allows ACR tokens (AADSTS500014); switch to *.azurecr.io after tenant/ACR auth works.
-container_image = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+# When ACR Tasks / Entra MI are blocked: build on your machine (see scripts/azure/push-app-image.sh), then:
+acr_admin_enabled = true
+container_image   = "dorabpdevacrXXXXX.azurecr.io/dora-bp-app:latest"  # replace with: terraform output container_registry_login_server
 cors_origins    = "https://your-app.azurecontainerapps.io"
 
 # Optional: your public IP for Key Vault access during first deploy

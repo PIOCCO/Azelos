@@ -52,6 +52,12 @@ variable "acr_sku" {
   default = "Basic"
 }
 
+variable "acr_admin_enabled" {
+  type        = bool
+  default     = false
+  description = "Dev workaround: ACR admin user for docker push + Container App pull when Entra MI / ACR Tasks fail. Not for production."
+}
+
 variable "log_analytics_retention_days" {
   type = number
 }

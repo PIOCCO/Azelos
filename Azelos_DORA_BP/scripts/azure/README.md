@@ -24,6 +24,11 @@ cd Azelos_DORA_BP
 
 # Apply bootstrap + dev after review
 DEPLOY_AUTO_APPROVE=1 ./scripts/azure/deploy-dev.sh
+
+# Build on your machine and push to ACR (when `az acr build` fails with TasksOperationsNotAllowed)
+./scripts/azure/push-app-image.sh
 ```
 
 See `infra/terraform/README.md` for architecture and post-apply migration steps.
+
+If ACR Tasks or Entra block cloud builds, see `infra/terraform/TROUBLESHOOTING-ACR-ENTRA.md`.

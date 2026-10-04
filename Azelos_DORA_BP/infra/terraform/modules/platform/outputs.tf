@@ -30,6 +30,10 @@ output "container_registry_login_server" {
   value = module.container_registry.login_server
 }
 
+output "container_registry_name" {
+  value = module.container_registry.name
+}
+
 output "log_analytics_workspace_id" {
   value = module.monitoring.log_analytics_workspace_id
 }
