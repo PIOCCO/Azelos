@@ -66,6 +66,14 @@ integrate_container_apps_with_vnet = false   # if you use express CAE
 
 `terraform apply`. With `acr_admin_enabled = true`, the app pulls ACR using **username/password** secrets (not managed identity).
 
+If apply fails on **must supply both username and password_secret_name**, enable admin on the registry first, then re-apply:
+
+```bash
+terraform apply -var-file=terraform.tfvars \
+  -target=module.platform.module.container_registry
+terraform apply -var-file=terraform.tfvars
+```
+
 ---
 
 ## Public image smoke test (no ACR at all)

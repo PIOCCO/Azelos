@@ -34,6 +34,12 @@ variable "acr_login_server" {
   type = string
 }
 
+variable "acr_registry_name" {
+  type        = string
+  default     = null
+  description = "ACR resource name; admin username equals this when Entra admin_username is unset."
+}
+
 variable "container_image" {
   type        = string
   description = "Full image reference, e.g. myacr.azurecr.io/dora-bp-app:1.0.0"

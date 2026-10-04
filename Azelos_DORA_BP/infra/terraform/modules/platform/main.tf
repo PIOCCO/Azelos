@@ -118,6 +118,7 @@ module "compute" {
   log_analytics_workspace_id = module.monitoring.log_analytics_workspace_id
   acr_id                     = module.container_registry.id
   acr_login_server           = module.container_registry.login_server
+  acr_registry_name          = module.container_registry.name
   container_image            = var.container_image
   use_acr_registry           = local.container_uses_acr
   acr_pull_auth              = local.acr_pull_auth
@@ -149,6 +150,7 @@ module "compute" {
     azurerm_key_vault_secret.jwt_secret_key,
     module.postgres,
     module.networking,
+    module.container_registry,
   ]
 }
 

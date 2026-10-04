@@ -1,3 +1,17 @@
+locals {
+  acr_admin_username_effective = coalesce(
+    var.acr_admin_username != null && trimspace(var.acr_admin_username) != "" ? trimspace(var.acr_admin_username) : null,
+    var.acr_registry_name,
+    try(regex("^([^.]+)", var.acr_login_server)[0], null)
+  )
+  acr_admin_pull_ready = (
+    var.acr_admin_password != null &&
+    trimspace(var.acr_admin_password) != "" &&
+    local.acr_admin_username_effective != null &&
+    trimspace(local.acr_admin_username_effective) != ""
+  )
+}
+
 resource "azurerm_user_assigned_identity" "app" {
   name                = "${var.name_prefix}-app-id"
   location            = var.location
@@ -64,19 +78,29 @@ resource "azurerm_container_app" "app" {
   }
 
   dynamic "registry" {
-    for_each = var.use_acr_registry && var.acr_pull_auth == "admin" ? [1] : []
+    for_each = var.use_acr_registry && var.acr_pull_auth == "admin" && local.acr_admin_pull_ready ? [1] : []
     content {
       server               = var.acr_login_server
-      username             = var.acr_admin_username
+      username             = local.acr_admin_username_effective
       password_secret_name = "acr-password"
     }
   }
 
   dynamic "secret" {
-    for_each = var.use_acr_registry && var.acr_pull_auth == "admin" ? [1] : []
+    for_each = var.use_acr_registry && var.acr_pull_auth == "admin" && local.acr_admin_pull_ready ? [1] : []
     content {
       name  = "acr-password"
       value = var.acr_admin_password
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition = (
+        var.acr_pull_auth != "admin" ||
+        local.acr_admin_pull_ready
+      )
+      error_message = "ACR admin pull requires admin_enabled on the registry and a non-empty admin password. Run: terraform apply -target=module.platform.module.container_registry (or az acr update --admin-enabled true), then apply again."
     }
   }
 
