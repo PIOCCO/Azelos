@@ -16,6 +16,8 @@ resource "azurerm_subnet" "container_apps" {
   virtual_network_name = azurerm_virtual_network.this.name
   address_prefixes     = [cidrsubnet(var.vnet_address_space[0], 5, 1)]
 
+  private_link_service_network_policies_enabled = false
+
   delegation {
     name = "container-apps-delegation"
     service_delegation {
@@ -58,10 +60,9 @@ resource "azurerm_network_security_group" "container_apps" {
   tags                = var.tags
 }
 
-resource "azurerm_subnet_network_security_group_association" "container_apps" {
-  subnet_id                 = azurerm_subnet.container_apps.id
-  network_security_group_id = azurerm_network_security_group.container_apps.id
-}
+# Do not attach an NSG to the Container Apps infrastructure subnet unless you add
+# the full rule set from Microsoft docs; an empty NSG often breaks CAE creation.
+# NSG resource kept for optional hardening later (associate manually after CAE exists).
 
 resource "azurerm_network_security_group" "postgresql" {
   name                = "${var.name_prefix}-nsg-pg"
