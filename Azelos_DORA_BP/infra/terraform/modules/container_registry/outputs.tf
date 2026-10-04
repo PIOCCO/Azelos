@@ -12,7 +12,9 @@ output "name" {
 
 output "admin_username" {
   value = var.admin_enabled ? coalesce(
-    try(trimspace(azurerm_container_registry.this.admin_username) != "" ? trimspace(azurerm_container_registry.this.admin_username) : null, null),
+    azurerm_container_registry.this.admin_username != null && trimspace(azurerm_container_registry.this.admin_username) != "" ?
+    trimspace(azurerm_container_registry.this.admin_username) :
+    null,
     azurerm_container_registry.this.name
   ) : null
   sensitive = false

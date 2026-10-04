@@ -1,16 +1,16 @@
 locals {
+  acr_admin_username_normalized = var.acr_admin_username != null ? trimspace(var.acr_admin_username) : ""
+  acr_admin_password_normalized = var.acr_admin_password != null ? trimspace(var.acr_admin_password) : ""
   acr_admin_username_effective = coalesce(
-    var.acr_admin_username != null && trimspace(var.acr_admin_username) != "" ? trimspace(var.acr_admin_username) : null,
+    local.acr_admin_username_normalized != "" ? local.acr_admin_username_normalized : null,
     var.acr_registry_name,
     try(regex("^([^.]+)", var.acr_login_server)[0], null)
   )
   acr_admin_pull_ready = (
-    var.acr_admin_password != null &&
-    trimspace(var.acr_admin_password) != "" &&
+    local.acr_admin_password_normalized != "" &&
     local.acr_admin_username_effective != null &&
     trimspace(local.acr_admin_username_effective) != ""
   )
-
 }
 
 resource "azurerm_user_assigned_identity" "app" {
