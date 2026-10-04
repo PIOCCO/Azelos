@@ -50,9 +50,27 @@ az containerapp update -g "$RG" -n "$APP" \
   --set-env-vars "STORAGE_PROVIDER=local" "STORAGE_LOCAL_PATH=/tmp/evidence" \
   --output none
 
-echo "Done. URL:"
-az containerapp show -g "$RG" -n "$APP" --query properties.configuration.ingress.fqdn -o tsv | sed 's/^/https:\/\//'
+echo "Waiting for latest revision ..."
+for _ in $(seq 1 36); do
+  state="$(az containerapp revision list -g "$RG" -n "$APP" --query "[0].properties.runningState" -o tsv 2>/dev/null || true)"
+  health="$(az containerapp revision list -g "$RG" -n "$APP" --query "[0].properties.healthState" -o tsv 2>/dev/null || true)"
+  if [[ "$state" == "Running" && "$health" == "Healthy" ]]; then
+    break
+  fi
+  if [[ "$state" == "Running" && "$health" == "Unhealthy" ]]; then
+    echo "Revision is Running but Unhealthy (often DB/migrations). Check logs below." >&2
+    break
+  fi
+  sleep 5
+done
+
+FQDN="$(az containerapp show -g "$RG" -n "$APP" --query properties.configuration.ingress.fqdn -o tsv)"
 echo ""
-echo "In terraform.tfvars use (no .azurecr.io → no ACR auth):"
-echo "  container_image = \"${PUBLIC_IMAGE}\""
+echo "Done. URL: https://${FQDN}"
+echo "  Health: curl -sS \"https://${FQDN}/health\""
+echo "  Logs:   az containerapp logs show -g $RG -n $APP --tail 80"
+echo ""
+echo "terraform.tfvars (keeps Terraform aligned):"
 echo "  acr_admin_enabled = false"
+echo "  storage_provider  = \"local\""
+echo "  container_image   = \"${PUBLIC_IMAGE}\""

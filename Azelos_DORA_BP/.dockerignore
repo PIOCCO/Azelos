@@ -1,0 +1,14 @@
+.git
+.gitignore
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/node_modules
+frontend/dist
+backend/storage
+*.md
+docs
+infra
+scripts/azure
+.env
+.env.*
