@@ -1,5 +1,6 @@
 project_name    = "dora-bp"
-location        = "westeurope"
+# Must match a region allowed on your subscription (e.g. spaincentral only).
+location        = "spaincentral"
 owner           = "your-team"
 container_image = "dora-bp-dev-acr12345.azurecr.io/dora-bp-app:latest"
 cors_origins    = "https://your-app.azurecontainerapps.io"

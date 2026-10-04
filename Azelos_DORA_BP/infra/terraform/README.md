@@ -43,13 +43,27 @@ docker build -f Dockerfile.app -t <acr_login_server>/dora-bp-app:1.0.0 .
 docker push <acr_login_server>/dora-bp-app:1.0.0
 ```
 
+## Azure region (subscription policy)
+
+Your **`location`** must be a region where **your subscription** is allowed to deploy (Azure Policy or subscription “best available regions”). If only one region works (e.g. `spaincentral`), use it **everywhere**:
+
+| Stack | File |
+|-------|------|
+| Remote state bootstrap | `bootstrap/terraform.tfvars` → `location` |
+| Dev / staging / prod | `environments/<env>/terraform.tfvars` → `location` |
+
+Bootstrap defaults to `westeurope` in `variables.tf` if you do not pass `location`. That will fail with `RequestDisallowedByAzure` when your subscription is restricted to another region.
+
+Use the same region for bootstrap and app stacks unless your cloud team explicitly allows cross-region state.
+
 ## Remote state bootstrap (once per subscription)
 
 ```bash
 cd infra/terraform/bootstrap
+cp terraform.tfvars.example terraform.tfvars   # set location to your allowed region
 terraform init
-terraform plan
-terraform apply   # review first
+terraform plan -var-file=terraform.tfvars
+terraform apply -var-file=terraform.tfvars   # review first
 ```
 
 Copy outputs into `environments/<env>/backend.hcl` (see `backend.hcl.example`).

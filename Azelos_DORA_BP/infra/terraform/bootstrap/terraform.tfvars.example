@@ -1,0 +1,4 @@
+# Copy to terraform.tfvars and set location to a region your subscription is allowed to use.
+# RequestDisallowedByAzure / 403 on storage usually means this value is wrong for your sub.
+project_name = "dora-bp"
+location     = "spaincentral"
