@@ -45,11 +45,13 @@ from app.api.v1 import (
     tenant_integrations,
     relationship_map_layout,
     policies,
+    license as license_api,
 )
 
 api_v1_router = APIRouter()
 api_v1_router.include_router(auth.router)
 api_v1_router.include_router(policies.router)
+api_v1_router.include_router(license_api.router)
 api_v1_router.include_router(organizations.router)
 api_v1_router.include_router(profiles.router)
 api_v1_router.include_router(applicability.router)

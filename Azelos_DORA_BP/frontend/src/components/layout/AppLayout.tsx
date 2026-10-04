@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
+import { LicenseBanner } from "./LicenseBanner";
 import { useOrg } from "../../contexts/OrgContext";
 import { ErrorState } from "../ui/States";
 import { useTranslation } from "../../i18n/LocaleContext";
@@ -14,6 +15,7 @@ export function AppLayout() {
       <Sidebar />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar />
+        <LicenseBanner />
         <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-4 md:p-6 lg:p-8">
           {error ? (
             <div className="mb-4">

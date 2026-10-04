@@ -127,6 +127,7 @@ const fr: TranslationDict = {
     integrations: "Intégrations",
     cloud: "Environnement cloud",
     customFields: "Champs personnalisés",
+    license: "Licence logicielle",
     language: "Langue",
     sectionsNav: "Sections des paramètres",
     general: "Général",
@@ -280,6 +281,30 @@ const fr: TranslationDict = {
       subtitle:
         "Associez les fonctions métier aux services TIC (alimente la cartographie des relations).",
     },
+  },
+  license: {
+    title: "Licence logicielle",
+    subtitle: "Droit d'usage ADORA (pilote ou abonnement) pour ce déploiement.",
+    status: "Statut",
+    plan: "Formule",
+    customer: "Client",
+    licenseId: "ID de licence",
+    startsAt: "Date de début",
+    expiresAt: "Date d'expiration",
+    daysRemaining: "Jours restants",
+    maxUsers: "Utilisateurs maximum",
+    modules: "Modules activés",
+    allModules: "Tous les modules",
+    installTitle: "Installer ou renouveler la licence",
+    installHelp:
+      "Collez l'enveloppe JSON signée fournie par Azelos, ou configurez ADORA_LICENSE / ADORA_LICENSE_FILE sur le serveur.",
+    install: "Installer la licence",
+    replace: "Remplacer / renouveler",
+    invalidJson: "JSON invalide — vérifiez le format de l'enveloppe.",
+    expiredReadOnly: "Licence expirée — ADORA est en mode lecture seule.",
+    viewLicense: "Voir la licence",
+    revoked: "Licence révoquée — ADORA est en mode lecture seule.",
+    invalid: "Aucune licence ADORA valide n'est installée.",
   },
 };
 

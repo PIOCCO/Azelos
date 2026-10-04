@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
 
@@ -10,6 +10,7 @@ from app.core.rbac import Role
 from app.core.security import create_access_token
 from app.models.enums import AuditAction
 from app.services.invitation_service import InvitationService
+from app.licensing.service import LicenseService
 from app.services.platform_audit import record_platform_audit
 
 router = APIRouter(prefix="/memberships", tags=["Memberships"])
@@ -45,6 +46,20 @@ def create_invitation(
     ctx: AuthContext = Depends(require_role(Role.ORG_ADMIN)),
     db: Session = Depends(get_db),
 ):
+    can_invite, limit_msg = LicenseService(db).can_invite_user(ctx.organization_id)
+    if not can_invite:
+        record_platform_audit(
+            db,
+            organization_id=ctx.organization_id,
+            actor=ctx.user.email,
+            entity_type="SoftwareLicense",
+            entity_id=ctx.organization_id,
+            action=AuditAction.UPDATE,
+            notes="user_blocked_license_limit",
+            new_value={"message": limit_msg},
+        )
+        db.commit()
+        raise HTTPException(status_code=403, detail=limit_msg or "User limit reached")
     svc = InvitationService(db, ctx.organization_id)
     row, token = svc.create_invitation(
         email=body.email, role=body.role, invited_by=ctx.user.email

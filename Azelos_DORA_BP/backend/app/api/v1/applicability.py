@@ -11,6 +11,7 @@ from app.core.rbac import Role, role_at_least
 from app.schemas.applicability import ApplicabilityOut, ModuleApplicabilityOut
 from app.services.applicability import ApplicabilityService
 from app.services.configuration_service import ConfigurationService
+from app.licensing.service import LicenseService
 
 router = APIRouter(prefix="/organizations", tags=["Applicability"])
 
@@ -41,6 +42,11 @@ def patch_applicability_module(
 ):
     if not role_at_least(ctx.role, Role.ORG_ADMIN):
         raise HTTPException(status_code=403, detail="Insufficient permissions")
+    if body.enabled and not LicenseService(db).module_enabled(organization_id, module_key):
+        raise HTTPException(
+            status_code=403,
+            detail="This module is not included in your ADORA license",
+        )
     service = ConfigurationService(db, organization_id, actor_id=str(ctx.user.id))
     service.set_module_enabled(module_key, body.enabled)
     db.flush()

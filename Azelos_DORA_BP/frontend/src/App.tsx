@@ -17,6 +17,7 @@ import { SettingsIntegrationsPage } from "./pages/settings/SettingsIntegrationsP
 import { SettingsCloudPage } from "./pages/settings/SettingsCloudPage";
 import { SettingsCustomFieldsPage } from "./pages/settings/SettingsCustomFieldsPage";
 import { SettingsLanguagePage } from "./pages/settings/SettingsLanguagePage";
+import { SettingsLicensePage } from "./pages/settings/SettingsLicensePage";
 import { ApplicabilityPage } from "./pages/ApplicabilityPage";
 import { RequirementsPage } from "./pages/RequirementsPage";
 import { IncidentsPage } from "./pages/entity/IncidentsPage";
@@ -190,6 +191,7 @@ export default function App() {
             <Route path="integrations" element={<SettingsIntegrationsPage />} />
             <Route path="cloud" element={<SettingsCloudPage />} />
             <Route path="custom-fields" element={<SettingsCustomFieldsPage />} />
+            <Route path="license" element={<SettingsLicensePage />} />
           </Route>
           <Route path="dependencies" element={<DependenciesPage />} />
           <Route path="onboarding/applicability" element={<ApplicabilityPage />} />

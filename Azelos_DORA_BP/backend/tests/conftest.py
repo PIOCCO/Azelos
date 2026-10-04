@@ -7,6 +7,8 @@ import pytest
 
 os.environ.setdefault("DISABLE_RATE_LIMIT", "1")
 os.environ.setdefault("POLICY_ACCEPTANCE_ENFORCED", "0")
+os.environ.setdefault("ADORA_LICENSE_ENFORCEMENT", "0")
+os.environ.setdefault("DISABLE_LICENSE_BOOTSTRAP", "1")
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, text

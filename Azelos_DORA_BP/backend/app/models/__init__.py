@@ -24,6 +24,7 @@ from app.models.policy_acceptance import UserPolicyAcceptance
 from app.models.bia import BusinessImpactAssessment
 from app.models.requirement_evidence import RequirementEvidenceLink
 from app.models.saas import OrganizationSubscription, UserInvitation
+from app.models.licensing import OrganizationLicense
 from app.models.extensions import ExtensionRegistration
 from app.models.organization_profile import OrganizationProfile
 from app.models.profile_rules import ProfileRule

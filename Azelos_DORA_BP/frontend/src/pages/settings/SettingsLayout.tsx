@@ -11,6 +11,7 @@ const ADMIN_LINKS = [
   { to: "/settings/integrations", end: false, labelKey: "settings.integrations" },
   { to: "/settings/cloud", end: false, labelKey: "settings.cloud" },
   { to: "/settings/custom-fields", end: false, labelKey: "settings.customFields" },
+  { to: "/settings/license", end: false, labelKey: "settings.license" },
 ] as const;
 
 export function SettingsLayout() {

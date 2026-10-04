@@ -20,7 +20,7 @@ from app.core.logging import RequestLoggingMiddleware
 from app.core.production_validation import validate_production_settings
 from app.core.rate_limit import RateLimitMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
-from app.core.subscription_gate import SubscriptionGateMiddleware
+from app.core.license_gate import LicenseEnforcementMiddleware
 
 
 def _maybe_auto_migrate_schema() -> None:
@@ -70,6 +70,21 @@ def _maybe_auto_migrate_schema() -> None:
             log.exception("Schema repair check failed")
 
 
+def _maybe_bootstrap_license_from_environment() -> None:
+    if os.getenv("DISABLE_LICENSE_BOOTSTRAP", "").strip().lower() in ("1", "true", "yes", "on"):
+        return
+    log = logging.getLogger("app.main")
+    try:
+        from app.core.database import SessionLocal
+        from app.licensing.service import LicenseService
+
+        with SessionLocal() as db:
+            if LicenseService(db).bootstrap_from_environment():
+                log.info("ADORA license loaded from environment configuration")
+    except Exception:
+        log.exception("Could not bootstrap ADORA license from environment")
+
+
 def create_app() -> FastAPI:
     load_dotenv(Path(__file__).resolve().parents[1] / ".env")
     settings = get_settings()
@@ -77,13 +92,14 @@ def create_app() -> FastAPI:
         os.environ["AUTO_MIGRATE_DB"] = "0"
     _maybe_auto_migrate_schema()
     validate_production_settings(settings)
+    _maybe_bootstrap_license_from_environment()
     app = FastAPI(
         title=settings.app_name,
         version="1.0.0",
         description="DORA Blueprint — core + configuration API over PostgreSQL",
     )
     register_exception_handlers(app)
-    app.add_middleware(SubscriptionGateMiddleware)
+    app.add_middleware(LicenseEnforcementMiddleware)
     app.add_middleware(RateLimitMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestLoggingMiddleware)
