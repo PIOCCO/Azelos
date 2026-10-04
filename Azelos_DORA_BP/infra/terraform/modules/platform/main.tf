@@ -137,6 +137,7 @@ module "compute" {
     azurerm_key_vault_secret.database_url,
     azurerm_key_vault_secret.jwt_secret_key,
     module.postgres,
+    module.networking,
   ]
 }
 
