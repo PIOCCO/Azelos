@@ -11,7 +11,15 @@ variable "resource_group_name" {
 }
 
 variable "container_apps_subnet_id" {
-  type = string
+  type        = string
+  default     = null
+  description = "Infrastructure subnet for VNet-integrated environments; null for platform-managed network."
+}
+
+variable "use_custom_vnet" {
+  type        = bool
+  default     = true
+  description = "When false, Container Apps uses the default managed network (no custom VNet integration)."
 }
 
 variable "log_analytics_workspace_id" {

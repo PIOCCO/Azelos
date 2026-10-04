@@ -59,11 +59,20 @@ variable "database_name" {
 
 variable "delegated_subnet_id" {
   type        = string
-  description = "Subnet ID for private access."
+  default     = null
+  description = "Subnet ID for private VNet access; null when using public access."
 }
 
 variable "private_dns_zone_id" {
-  type = string
+  type        = string
+  default     = null
+  description = "Private DNS zone for VNet-integrated server; null for public access."
+}
+
+variable "open_public_firewall" {
+  type        = bool
+  default     = false
+  description = "Dev only: allow PostgreSQL connections from Azure (0.0.0.0–255.255.255.255). Never in prod."
 }
 
 variable "public_network_access_enabled" {

@@ -46,6 +46,34 @@ Workload-profiles environment (azurerm ~4.14): prefix must be **`/21` or larger*
 
 If you previously imported a `/23` subnet without delegation, **delete** `snet-containerapps` (when no CAE exists), remove it from Terraform state, and apply again so the subnet is recreated at `/21`.
 
+## NSG on the infrastructure subnet
+
+An **empty NSG associated** with `snet-containerapps` often produces `Invalid vnet resource ID` / invalid network configuration. This repo **no longer associates** an NSG with that subnet by default.
+
+If your subnet still has an NSG (Portal or earlier apply):
+
+```bash
+az network vnet subnet update -g dora-bp-dev-rg --vnet-name dora-bp-dev-vnet -n snet-containerapps \
+  --remove networkSecurityGroup 2>/dev/null || \
+az network vnet subnet update -g dora-bp-dev-rg --vnet-name dora-bp-dev-vnet -n snet-containerapps --network-security-group ""
+```
+
+Remove stale association from Terraform state:
+
+```bash
+terraform state rm 'module.platform.module.networking.azurerm_subnet_network_security_group_association.container_apps' 2>/dev/null || true
+terraform apply -var-file=terraform.tfvars
+```
+
+## Confirm Terraform uses the same subnet ID as Azure
+
+```bash
+terraform state show 'module.platform.module.networking.azurerm_subnet.container_apps' | grep '^    id '
+az network vnet subnet show -g dora-bp-dev-rg --vnet-name dora-bp-dev-vnet -n snet-containerapps --query id -o tsv
+```
+
+IDs must match exactly.
+
 ## Azure CLI smoke test (clearer errors than Terraform)
 
 ```bash

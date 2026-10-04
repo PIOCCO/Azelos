@@ -97,6 +97,12 @@ variable "postgresql_administrator_login" {
   default = "doraadmin"
 }
 
+variable "integrate_container_apps_with_vnet" {
+  type        = bool
+  default     = true
+  description = "Custom VNet for Container Apps + private PostgreSQL. Set false for dev when CAE VNet integration fails in your region/subscription."
+}
+
 variable "tenant_id" {
   type        = string
   description = "Azure AD tenant ID for Key Vault."

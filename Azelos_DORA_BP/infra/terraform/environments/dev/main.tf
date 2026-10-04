@@ -21,4 +21,7 @@ module "platform" {
   container_min_replicas = 0
   container_max_replicas = 2
   cors_origins           = var.cors_origins
+
+  # Spain Central / some subscriptions fail CAE + custom VNet with a vague 400; dev uses managed network + public PG.
+  integrate_container_apps_with_vnet = var.integrate_container_apps_with_vnet
 }

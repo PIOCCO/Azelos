@@ -22,14 +22,17 @@ resource "azurerm_container_app_environment" "this" {
   location                   = var.location
   resource_group_name        = var.resource_group_name
   log_analytics_workspace_id = var.log_analytics_workspace_id
-  infrastructure_subnet_id   = var.container_apps_subnet_id
+  infrastructure_subnet_id   = var.use_custom_vnet ? var.container_apps_subnet_id : null
   tags                       = var.tags
 
-  workload_profile {
-    name                  = "Consumption"
-    workload_profile_type = "Consumption"
-    minimum_count         = 0
-    maximum_count         = 10
+  dynamic "workload_profile" {
+    for_each = var.use_custom_vnet ? [1] : []
+    content {
+      name                  = "Consumption"
+      workload_profile_type = "Consumption"
+      minimum_count         = 0
+      maximum_count         = 10
+    }
   }
 
   lifecycle {
@@ -41,9 +44,9 @@ resource "azurerm_container_app" "app" {
   name                         = "${var.name_prefix}-app"
   container_app_environment_id = azurerm_container_app_environment.this.id
   resource_group_name          = var.resource_group_name
-  revision_mode                = "Single"
-  workload_profile_name        = "Consumption"
-  tags                         = var.tags
+  revision_mode         = "Single"
+  workload_profile_name = var.use_custom_vnet ? "Consumption" : null
+  tags                  = var.tags
 
   identity {
     type         = "UserAssigned"

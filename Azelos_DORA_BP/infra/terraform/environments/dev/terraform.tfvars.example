@@ -1,6 +1,8 @@
 project_name    = "dora-bp"
 # Must match a region allowed on your subscription (e.g. spaincentral only).
 location        = "spaincentral"
+# Leave false if ManagedEnvironmentInvalidNetworkConfiguration persists with custom VNet.
+integrate_container_apps_with_vnet = false
 owner           = "your-team"
 container_image = "dora-bp-dev-acr12345.azurecr.io/dora-bp-app:latest"
 cors_origins    = "https://your-app.azurecontainerapps.io"

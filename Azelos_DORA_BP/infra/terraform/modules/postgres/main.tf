@@ -25,6 +25,14 @@ resource "azurerm_postgresql_flexible_server" "this" {
   }
 }
 
+resource "azurerm_postgresql_flexible_server_firewall_rule" "public_dev" {
+  count            = var.public_network_access_enabled && var.open_public_firewall ? 1 : 0
+  name             = "allow-azure-dev"
+  server_id        = azurerm_postgresql_flexible_server.this.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "255.255.255.255"
+}
+
 resource "azurerm_postgresql_flexible_server_database" "app" {
   name      = var.database_name
   server_id = azurerm_postgresql_flexible_server.this.id

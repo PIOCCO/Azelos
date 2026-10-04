@@ -28,3 +28,9 @@ variable "key_vault_allowed_ip_ranges" {
   description = "Operator public IPs for Key Vault during bootstrap (optional)."
   default     = []
 }
+
+variable "integrate_container_apps_with_vnet" {
+  type        = bool
+  description = "false = Container Apps default network + PostgreSQL public (recommended for dev when VNet CAE fails)."
+  default     = false
+}

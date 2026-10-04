@@ -90,9 +90,10 @@ module "postgres" {
   storage_mb                    = var.postgresql_storage_mb
   backup_retention_days         = var.postgresql_backup_retention_days
   geo_redundant_backup_enabled  = var.postgresql_geo_redundant_backup_enabled
-  delegated_subnet_id           = module.networking.postgresql_subnet_id
-  private_dns_zone_id           = module.networking.postgresql_private_dns_zone_id
-  public_network_access_enabled = false
+  delegated_subnet_id           = var.integrate_container_apps_with_vnet ? module.networking.postgresql_subnet_id : null
+  private_dns_zone_id           = var.integrate_container_apps_with_vnet ? module.networking.postgresql_private_dns_zone_id : null
+  public_network_access_enabled = !var.integrate_container_apps_with_vnet
+  open_public_firewall          = !var.integrate_container_apps_with_vnet && var.environment == "dev"
   log_analytics_workspace_id    = module.monitoring.log_analytics_workspace_id
   enable_diagnostic_settings    = true
   tags                          = local.tags
@@ -111,7 +112,8 @@ module "compute" {
   name_prefix                = local.name_prefix
   location                   = var.location
   resource_group_name        = module.resource_group.name
-  container_apps_subnet_id   = module.networking.container_apps_subnet_id
+  use_custom_vnet            = var.integrate_container_apps_with_vnet
+  container_apps_subnet_id   = var.integrate_container_apps_with_vnet ? module.networking.container_apps_subnet_id : null
   log_analytics_workspace_id = module.monitoring.log_analytics_workspace_id
   acr_id                     = module.container_registry.id
   acr_login_server           = module.container_registry.login_server
