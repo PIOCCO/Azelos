@@ -2,3 +2,5 @@
 # RequestDisallowedByAzure / 403 on storage usually means this value is wrong for your sub.
 project_name = "dora-bp"
 location     = "spaincentral"
+# GRS is not available in all regions; LRS is required for spaincentral tfstate.
+storage_replication_type = "LRS"

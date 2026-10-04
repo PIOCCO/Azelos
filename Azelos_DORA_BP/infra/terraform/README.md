@@ -56,6 +56,8 @@ Bootstrap defaults to `westeurope` in `variables.tf` if you do not pass `locatio
 
 Use the same region for bootstrap and app stacks unless your cloud team explicitly allows cross-region state.
 
+Bootstrap tfstate storage defaults to **LRS** because **GRS is not available in every region** (e.g. `spaincentral` returns `RedundancyConfigurationNotAvailableInRegion` with `Standard_GRS`).
+
 ## Remote state bootstrap (once per subscription)
 
 ```bash
