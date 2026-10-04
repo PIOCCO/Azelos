@@ -83,7 +83,7 @@ Use this as the **sales/engineering truth table**. Do not promise beyond this.
 | Workflow area | Working today | Limitations |
 |---------------|---------------|-------------|
 | Organization profile & onboarding wizard | Yes | Customer-owned data quality |
-| Applicability | Computed from profile; **review UI read-only** (no admin override in UI for rule-blocked modules) | Not legal interpretation |
+| Applicability | Computed from profile; **ORG_ADMIN toggles optional modules**; rule-required modules enforced | Not legal interpretation |
 | Requirements | Baseline per org at provision; status/owner/notes | **Small seeded catalogue** vs full RTS library |
 | Business functions, BIA page, dependencies | Create/edit in UI; BIA API-backed | Depth of BIA analytics limited |
 | ICT providers | CRUD, CSV import/export on list | No automated vendor scoring |
@@ -96,7 +96,7 @@ Use this as the **sales/engineering truth table**. Do not promise beyond this.
 | Resilience findings/remediation/recovery tests | API + **list UI** | Limited create UX on some screens |
 | Relationship map | GraphQL graph; **layout persisted** per org | Requires linked data to be useful |
 | Dashboard / DORA overview | KPIs from live data | — |
-| Reports | **JSON** (`/resilience/reports/*`) in browser | **No polished PDF** in product |
+| Reports | **JSON** (`/resilience/reports/*`) in browser | **DORA assessment PDF** on Reports page; not full committee/RoI pack |
 | Exports | Provider **CSV**; tenant **ZIP** (`GET /api/v1/tenant/data/export`, ORG_ADMIN) | ZIP not in main menu—documented procedure |
 | Audit log | Platform audit records | Not enterprise SIEM |
 | Users / RBAC / invites | Email/password; `/accept-invite` | **SSO:** env-level OIDC only, **not self-service** |
