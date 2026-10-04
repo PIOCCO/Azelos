@@ -134,6 +134,70 @@ class EvidenceAttachmentService:
         )
         return EvidenceOut.model_validate(row)
 
+    def delete_pdf(
+        self,
+        entity_type: EvidenceEntityType,
+        entity_id: UUID,
+        evidence_id: UUID,
+        actor_email: str,
+    ) -> None:
+        self._assert_entity(entity_type, entity_id)
+        ev = self.db.get(Evidence, evidence_id)
+        if ev is None or ev.financial_entity_id != self.organization_id:
+            raise AppError("NOT_FOUND", "Evidence not found", 404)
+
+        if entity_type == EvidenceEntityType.ORGANIZATION_REQUIREMENT:
+            link = self.db.scalar(
+                select(RequirementEvidenceLink).where(
+                    RequirementEvidenceLink.financial_entity_id == self.organization_id,
+                    RequirementEvidenceLink.organization_requirement_id == entity_id,
+                    RequirementEvidenceLink.evidence_id == evidence_id,
+                )
+            )
+            if link is None:
+                raise AppError("NOT_FOUND", "Evidence not linked to this requirement", 404)
+            self.db.delete(link)
+        elif entity_type == EvidenceEntityType.CONTRACT_CONTROL:
+            link = self.db.scalar(
+                select(EvidenceControlLink).where(
+                    EvidenceControlLink.contract_control_id == entity_id,
+                    EvidenceControlLink.evidence_id == evidence_id,
+                )
+            )
+            if link is None:
+                raise AppError("NOT_FOUND", "Evidence not linked to this control", 404)
+            self.db.delete(link)
+        elif entity_type == EvidenceEntityType.ICT_PROVIDER:
+            if ev.provider_id != entity_id:
+                raise AppError("NOT_FOUND", "Evidence not linked to this provider", 404)
+        elif entity_type == EvidenceEntityType.CONTRACT:
+            if ev.contract_id != entity_id:
+                raise AppError("NOT_FOUND", "Evidence not linked to this contract", 404)
+        else:
+            raise AppError("VALIDATION", "Unsupported entity type", 400)
+
+        storage = get_evidence_storage()
+        if ev.storage_object_key and storage.exists(ev.storage_object_key):
+            storage.delete(ev.storage_object_key)
+
+        file_name = ev.file_name
+        self.db.delete(ev)
+        self.db.flush()
+
+        record_platform_audit(
+            self.db,
+            organization_id=self.organization_id,
+            actor=actor_email,
+            entity_type="Evidence",
+            entity_id=evidence_id,
+            action=AuditAction.DELETE,
+            new_value={
+                "file_name": file_name,
+                "entity_type": entity_type.value,
+                "entity_id": str(entity_id),
+            },
+        )
+
     def _assert_entity(self, entity_type: EvidenceEntityType, entity_id: UUID) -> None:
         if entity_type == EvidenceEntityType.ORGANIZATION_REQUIREMENT:
             row = RequirementRepository(self.db, self.organization_id).get_organization_requirement(

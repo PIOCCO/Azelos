@@ -130,6 +130,40 @@ def test_requirement_pdf_upload_lists_per_requirement(client, db_session):
     assert dl.content.startswith(b"%PDF")
 
 
+def test_delete_requirement_pdf_attachment(client, db_session):
+    org, user, org_req_a, _ = _seed_org_with_requirement(db_session)
+    headers = _login(client, user, org)
+    up = client.post(
+        f"/api/v1/evidence-attachments/organization_requirement/{org_req_a.id}",
+        headers=headers,
+        files={"file": ("remove-me.pdf", io.BytesIO(MIN_PDF), "application/pdf")},
+    )
+    assert up.status_code == 201
+    evidence_id = up.json()["id"]
+
+    listed = client.get(
+        f"/api/v1/evidence-attachments/organization_requirement/{org_req_a.id}",
+        headers=headers,
+    )
+    assert listed.status_code == 200
+    assert len(listed.json()) == 1
+
+    deleted = client.delete(
+        f"/api/v1/evidence-attachments/organization_requirement/{org_req_a.id}/{evidence_id}",
+        headers=headers,
+    )
+    assert deleted.status_code == 204
+
+    listed_after = client.get(
+        f"/api/v1/evidence-attachments/organization_requirement/{org_req_a.id}",
+        headers=headers,
+    )
+    assert listed_after.json() == []
+
+    gone = client.get(f"/api/v1/evidence/{evidence_id}/view", headers=headers)
+    assert gone.status_code == 404
+
+
 def test_requirement_evidence_idor_denied(client, db_session):
     org, user, org_req_a, _ = _seed_org_with_requirement(db_session)
     from app.models.financial_entity import FinancialEntity

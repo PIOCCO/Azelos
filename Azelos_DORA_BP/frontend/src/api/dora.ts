@@ -160,6 +160,17 @@ export async function uploadEvidenceAttachment(
   return res.json() as Promise<Evidence>;
 }
 
+export function deleteEvidenceAttachment(
+  entityType: EvidenceEntityType,
+  entityId: string,
+  evidenceId: string,
+) {
+  return apiRequest<void>(
+    `/api/v1/evidence-attachments/${entityType}/${entityId}/${evidenceId}`,
+    { method: "DELETE" },
+  );
+}
+
 /** @deprecated Prefer uploadEvidenceAttachment("organization_requirement", id, file) */
 export async function uploadRequirementEvidence(
   organizationId: string,

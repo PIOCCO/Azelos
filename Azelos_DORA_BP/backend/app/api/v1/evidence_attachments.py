@@ -62,3 +62,21 @@ async def upload_entity_evidence(
     )
     db.commit()
     return out
+
+
+@router.delete(
+    "/{entity_type}/{entity_id}/{evidence_id}",
+    status_code=204,
+)
+def delete_entity_evidence(
+    entity_type: str,
+    entity_id: UUID,
+    evidence_id: UUID,
+    ctx: AuthContext = Depends(require_role(Role.SECURITY_MANAGER)),
+    db: Session = Depends(get_db),
+):
+    et = _parse_entity_type(entity_type)
+    EvidenceAttachmentService(db, ctx.organization_id).delete_pdf(
+        et, entity_id, evidence_id, ctx.user.email
+    )
+    db.commit()
