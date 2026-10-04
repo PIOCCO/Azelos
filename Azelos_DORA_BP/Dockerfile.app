@@ -13,7 +13,9 @@ COPY backend/app ./app
 COPY backend/alembic ./alembic
 COPY backend/alembic.ini ./
 COPY backend/scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
-RUN pip install --no-cache-dir ".[dev]" && chmod +x ./scripts/docker-entrypoint.sh
+# azure extra: evidence blob storage (Terraform default STORAGE_PROVIDER=azure_blob)
+# dev extra: uvicorn for container CMD
+RUN pip install --no-cache-dir ".[dev,azure]" && chmod +x ./scripts/docker-entrypoint.sh
 COPY --from=frontend-build /fe/dist /app/frontend/dist
 ENV PYTHONUNBUFFERED=1
 ENV SERVE_FRONTEND=1
