@@ -12,6 +12,7 @@ resource "azurerm_role_assignment" "acr_pull" {
 }
 
 resource "azurerm_role_assignment" "kv_secrets_user" {
+  count                = var.use_custom_vnet ? 1 : 0
   scope                = var.key_vault_id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_user_assigned_identity.app.principal_id
@@ -58,16 +59,38 @@ resource "azurerm_container_app" "app" {
     identity = azurerm_user_assigned_identity.app.id
   }
 
-  secret {
-    name                = "database-url"
-    key_vault_secret_id = var.secret_ids.database_url
-    identity            = azurerm_user_assigned_identity.app.id
+  dynamic "secret" {
+    for_each = var.use_custom_vnet ? [1] : []
+    content {
+      name                = "database-url"
+      key_vault_secret_id = var.secret_ids.database_url
+      identity            = azurerm_user_assigned_identity.app.id
+    }
   }
 
-  secret {
-    name                = "jwt-secret-key"
-    key_vault_secret_id = var.secret_ids.jwt_secret_key
-    identity            = azurerm_user_assigned_identity.app.id
+  dynamic "secret" {
+    for_each = var.use_custom_vnet ? [1] : []
+    content {
+      name                = "jwt-secret-key"
+      key_vault_secret_id = var.secret_ids.jwt_secret_key
+      identity            = azurerm_user_assigned_identity.app.id
+    }
+  }
+
+  dynamic "secret" {
+    for_each = var.use_custom_vnet || var.inline_secrets == null ? [] : [1]
+    content {
+      name  = "database-url"
+      value = var.inline_secrets.database_url
+    }
+  }
+
+  dynamic "secret" {
+    for_each = var.use_custom_vnet || var.inline_secrets == null ? [] : [1]
+    content {
+      name  = "jwt-secret-key"
+      value = var.inline_secrets.jwt_secret_key
+    }
   }
 
   ingress {

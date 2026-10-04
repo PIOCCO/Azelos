@@ -123,6 +123,10 @@ module "compute" {
     database_url   = azurerm_key_vault_secret.database_url.id
     jwt_secret_key = azurerm_key_vault_secret.jwt_secret_key.id
   }
+  inline_secrets = var.integrate_container_apps_with_vnet ? null : {
+    database_url   = azurerm_key_vault_secret.database_url.value
+    jwt_secret_key = random_password.jwt_secret.result
+  }
   app_environment_variables = {
     DB_SSL_MODE             = "require"
     SERVE_FRONTEND          = "1"

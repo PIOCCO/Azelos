@@ -1,5 +1,25 @@
 # Container Apps environment — VNet / subnet errors
 
+## Dev workaround (no custom VNet)
+
+If a **fresh** apply still fails with `Invalid vnet resource ID` after correct `/21` subnet + delegation + no NSG, your subscription/region may block **custom VNet** Container Apps environments.
+
+For **dev only**, disable VNet integration (Container Apps managed network + PostgreSQL public with firewall):
+
+In `environments/dev/terraform.tfvars`:
+
+```hcl
+integrate_container_apps_with_vnet = false
+```
+
+Then `terraform destroy` + `terraform apply` (PostgreSQL must be recreated — no data to keep).
+
+**Not for production** — use private VNet + private PostgreSQL in staging/prod when CAE VNet works in your tenant.
+
+Express environments also **cannot** use `keyVaultUrl` on Container App secrets. With `integrate_container_apps_with_vnet = false`, Terraform injects `DATABASE_URL` and `JWT_SECRET_KEY` as inline app secrets (values still originate from Key Vault resources in Terraform state — not ideal for prod).
+
+---
+
 ## Symptom
 
 `ManagedEnvironmentInvalidNetworkConfiguration: Invalid vnet resource ID provided, or the virtual network could not be found`

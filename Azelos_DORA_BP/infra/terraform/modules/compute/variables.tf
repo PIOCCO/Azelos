@@ -48,7 +48,17 @@ variable "secret_ids" {
     database_url   = string
     jwt_secret_key = string
   })
-  description = "Key Vault secret resource IDs for Container Apps."
+  description = "Key Vault secret resource IDs for Container Apps (VNet / non-express environments only)."
+}
+
+variable "inline_secrets" {
+  type = object({
+    database_url   = string
+    jwt_secret_key = string
+  })
+  default     = null
+  sensitive   = true
+  description = "Plain secret values for express (managed-network) environments — Key Vault refs not supported."
 }
 
 variable "app_environment_variables" {
