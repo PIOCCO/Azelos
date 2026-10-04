@@ -6,6 +6,7 @@ resource "azurerm_user_assigned_identity" "app" {
 }
 
 resource "azurerm_role_assignment" "acr_pull" {
+  count                = var.use_acr_registry ? 1 : 0
   scope                = var.acr_id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_user_assigned_identity.app.principal_id
@@ -54,9 +55,12 @@ resource "azurerm_container_app" "app" {
     identity_ids = [azurerm_user_assigned_identity.app.id]
   }
 
-  registry {
-    server   = var.acr_login_server
-    identity = azurerm_user_assigned_identity.app.id
+  dynamic "registry" {
+    for_each = var.use_acr_registry ? [1] : []
+    content {
+      server   = var.acr_login_server
+      identity = azurerm_user_assigned_identity.app.id
+    }
   }
 
   dynamic "secret" {
