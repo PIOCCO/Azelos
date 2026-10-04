@@ -24,6 +24,10 @@ resource "azurerm_container_app_environment" "this" {
   log_analytics_workspace_id = var.log_analytics_workspace_id
   infrastructure_subnet_id   = var.container_apps_subnet_id
   tags                       = var.tags
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "azurerm_container_app" "app" {

@@ -6,21 +6,14 @@ resource "azurerm_virtual_network" "this" {
   tags                = var.tags
 }
 
+# Consumption-only Container Apps environments (our default) require a dedicated /23+
+# subnet with NO delegation. See:
+# https://learn.microsoft.com/en-us/azure/container-apps/vnet-custom
 resource "azurerm_subnet" "container_apps" {
   name                 = "snet-containerapps"
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
-  address_prefixes     = [cidrsubnet(var.vnet_address_space[0], 8, 1)]
-
-  delegation {
-    name = "container-apps-delegation"
-    service_delegation {
-      name = "Microsoft.App/environments"
-      actions = [
-        "Microsoft.Network/virtualNetworks/subnets/join/action",
-      ]
-    }
-  }
+  address_prefixes     = [cidrsubnet(var.vnet_address_space[0], 7, 4)]
 }
 
 resource "azurerm_subnet" "postgresql" {
