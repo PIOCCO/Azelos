@@ -34,6 +34,11 @@ output "container_registry_name" {
   value = module.container_registry.name
 }
 
+output "acr_pull_auth" {
+  value       = local.acr_pull_auth
+  description = "How the Container App authenticates to ACR (admin avoids broken Entra ACR tokens)."
+}
+
 output "log_analytics_workspace_id" {
   value = module.monitoring.log_analytics_workspace_id
 }

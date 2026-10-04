@@ -10,6 +10,7 @@ locals {
     local.acr_admin_username_effective != null &&
     trimspace(local.acr_admin_username_effective) != ""
   )
+
 }
 
 resource "azurerm_user_assigned_identity" "app" {
@@ -56,6 +57,10 @@ resource "azurerm_container_app_environment" "this" {
   }
 }
 
+resource "terraform_data" "acr_pull_config" {
+  input = var.use_acr_registry ? "${var.acr_pull_auth}|${var.acr_login_server}" : "none"
+}
+
 resource "azurerm_container_app" "app" {
   name                         = "${var.name_prefix}-app"
   container_app_environment_id = azurerm_container_app_environment.this.id
@@ -95,6 +100,9 @@ resource "azurerm_container_app" "app" {
   }
 
   lifecycle {
+    replace_triggered_by = [
+      terraform_data.acr_pull_config,
+    ]
     precondition {
       condition = (
         var.acr_pull_auth != "admin" ||

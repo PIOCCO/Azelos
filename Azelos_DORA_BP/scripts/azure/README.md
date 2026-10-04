@@ -27,6 +27,9 @@ DEPLOY_AUTO_APPROVE=1 ./scripts/azure/deploy-dev.sh
 
 # Build on your machine and push to ACR (when `az acr build` fails with TasksOperationsNotAllowed)
 ./scripts/azure/push-app-image.sh
+
+# Container App still uses Entra MI for ACR (AADSTS500014) after apply
+./scripts/azure/fix-containerapp-acr-admin.sh
 ```
 
 See `infra/terraform/README.md` for architecture and post-apply migration steps.

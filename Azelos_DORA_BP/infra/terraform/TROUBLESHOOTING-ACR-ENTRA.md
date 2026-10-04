@@ -66,6 +66,22 @@ integrate_container_apps_with_vnet = false   # if you use express CAE
 
 `terraform apply`. With `acr_admin_enabled = true`, the app pulls ACR using **username/password** secrets (not managed identity).
 
+If the revision still fails with **AADSTS500014** / **Identity proxy … ACR token**, Azure is still using **managed identity** on the registry (stale config). Either:
+
+```bash
+chmod +x scripts/azure/fix-containerapp-acr-admin.sh
+./scripts/azure/fix-containerapp-acr-admin.sh
+```
+
+Or recreate via Terraform (pull latest module with `replace_triggered_by` on pull mode):
+
+```bash
+terraform taint 'module.platform.module.compute.azurerm_container_app.app'
+terraform apply -var-file=terraform.tfvars
+```
+
+Confirm `terraform output acr_pull_auth` is **`admin`**, not `managed_identity`.
+
 If apply fails on **must supply both username and password_secret_name**, enable admin on the registry first, then re-apply:
 
 ```bash

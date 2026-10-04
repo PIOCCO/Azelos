@@ -121,9 +121,20 @@ module "compute" {
   acr_registry_name          = module.container_registry.name
   container_image            = var.container_image
   use_acr_registry           = local.container_uses_acr
-  acr_pull_auth              = local.acr_pull_auth
-  acr_admin_username         = var.acr_admin_enabled ? module.container_registry.admin_username : null
-  acr_admin_password         = var.acr_admin_enabled ? module.container_registry.admin_password : null
+  acr_pull_auth = local.acr_pull_auth
+  acr_admin_username = (
+    var.acr_admin_enabled && length(data.azurerm_container_registry.acr_credentials) > 0 ?
+    coalesce(
+      try(trimspace(data.azurerm_container_registry.acr_credentials[0].admin_username) != "" ? trimspace(data.azurerm_container_registry.acr_credentials[0].admin_username) : null, null),
+      data.azurerm_container_registry.acr_credentials[0].name
+    ) :
+    null
+  )
+  acr_admin_password = (
+    var.acr_admin_enabled && length(data.azurerm_container_registry.acr_credentials) > 0 ?
+    data.azurerm_container_registry.acr_credentials[0].admin_password :
+    null
+  )
   key_vault_id               = module.key_vault.id
   secret_ids = {
     database_url   = azurerm_key_vault_secret.database_url.id
