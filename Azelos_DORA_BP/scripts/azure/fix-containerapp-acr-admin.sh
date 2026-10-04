@@ -78,3 +78,8 @@ az containerapp registry list -g "$RG" -n "$APP" -o table
 
 echo "Done. Check revision:"
 echo "  az containerapp revision list -g $RG -n $APP -o table"
+echo ""
+echo "If revision STILL fails with AADSTS500014 / Identity proxy ACR token:"
+echo "  Entra is blocking ALL *.azurecr.io pulls for apps with managed identity."
+echo "  Use Docker Hub (public) instead:"
+echo "    DOCKERHUB_USER=your-dockerhub-user ./scripts/azure/deploy-containerapp-dockerhub.sh"

@@ -115,8 +115,32 @@ Probes target port **8000**; hello-world uses **80** — revision may show not r
 
 ---
 
+## AADSTS500014 persists after admin registry fix
+
+If `fix-containerapp-acr-admin.sh` runs but the revision **still** fails with **Identity proxy … ACR token** / **AADSTS500014**, Container Apps is routing **`*.azurecr.io`** pulls through Entra for this app (managed identity is attached). **Username/password on the registry does not bypass that path** while Entra’s ACR enterprise app is disabled.
+
+**Workaround that works in dev:** host the image on **Docker Hub** (public) so the app never pulls from `azurecr.io`:
+
+```bash
+docker login
+DOCKERHUB_USER=your-dockerhub-user ./scripts/azure/deploy-containerapp-dockerhub.sh
+```
+
+Then in `terraform.tfvars`:
+
+```hcl
+acr_admin_enabled = false
+container_image   = "docker.io/your-dockerhub-user/dora-bp-app:latest"
+```
+
+Evidence files use **`STORAGE_PROVIDER=local`** in the container for this path (ephemeral disk; fine for dev smoke tests).
+
+**Permanent fix:** tenant admin re-enables the subscription and the **Azure Container Registry** enterprise application; then return to `*.azurecr.io` + managed identity or admin as documented above.
+
+---
+
 ## Still stuck?
 
-- **No Docker locally:** use GitHub Actions (build + push with ACR admin secrets or OIDC).
+- **No Docker locally:** use GitHub Actions (build + push to Docker Hub or GHCR).
 - **TasksOperationsNotAllowed:** Azure Support or use push-only (this doc); Tasks are optional.
-- **Subscription lapsed:** renew subscription before any auth path works reliably.
+- **Subscription lapsed:** renew subscription before any ACR/Entra path works reliably.

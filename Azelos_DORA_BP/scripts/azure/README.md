@@ -30,6 +30,9 @@ DEPLOY_AUTO_APPROVE=1 ./scripts/azure/deploy-dev.sh
 
 # Container App still uses Entra MI for ACR (AADSTS500014) after apply
 ./scripts/azure/fix-containerapp-acr-admin.sh
+
+# AADSTS500014 still after fix — deploy from Docker Hub (bypasses azurecr.io)
+DOCKERHUB_USER=youruser ./scripts/azure/deploy-containerapp-dockerhub.sh
 ```
 
 See `infra/terraform/README.md` for architecture and post-apply migration steps.
