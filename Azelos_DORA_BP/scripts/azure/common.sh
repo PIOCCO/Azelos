@@ -125,3 +125,55 @@ ensure_tfvars() {
   echo "Copy ${TF_DEV}/terraform.tfvars.example to terraform.tfvars and set container_image + cors_origins."
   exit 1
 }
+
+tf_dev_output_raw() {
+  local name="$1"
+  terraform -chdir="$TF_DEV" output -raw "$name" 2>/dev/null || return 1
+}
+
+# Sets RESOLVED_RG, RESOLVED_ACR_NAME, RESOLVED_ACR_LOGIN (env overrides: RESOURCE_GROUP, ACR_NAME, ACR_LOGIN_SERVER).
+resolve_dev_acr() {
+  RESOLVED_RG="${RESOURCE_GROUP:-}"
+  RESOLVED_ACR_NAME="${ACR_NAME:-}"
+  RESOLVED_ACR_LOGIN="${ACR_LOGIN_SERVER:-}"
+
+  if [[ -z "$RESOLVED_RG" ]]; then
+    RESOLVED_RG="$(tf_dev_output_raw resource_group_name || true)"
+  fi
+  RESOLVED_RG="${RESOLVED_RG:-dora-bp-dev-rg}"
+
+  if [[ -z "$RESOLVED_ACR_LOGIN" ]]; then
+    RESOLVED_ACR_LOGIN="$(tf_dev_output_raw container_registry_login_server || true)"
+  fi
+
+  if [[ -z "$RESOLVED_ACR_NAME && -n "$RESOLVED_ACR_LOGIN" ]]; then
+    RESOLVED_ACR_NAME="${RESOLVED_ACR_LOGIN%%.azurecr.io}"
+  fi
+
+  if [[ -z "$RESOLVED_ACR_NAME" ]]; then
+    RESOLVED_ACR_NAME="$(tf_dev_output_raw container_registry_name || true)"
+  fi
+
+  if [[ -z "$RESOLVED_ACR_NAME" || -z "$RESOLVED_ACR_LOGIN" ]]; then
+    local line name login
+    mapfile -t lines < <(az acr list -g "$RESOLVED_RG" --query "[].{name:name, login:loginServer}" -o tsv 2>/dev/null || true)
+    if [[ "${#lines[@]}" -eq 0 ]]; then
+      echo "No ACR in $RESOLVED_RG. Set ACR_NAME and ACR_LOGIN_SERVER." >&2
+      return 1
+    fi
+    if [[ "${#lines[@]}" -gt 1 && -z "${ACR_NAME:-}" ]]; then
+      echo "Multiple ACRs in $RESOLVED_RG; set ACR_NAME:" >&2
+      az acr list -g "$RESOLVED_RG" --query "[].{name:name, loginServer:loginServer}" -o table >&2
+      return 1
+    fi
+    line="${lines[0]}"
+    name="$(awk '{print $1}' <<<"$line")"
+    login="$(awk '{print $2}' <<<"$line")"
+    RESOLVED_ACR_NAME="${RESOLVED_ACR_NAME:-$name}"
+    RESOLVED_ACR_LOGIN="${RESOLVED_ACR_LOGIN:-$login}"
+  fi
+
+  if [[ -z "$RESOLVED_ACR_LOGIN" ]]; then
+    RESOLVED_ACR_LOGIN="$(az acr show -g "$RESOLVED_RG" -n "$RESOLVED_ACR_NAME" --query loginServer -o tsv)"
+  fi
+}
