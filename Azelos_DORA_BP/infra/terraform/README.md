@@ -60,7 +60,7 @@ Bootstrap tfstate storage defaults to **LRS** because **GRS is not available in 
 
 PostgreSQL Flexible Server: if apply fails with `zone can only be changed when exchanged with…`, the server already exists with an Azure-assigned zone. Pull the latest `postgres` module (`lifecycle { ignore_changes = [zone] }`) or set `zone` in the module call to match `az postgres flexible-server show … --query availabilityZone`.
 
-Container Apps environment (`ManagedEnvironmentInvalidNetworkConfiguration`): for **Consumption** plans the infrastructure subnet must be **at least /23** and **must not** be delegated to `Microsoft.App/environments`. After updating the networking module, run `terraform apply` (subnet may be replaced). Verify with:
+Container Apps environment (`ManagedEnvironmentInvalidNetworkConfiguration`): with **azurerm ~4.14** and custom VNet, the infrastructure subnet must be **at least /21**, **delegated** to `Microsoft.App/environments`, and the environment needs a **Consumption workload profile** (see `modules/compute/main.tf`). A `/23` non-delegated subnet often fails with a vague “Invalid vnet resource ID” error. See [TROUBLESHOOTING-CAE-VNET.md](./TROUBLESHOOTING-CAE-VNET.md). Verify with:
 
 ```bash
 az network vnet subnet show -g dora-bp-dev-rg -n snet-containerapps --vnet-name dora-bp-dev-vnet \

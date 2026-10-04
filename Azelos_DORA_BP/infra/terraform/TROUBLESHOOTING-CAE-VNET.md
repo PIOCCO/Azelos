@@ -37,11 +37,22 @@ az network vnet subnet show --ids "$SUBNET_ID" \
   --query "{prefix:addressPrefix, delegations:delegations}" -o json
 ```
 
-Consumption-only: prefix must be **/23 or larger**, **delegations: []**.
+Workload-profiles environment (azurerm ~4.14): prefix must be **`/21` or larger** (e.g. `10.40.8.0/21`), **delegated** to `Microsoft.App/environments`, and the environment must define a **`Consumption` workload profile**.
 
 ## Subnet design (this repo)
 
-- `snet-containerapps`: `/23`, **no** delegation
-- `snet-postgresql`: delegated to PostgreSQL Flexible Server
+- `snet-containerapps`: `/21`, delegated to `Microsoft.App/environments`
+- `snet-postgresql`: `/24`, delegated to PostgreSQL Flexible Server
 
-Pull latest `modules/networking/main.tf` if your copy still delegates `Microsoft.App/environments` on the Container Apps subnet.
+If you previously imported a `/23` subnet without delegation, **delete** `snet-containerapps` (when no CAE exists), remove it from Terraform state, and apply again so the subnet is recreated at `/21`.
+
+## Azure CLI smoke test (clearer errors than Terraform)
+
+```bash
+SUBNET_ID=$(az network vnet subnet show -g dora-bp-dev-rg --vnet-name dora-bp-dev-vnet -n snet-containerapps --query id -o tsv)
+az containerapp env create -g dora-bp-dev-rg -n cae-smoke-test --location spaincentral \
+  --infrastructure-subnet-resource-id "$SUBNET_ID" \
+  --logs-workspace-id "<log-analytics-id>" \
+  --enable-workload-profiles
+# delete smoke env after: az containerapp env delete ...
+```

@@ -25,6 +25,13 @@ resource "azurerm_container_app_environment" "this" {
   infrastructure_subnet_id   = var.container_apps_subnet_id
   tags                       = var.tags
 
+  workload_profile {
+    name                  = "Consumption"
+    workload_profile_type = "Consumption"
+    minimum_count         = 0
+    maximum_count         = 10
+  }
+
   lifecycle {
     create_before_destroy = true
   }
@@ -35,6 +42,7 @@ resource "azurerm_container_app" "app" {
   container_app_environment_id = azurerm_container_app_environment.this.id
   resource_group_name          = var.resource_group_name
   revision_mode                = "Single"
+  workload_profile_name        = "Consumption"
   tags                         = var.tags
 
   identity {

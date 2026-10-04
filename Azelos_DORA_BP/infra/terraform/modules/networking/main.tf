@@ -6,14 +6,25 @@ resource "azurerm_virtual_network" "this" {
   tags                = var.tags
 }
 
-# Consumption-only Container Apps environments (our default) require a dedicated /23+
-# subnet with NO delegation. See:
-# https://learn.microsoft.com/en-us/azure/container-apps/vnet-custom
+# Workload-profiles Container Apps environment (azurerm 4.x + custom VNet):
+# - infrastructure subnet must be /21 or larger (provider requirement)
+# - subnet delegated to Microsoft.App/environments
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app_environment
 resource "azurerm_subnet" "container_apps" {
   name                 = "snet-containerapps"
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.this.name
-  address_prefixes     = [cidrsubnet(var.vnet_address_space[0], 7, 4)]
+  address_prefixes     = [cidrsubnet(var.vnet_address_space[0], 5, 1)]
+
+  delegation {
+    name = "container-apps-delegation"
+    service_delegation {
+      name = "Microsoft.App/environments"
+      actions = [
+        "Microsoft.Network/virtualNetworks/subnets/join/action",
+      ]
+    }
+  }
 }
 
 resource "azurerm_subnet" "postgresql" {
