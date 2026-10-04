@@ -37,7 +37,7 @@ resource "azurerm_storage_container" "exports" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "storage" {
-  count = var.log_analytics_workspace_id == null ? 0 : 1
+  count = var.enable_diagnostic_settings ? 1 : 0
 
   name                       = "${var.name_prefix}-st-diag"
   target_resource_id         = "${azurerm_storage_account.this.id}/blobServices/default"

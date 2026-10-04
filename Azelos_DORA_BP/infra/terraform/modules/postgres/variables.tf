@@ -78,6 +78,12 @@ variable "log_analytics_workspace_id" {
   default     = null
 }
 
+variable "enable_diagnostic_settings" {
+  type        = bool
+  description = "Create monitor diagnostic settings (use a static bool; do not derive count from workspace id)."
+  default     = true
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

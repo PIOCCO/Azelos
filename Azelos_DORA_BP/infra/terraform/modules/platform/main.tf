@@ -49,6 +49,7 @@ module "storage" {
   resource_group_name        = module.resource_group.name
   account_replication_type   = var.storage_replication_type
   log_analytics_workspace_id = module.monitoring.log_analytics_workspace_id
+  enable_diagnostic_settings = true
   tags                       = local.tags
 }
 
@@ -93,6 +94,7 @@ module "postgres" {
   private_dns_zone_id           = module.networking.postgresql_private_dns_zone_id
   public_network_access_enabled = false
   log_analytics_workspace_id    = module.monitoring.log_analytics_workspace_id
+  enable_diagnostic_settings    = true
   tags                          = local.tags
 }
 

@@ -28,7 +28,7 @@ resource "azurerm_postgresql_flexible_server_database" "app" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "postgresql" {
-  count = var.log_analytics_workspace_id == null ? 0 : 1
+  count = var.enable_diagnostic_settings ? 1 : 0
 
   name                       = "${var.name_prefix}-pg-diag"
   target_resource_id         = azurerm_postgresql_flexible_server.this.id
