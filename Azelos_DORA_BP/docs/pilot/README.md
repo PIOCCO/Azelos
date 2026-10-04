@@ -26,6 +26,11 @@ This folder contains supplementary materials for **running a pilot** without exp
 | [FEEDBACK.md](./FEEDBACK.md) | Instrumentation + questionnaire |
 | [COMMERCIAL-PACKAGE.md](./COMMERCIAL-PACKAGE.md) | Pilot package shape (no fixed pricing) |
 | [ACCEPTANCE-CHECKLIST.md](./ACCEPTANCE-CHECKLIST.md) | Go / no-go checklist |
+| [EARLY-EXTERNAL-TESTER-PLAYBOOK.md](./EARLY-EXTERNAL-TESTER-PLAYBOOK.md) | **First LinkedIn / design partner** — isolated env, org, license, security |
+| [customer/EARLY-TESTER-GUIDE.md](./customer/EARLY-TESTER-GUIDE.md) | Short guide for external testers |
+| [templates/EXTERNAL-TESTER-FEEDBACK-QUESTIONNAIRE.md](./templates/EXTERNAL-TESTER-FEEDBACK-QUESTIONNAIRE.md) | Feedback form |
+| [templates/EXTERNAL-TESTER-RECORD.md](./templates/EXTERNAL-TESTER-RECORD.md) | Internal tester record |
+| [templates/EXTERNAL-TESTER-BUG-REPORT.md](./templates/EXTERNAL-TESTER-BUG-REPORT.md) | Bug report template |
 
 **Customer-facing guides**
 
