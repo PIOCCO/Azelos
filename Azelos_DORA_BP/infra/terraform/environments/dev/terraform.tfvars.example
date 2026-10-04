@@ -1,7 +1,8 @@
 project_name    = "dora-bp"
 location        = "westeurope"
 owner           = "your-team"
-container_image = "dora-bp-dev-acr12345.azurecr.io/dora-bp-app:latest"
+# Use MCR until Entra allows ACR tokens (AADSTS500014); switch to *.azurecr.io after tenant/ACR auth works.
+container_image = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
 cors_origins    = "https://your-app.azurecontainerapps.io"
 
 # Optional: your public IP for Key Vault access during first deploy

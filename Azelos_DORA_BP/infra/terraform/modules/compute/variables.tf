@@ -31,6 +31,12 @@ variable "container_image" {
   description = "Full image reference, e.g. myacr.azurecr.io/dora-bp-app:1.0.0"
 }
 
+variable "use_acr_registry" {
+  type        = bool
+  default     = true
+  description = "When false, image is public (e.g. MCR) — skip ACR registry auth (needed if Entra blocks ACR tokens)."
+}
+
 variable "key_vault_id" {
   type = string
 }

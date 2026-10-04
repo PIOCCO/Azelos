@@ -114,6 +114,7 @@ module "compute" {
   acr_id                     = module.container_registry.id
   acr_login_server           = module.container_registry.login_server
   container_image            = var.container_image
+  use_acr_registry           = can(regex("\\.azurecr\\.io/", var.container_image))
   key_vault_id               = module.key_vault.id
   secret_ids = {
     database_url   = azurerm_key_vault_secret.database_url.id

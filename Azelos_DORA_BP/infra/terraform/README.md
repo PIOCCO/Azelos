@@ -4,6 +4,8 @@ Infrastructure as Code for deploying the **containerized** application (`Dockerf
 
 See [ARCHITECTURE-ASSESSMENT.md](./ARCHITECTURE-ASSESSMENT.md) before first apply.
 
+If Container App revisions fail on ACR with **AADSTS500014**, see [TROUBLESHOOTING-ACR-ENTRA.md](./TROUBLESHOOTING-ACR-ENTRA.md).
+
 ## Architecture (summary)
 
 ```mermaid
