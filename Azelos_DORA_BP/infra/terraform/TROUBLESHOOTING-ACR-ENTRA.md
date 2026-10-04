@@ -139,6 +139,24 @@ Evidence files use **`STORAGE_PROVIDER=local`** in the container for this path (
 
 ---
 
+## Container Apps: unsupported MIME type `…rootfs.diff.tar.gzip`
+
+If revision provisioning fails with **BuildFailed** and **unsupported MIME type for compression** (often after `docker build` with the **legacy builder**), rebuild with **BuildKit/buildx** and push again:
+
+```bash
+docker login
+export DOCKER_BUILDKIT=1
+docker buildx create --name azelos-acr-builder --driver docker-container --use 2>/dev/null || docker buildx use azelos-acr-builder
+docker buildx build --platform linux/amd64 --provenance=false --sbom=false \
+  -f Dockerfile.app -t docker.io/YOURUSER/dora-bp-app:latest --push .
+```
+
+Or re-run `./scripts/azure/deploy-containerapp-dockerhub.sh` (uses buildx when available).
+
+Use a **new tag** (e.g. `:v1`) in `az containerapp update --image` if the platform cached a bad manifest.
+
+---
+
 ## Still stuck?
 
 - **No Docker locally:** use GitHub Actions (build + push to Docker Hub or GHCR).

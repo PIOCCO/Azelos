@@ -34,6 +34,11 @@ if [[ -n "$url" ]]; then
   APP="$(sed -n 's|https://\([^.]*\)\..*|\1|p' <<<"$url")"
 fi
 
+if ! docker info 2>/dev/null | grep -q Username; then
+  echo "Log in to Docker Hub first: docker login" >&2
+  exit 1
+fi
+
 echo "Building and pushing ${PUBLIC_IMAGE} (public pull — no ACR/Entra) ..."
 docker_build_push_for_container_apps "$ROOT/Dockerfile.app" "$ROOT" "$PUBLIC_IMAGE"
 
