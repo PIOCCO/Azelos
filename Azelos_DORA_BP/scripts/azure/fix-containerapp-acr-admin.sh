@@ -37,19 +37,44 @@ if [[ -z "$ACR_USER" || -z "$ACR_PASS" ]]; then
   exit 1
 fi
 
-echo "Setting acr-password secret and admin registry (no managed identity on registry)..."
-az containerapp secret set -g "$RG" -n "$APP" --secrets "acr-password=$ACR_PASS" --output none
+ACR_ID="$(az acr show -g "$RG" -n "$ACR_NAME" --query id -o tsv)"
 
-az containerapp registry remove -g "$RG" -n "$APP" --server "$LOGIN" --output none 2>/dev/null || true
+echo "Removing AcrPull role assignments (otherwise ACA may still use Entra MI for ACR)..."
+while IFS= read -r pid; do
+  [[ -z "$pid" ]] && continue
+  while IFS= read -r rid; do
+    [[ -z "$rid" ]] && continue
+    echo "  Deleting role assignment $rid for principal $pid"
+    az role assignment delete --ids "$rid" --output none 2>/dev/null || true
+  done < <(az role assignment list --scope "$ACR_ID" --assignee "$pid" --query "[?roleDefinitionName=='AcrPull'].id" -o tsv 2>/dev/null || true)
+done < <(az containerapp show -g "$RG" -n "$APP" --query "identity.userAssignedIdentities.*.principalId" -o tsv 2>/dev/null || true)
 
+echo "Removing all existing registry entries (often still bound to managed identity)..."
+while IFS= read -r server; do
+  [[ -z "$server" ]] && continue
+  echo "  remove $server"
+  az containerapp registry remove -g "$RG" -n "$APP" --server "$server" --output none 2>/dev/null || true
+done < <(az containerapp registry list -g "$RG" -n "$APP" --query "[].server" -o tsv 2>/dev/null || true)
+
+echo "Adding registry with admin username/password (NOT --identity; NOT --password-secret)..."
+# Wrong flags (--password-secret) make the CLI infer ACR via Entra → AADSTS500014.
 az containerapp registry set -g "$RG" -n "$APP" \
   --server "$LOGIN" \
   --username "$ACR_USER" \
-  --password-secret acr-password \
+  --password "$ACR_PASS" \
   --output none
 
-echo "Current registries:"
+IMAGE="${CONTAINER_IMAGE:-}"
+if [[ -z "$IMAGE" ]]; then
+  IMAGE="$(az containerapp show -g "$RG" -n "$APP" --query "properties.template.containers[0].image" -o tsv 2>/dev/null || true)"
+fi
+if [[ -n "$IMAGE" ]]; then
+  echo "Starting new revision with image: $IMAGE"
+  az containerapp update -g "$RG" -n "$APP" --image "$IMAGE" --output none
+fi
+
+echo "Current registries (identity column should be empty):"
 az containerapp registry list -g "$RG" -n "$APP" -o table
 
-echo "Done. New revision should pull without Entra ACR token."
-echo "Check: az containerapp revision list -g $RG -n $APP -o table"
+echo "Done. Check revision:"
+echo "  az containerapp revision list -g $RG -n $APP -o table"

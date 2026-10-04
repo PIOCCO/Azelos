@@ -73,6 +73,8 @@ chmod +x scripts/azure/fix-containerapp-acr-admin.sh
 ./scripts/azure/fix-containerapp-acr-admin.sh
 ```
 
+The fix script must use `az containerapp registry set --username … --password …`. Do **not** use `--password-secret` (invalid on current Azure CLI); the CLI may then **infer ACR via managed identity** and you will still see AADSTS500014.
+
 Or recreate via Terraform (pull latest module with `replace_triggered_by` on pull mode):
 
 ```bash
