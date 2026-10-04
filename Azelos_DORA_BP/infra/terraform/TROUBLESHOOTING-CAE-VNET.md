@@ -104,3 +104,7 @@ az containerapp env create -g dora-bp-dev-rg -n cae-smoke-test --location spainc
   --enable-workload-profiles
 # delete smoke env after: az containerapp env delete ...
 ```
+
+## Related: ACR / Entra `AADSTS500014`
+
+If the Container App fails on **ACR token** / disabled service principal (not VNet), see [TROUBLESHOOTING-ACR-ENTRA.md](./TROUBLESHOOTING-ACR-ENTRA.md).
