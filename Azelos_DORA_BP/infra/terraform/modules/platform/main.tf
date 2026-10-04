@@ -125,7 +125,10 @@ module "compute" {
   acr_admin_username = (
     var.acr_admin_enabled && length(data.azurerm_container_registry.acr_credentials) > 0 ?
     coalesce(
-      try(trimspace(data.azurerm_container_registry.acr_credentials[0].admin_username) != "" ? trimspace(data.azurerm_container_registry.acr_credentials[0].admin_username) : null, null),
+      (
+        data.azurerm_container_registry.acr_credentials[0].admin_username != null &&
+        trimspace(data.azurerm_container_registry.acr_credentials[0].admin_username) != ""
+      ) ? trimspace(data.azurerm_container_registry.acr_credentials[0].admin_username) : null,
       data.azurerm_container_registry.acr_credentials[0].name
     ) :
     null
