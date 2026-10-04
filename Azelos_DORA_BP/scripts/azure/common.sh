@@ -146,7 +146,7 @@ resolve_dev_acr() {
     RESOLVED_ACR_LOGIN="$(tf_dev_output_raw container_registry_login_server || true)"
   fi
 
-  if [[ -z "$RESOLVED_ACR_NAME && -n "$RESOLVED_ACR_LOGIN" ]]; then
+  if [[ -z "$RESOLVED_ACR_NAME" && -n "$RESOLVED_ACR_LOGIN" ]]; then
     RESOLVED_ACR_NAME="${RESOLVED_ACR_LOGIN%%.azurecr.io}"
   fi
 
