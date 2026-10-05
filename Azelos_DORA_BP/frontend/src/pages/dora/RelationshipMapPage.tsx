@@ -51,6 +51,7 @@ import {
   relationshipTypesInGraph,
   toFlowEdges,
   toFlowNodes,
+  areSelectionSetsEqual,
 } from "./relationshipMapUtils";
 
 type MapLocationState = {
@@ -87,6 +88,8 @@ function GraphCanvas(props: {
   const manualPositionsRef = useRef<Map<string, XYPosition>>(new Map());
   const didDragRef = useRef(false);
   const persistTimerRef = useRef<number | null>(null);
+  const suppressSelectionEventsRef = useRef(false);
+  const modeChangeGuardRef = useRef(false);
   const {
     rawGraph,
     hiddenRelationships,
@@ -209,9 +212,23 @@ function GraphCanvas(props: {
   }, [props.layoutEpoch, props.layoutResetKey, props.persistedPositions]);
 
   useEffect(() => {
+    suppressSelectionEventsRef.current = true;
     setNodes(flowNodesWithPersistedLayout);
     setEdges(flowEdges);
+    requestAnimationFrame(() => {
+      suppressSelectionEventsRef.current = false;
+    });
   }, [flowNodesWithPersistedLayout, flowEdges, setNodes, setEdges]);
+
+  useEffect(() => {
+    modeChangeGuardRef.current = true;
+    suppressSelectionEventsRef.current = true;
+    const timeoutId = window.setTimeout(() => {
+      modeChangeGuardRef.current = false;
+      suppressSelectionEventsRef.current = false;
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [props.interactionMode]);
 
   const onNodeDragStart = useCallback(() => {
     didDragRef.current = true;
@@ -292,8 +309,10 @@ function GraphCanvas(props: {
       onNodeDragStart={onNodeDragStart}
       onNodeDragStop={onNodeDragStop}
       onSelectionChange={({ nodes: selectedNodes }) => {
-        if (!isSelectMode) return;
+        if (!isSelectMode || suppressSelectionEventsRef.current) return;
         const ids = new Set(selectedNodes.map((n) => n.id));
+        if (modeChangeGuardRef.current && ids.size === 0 && canvasSelectedIds.size > 0) return;
+        if (areSelectionSetsEqual(ids, canvasSelectedIds)) return;
         props.onCanvasSelectionChange(ids);
       }}
       onNodeClick={(evt, n) => {
@@ -326,6 +345,9 @@ function GraphCanvas(props: {
       <Panel
         position="top-left"
         className="!m-2 flex items-center gap-1 rounded-lg border border-gray-200 bg-white/95 px-2 py-1.5 text-xs shadow-card backdrop-blur-sm"
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
@@ -334,7 +356,12 @@ function GraphCanvas(props: {
           className={`inline-flex items-center gap-1 rounded px-2 py-1 ${
             !isSelectMode ? "bg-primary text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
-          onClick={() => props.onInteractionModeChange("pan")}
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            props.onInteractionModeChange("pan");
+          }}
         >
           <Hand className="h-3.5 w-3.5" aria-hidden />
           Pan
@@ -346,7 +373,12 @@ function GraphCanvas(props: {
           className={`inline-flex items-center gap-1 rounded px-2 py-1 ${
             isSelectMode ? "bg-primary text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
           }`}
-          onClick={() => props.onInteractionModeChange("select")}
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            props.onInteractionModeChange("select");
+          }}
         >
           <MousePointer2 className="h-3.5 w-3.5" aria-hidden />
           Select
@@ -456,7 +488,10 @@ function RelationshipMapInner() {
 
   const onCanvasSelectionChange = useCallback(
     (ids: Set<string>, primary?: GraphNode | null) => {
-      setCanvasSelectedIds(new Set(ids));
+      setCanvasSelectedIds((prev) => {
+        if (areSelectionSetsEqual(prev, ids)) return prev;
+        return new Set(ids);
+      });
       if (primary !== undefined) {
         setSelectedNode(primary);
         return;

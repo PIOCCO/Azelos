@@ -214,6 +214,14 @@ export function mergeFlowNodePositions(
 export const DEFAULT_NODE_WIDTH = 150;
 export const DEFAULT_NODE_HEIGHT = 52;
 
+export function areSelectionSetsEqual(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
+  if (a.size !== b.size) return false;
+  for (const id of a) {
+    if (!b.has(id)) return false;
+  }
+  return true;
+}
+
 export type AxisRect = { x: number; y: number; width: number; height: number };
 
 /** Normalize a drag rectangle (any corner start) to positive width/height. */

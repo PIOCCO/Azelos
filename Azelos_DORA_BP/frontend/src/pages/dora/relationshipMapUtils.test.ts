@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyGraphFilters,
   applyPositionDeltaToNodes,
+  areSelectionSetsEqual,
   mergeFlowNodePositions,
   mergeGraphs,
   nodeIdsIntersectingRect,
@@ -71,6 +72,12 @@ describe("relationshipMapUtils", () => {
         expect(rel).toMatch(/^[A-Z_]+$/);
       }
     }
+  });
+
+  it("compares canvas selection sets by value", () => {
+    expect(areSelectionSetsEqual(new Set(["a", "b"]), new Set(["b", "a"]))).toBe(true);
+    expect(areSelectionSetsEqual(new Set(["a"]), new Set(["a", "b"]))).toBe(false);
+    expect(areSelectionSetsEqual(new Set(), new Set())).toBe(true);
   });
 
   it("normalizes marquee rectangles from any drag direction", () => {
