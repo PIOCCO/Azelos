@@ -5,13 +5,17 @@ import {
   Background,
   Controls,
   MiniMap,
+  Panel,
   ReactFlow,
   ReactFlowProvider,
+  SelectionMode,
   useEdgesState,
   useNodesState,
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import "./relationshipMapFlow.css";
+import { Hand, Maximize2, MousePointer2, ZoomIn, ZoomOut } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getRelationshipMapLayout,
@@ -56,6 +60,8 @@ type MapLocationState = {
   autoLoad?: boolean;
 };
 
+export type GraphInteractionMode = "pan" | "select";
+
 function GraphCanvas(props: {
   rawGraph: EntityGraphResult;
   depth: number;
@@ -65,16 +71,22 @@ function GraphCanvas(props: {
   filterTarget: string;
   selectedNode: GraphNode | null;
   selectedEdge: GraphEdge | null;
+  canvasSelectedIds: Set<string>;
+  interactionMode: GraphInteractionMode;
   layoutResetKey: number;
   layoutEpoch: number;
   persistedPositions: RelationshipMapLayoutPositions;
   onPersistPositions: (positions: RelationshipMapLayoutPositions) => void;
   onSelectNode: (n: GraphNode | null) => void;
   onSelectEdge: (e: GraphEdge | null) => void;
+  onCanvasSelectionChange: (ids: Set<string>, primary?: GraphNode | null) => void;
+  onToggleCanvasNode: (id: string, graphNode: GraphNode) => void;
+  onInteractionModeChange: (mode: GraphInteractionMode) => void;
 }) {
-  const { fitView } = useReactFlow();
+  const { fitView, zoomIn, zoomOut } = useReactFlow();
   const manualPositionsRef = useRef<Map<string, XYPosition>>(new Map());
   const didDragRef = useRef(false);
+  const persistTimerRef = useRef<number | null>(null);
   const {
     rawGraph,
     hiddenRelationships,
@@ -98,6 +110,8 @@ function GraphCanvas(props: {
     [rawGraph, hiddenRelationships, nodeTypeFilter, filterSource, filterTarget],
   );
 
+  const canvasSelectedIds = props.canvasSelectedIds;
+
   const highlight = useMemo(() => {
     if (selectedEdge) {
       return {
@@ -106,21 +120,30 @@ function GraphCanvas(props: {
         dim: true,
       };
     }
+    if (canvasSelectedIds.size > 1) {
+      return { nodes: new Set(canvasSelectedIds), edges: new Set<string>(), dim: false };
+    }
+    if (canvasSelectedIds.size === 1) {
+      const only = [...canvasSelectedIds][0]!;
+      const n = neighborSets(only, filtered.edges);
+      return { nodes: n.nodes, edges: n.edges, dim: true };
+    }
     if (selectedNode) {
       const n = neighborSets(selectedNode.id, filtered.edges);
       return { nodes: n.nodes, edges: n.edges, dim: true };
     }
     return { nodes: new Set<string>(), edges: new Set<string>(), dim: false };
-  }, [selectedEdge, selectedNode, filtered.edges]);
+  }, [selectedEdge, selectedNode, filtered.edges, canvasSelectedIds]);
 
   const flowNodes = useMemo(() => {
     const laid = layoutNodes(filtered.nodes, filtered.edges);
     return toFlowNodes(laid, {
       highlightNodeIds: highlight.nodes,
       dimUnrelated: highlight.dim,
-      selectedId: selectedNode?.id ?? null,
+      selectedIds: canvasSelectedIds,
+      focusedId: selectedNode?.id ?? null,
     });
-  }, [filtered, highlight, selectedNode?.id]);
+  }, [filtered, highlight, selectedNode?.id, canvasSelectedIds]);
 
   const flowNodesWithPersistedLayout = useMemo(() => {
     const saved = new Map<string, XYPosition>();
@@ -152,23 +175,29 @@ function GraphCanvas(props: {
     props.onPersistPositions(positions);
   }, [props.onPersistPositions]);
 
+  const schedulePersistedPositions = useCallback(() => {
+    if (persistTimerRef.current != null) {
+      window.clearTimeout(persistTimerRef.current);
+    }
+    persistTimerRef.current = window.setTimeout(() => {
+      persistTimerRef.current = null;
+      flushPersistedPositions();
+    }, 400);
+  }, [flushPersistedPositions]);
+
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
       onNodesChangeInternal(changes);
       let dragEnded = false;
       for (const ch of changes) {
         if (ch.type === "position" && ch.position) {
-          if (ch.dragging) {
-            manualPositionsRef.current.set(ch.id, { x: ch.position.x, y: ch.position.y });
-          } else {
-            manualPositionsRef.current.set(ch.id, { x: ch.position.x, y: ch.position.y });
-            dragEnded = true;
-          }
+          manualPositionsRef.current.set(ch.id, { x: ch.position.x, y: ch.position.y });
+          if (!ch.dragging) dragEnded = true;
         }
       }
-      if (dragEnded) flushPersistedPositions();
+      if (dragEnded) schedulePersistedPositions();
     },
-    [onNodesChangeInternal, flushPersistedPositions],
+    [onNodesChangeInternal, schedulePersistedPositions],
   );
 
   // Seed manual positions only when persisted layout changes — never on highlight/filter recalc.
@@ -191,12 +220,12 @@ function GraphCanvas(props: {
   const onNodeDragStop = useCallback(
     (_evt: MouseEvent | TouchEvent, node: Node) => {
       manualPositionsRef.current.set(node.id, { x: node.position.x, y: node.position.y });
-      flushPersistedPositions();
+      schedulePersistedPositions();
       window.setTimeout(() => {
         didDragRef.current = false;
       }, 0);
     },
-    [flushPersistedPositions],
+    [schedulePersistedPositions],
   );
 
   useEffect(() => {
@@ -205,34 +234,149 @@ function GraphCanvas(props: {
     }
   }, [rawGraph.nodes.length, fitView]);
 
+  useEffect(() => {
+    return () => {
+      if (persistTimerRef.current != null) window.clearTimeout(persistTimerRef.current);
+    };
+  }, []);
+
+  const { onCanvasSelectionChange, onSelectEdge } = props;
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (
+        el &&
+        (el.tagName === "INPUT" ||
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "SELECT" ||
+          el.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.key === "Escape") {
+        onCanvasSelectionChange(new Set(), null);
+        onSelectEdge(null);
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        const ids = new Set(filtered.nodes.map((n) => n.id));
+        onCanvasSelectionChange(ids);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [filtered.nodes, onCanvasSelectionChange, onSelectEdge]);
+
+  const isSelectMode = props.interactionMode === "select";
+
   return (
     <ReactFlow
-      className="h-full w-full select-none"
+      className={`relationship-map-flow h-full w-full select-none ${
+        isSelectMode ? "relationship-map-flow--select" : "relationship-map-flow--pan"
+      }`}
       nodes={nodes}
       edges={edges}
       nodesDraggable
       nodeDragThreshold={6}
-      panOnDrag
+      elementsSelectable={isSelectMode}
+      selectionOnDrag={isSelectMode}
+      selectionMode={SelectionMode.Partial}
+      panOnDrag={isSelectMode ? [1, 2] : true}
+      panOnScroll
+      zoomOnScroll
+      multiSelectionKeyCode="Shift"
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onNodeDragStart={onNodeDragStart}
       onNodeDragStop={onNodeDragStop}
-      onNodeClick={(_, n) => {
+      onSelectionChange={({ nodes: selectedNodes }) => {
+        if (!isSelectMode) return;
+        const ids = new Set(selectedNodes.map((n) => n.id));
+        props.onCanvasSelectionChange(ids);
+      }}
+      onNodeClick={(evt, n) => {
         if (didDragRef.current) return;
         props.onSelectEdge(null);
-        props.onSelectNode((n.data as { node: GraphNode }).node);
+        const graphNode = (n.data as { node: GraphNode }).node;
+        if (isSelectMode) {
+          props.onSelectNode(graphNode);
+          return;
+        }
+        if (evt.shiftKey) {
+          props.onToggleCanvasNode(n.id, graphNode);
+          return;
+        }
+        props.onCanvasSelectionChange(new Set([n.id]), graphNode);
       }}
       onEdgeClick={(_, e) => {
         const raw = rawGraph.edges.find((x) => x.id === e.id);
+        props.onCanvasSelectionChange(new Set(), null);
         props.onSelectNode(null);
         props.onSelectEdge(raw ?? null);
       }}
-      onPaneClick={() => {
-        props.onSelectNode(null);
+      onPaneClick={(evt) => {
+        if (evt.shiftKey) return;
+        props.onCanvasSelectionChange(new Set(), null);
         props.onSelectEdge(null);
       }}
       fitView
     >
+      <Panel
+        position="top-left"
+        className="!m-2 flex items-center gap-1 rounded-lg border border-gray-200 bg-white/95 px-2 py-1.5 text-xs shadow-card backdrop-blur-sm"
+      >
+        <button
+          type="button"
+          title="Pan"
+          aria-pressed={!isSelectMode}
+          className={`inline-flex items-center gap-1 rounded px-2 py-1 ${
+            !isSelectMode ? "bg-primary text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+          onClick={() => props.onInteractionModeChange("pan")}
+        >
+          <Hand className="h-3.5 w-3.5" aria-hidden />
+          Pan
+        </button>
+        <button
+          type="button"
+          title="Select"
+          aria-pressed={isSelectMode}
+          className={`inline-flex items-center gap-1 rounded px-2 py-1 ${
+            isSelectMode ? "bg-primary text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+          onClick={() => props.onInteractionModeChange("select")}
+        >
+          <MousePointer2 className="h-3.5 w-3.5" aria-hidden />
+          Select
+        </button>
+        <span className="mx-0.5 h-4 w-px bg-gray-200" aria-hidden />
+        <button
+          type="button"
+          title="Zoom out"
+          className="rounded p-1 text-gray-700 hover:bg-gray-100"
+          onClick={() => zoomOut({ duration: 150 })}
+        >
+          <ZoomOut className="h-4 w-4" aria-hidden />
+        </button>
+        <button
+          type="button"
+          title="Zoom in"
+          className="rounded p-1 text-gray-700 hover:bg-gray-100"
+          onClick={() => zoomIn({ duration: 150 })}
+        >
+          <ZoomIn className="h-4 w-4" aria-hidden />
+        </button>
+        <button
+          type="button"
+          title="Fit view"
+          className="rounded p-1 text-gray-700 hover:bg-gray-100"
+          onClick={() => fitView({ padding: 0.15, duration: 200 })}
+        >
+          <Maximize2 className="h-4 w-4" aria-hidden />
+        </button>
+      </Panel>
       <MiniMap />
       <Controls showInteractive={false} />
       <Background />
@@ -260,6 +404,8 @@ function RelationshipMapInner() {
   const [view, setView] = useState<"ALL" | "RISK" | "RESILIENCE">("ALL");
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<GraphEdge | null>(null);
+  const [interactionMode, setInteractionMode] = useState<GraphInteractionMode>("pan");
+  const [canvasSelectedIds, setCanvasSelectedIds] = useState<Set<string>>(() => new Set());
   const [hiddenRelationships, setHiddenRelationships] = useState<Set<string>>(new Set());
   const [nodeTypeFilter, setNodeTypeFilter] = useState<Set<string>>(new Set());
   const [filterSource, setFilterSource] = useState("");
@@ -308,6 +454,43 @@ function RelationshipMapInner() {
     [saveLayoutM],
   );
 
+  const onCanvasSelectionChange = useCallback(
+    (ids: Set<string>, primary?: GraphNode | null) => {
+      setCanvasSelectedIds(new Set(ids));
+      if (primary !== undefined) {
+        setSelectedNode(primary);
+        return;
+      }
+      if (ids.size === 1) {
+        const id = [...ids][0]!;
+        setSelectedNode(rawGraph?.nodes.find((n) => n.id === id) ?? null);
+      } else if (ids.size === 0) {
+        setSelectedNode(null);
+      }
+    },
+    [rawGraph],
+  );
+
+  const onToggleCanvasNode = useCallback(
+    (id: string, graphNode: GraphNode) => {
+      setCanvasSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        if (next.size === 1) {
+          const only = [...next][0]!;
+          setSelectedNode(rawGraph?.nodes.find((n) => n.id === only) ?? graphNode);
+        } else if (next.size === 0) {
+          setSelectedNode(null);
+        } else {
+          setSelectedNode(graphNode);
+        }
+        return next;
+      });
+    },
+    [rawGraph],
+  );
+
   const overviewQ = useQuery({
     queryKey: ["org-graph", depth, view],
     queryFn: () => fetchOrganizationGraph({ depth, maxNodes: 80, view }),
@@ -317,7 +500,9 @@ function RelationshipMapInner() {
   useEffect(() => {
     if (overviewQ.data && !initialLoaded.current) {
       setRawGraph(overviewQ.data);
-      setSelectedNode(overviewQ.data.nodes[0] ?? null);
+      const first = overviewQ.data.nodes[0] ?? null;
+      setSelectedNode(first);
+      setCanvasSelectedIds(first ? new Set([first.id]) : new Set());
       initialLoaded.current = true;
     }
   }, [overviewQ.data]);
@@ -353,7 +538,9 @@ function RelationshipMapInner() {
     },
     onSuccess: (data) => {
       setRawGraph(data);
-      setSelectedNode(data.nodes[0] ?? null);
+      const first = data.nodes[0] ?? null;
+      setSelectedNode(first);
+      setCanvasSelectedIds(first ? new Set([first.id]) : new Set());
     },
   });
 
@@ -567,12 +754,17 @@ function RelationshipMapInner() {
               filterTarget={filterTarget}
               selectedNode={selectedNode}
               selectedEdge={selectedEdge}
+              canvasSelectedIds={canvasSelectedIds}
+              interactionMode={interactionMode}
               layoutResetKey={layoutResetKey}
               layoutEpoch={layoutEpoch}
               persistedPositions={persistedPositions}
               onPersistPositions={persistPositions}
               onSelectNode={setSelectedNode}
               onSelectEdge={setSelectedEdge}
+              onCanvasSelectionChange={onCanvasSelectionChange}
+              onToggleCanvasNode={onToggleCanvasNode}
+              onInteractionModeChange={setInteractionMode}
             />
           )}
         </div>

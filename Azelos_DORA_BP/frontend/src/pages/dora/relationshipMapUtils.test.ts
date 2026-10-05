@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   applyGraphFilters,
+  applyPositionDeltaToNodes,
   mergeFlowNodePositions,
   mergeGraphs,
+  nodeIdsIntersectingRect,
+  normalizeSelectionRect,
   relationshipTypesInGraph,
   RELATIONSHIP_PRESETS,
 } from "./relationshipMapUtils";
@@ -67,5 +70,42 @@ describe("relationshipMapUtils", () => {
         expect(rel).toMatch(/^[A-Z_]+$/);
       }
     }
+  });
+
+  it("normalizes marquee rectangles from any drag direction", () => {
+    expect(normalizeSelectionRect({ x: 10, y: 20 }, { x: 30, y: 50 })).toEqual({
+      x: 10,
+      y: 20,
+      width: 20,
+      height: 30,
+    });
+    expect(normalizeSelectionRect({ x: 30, y: 50 }, { x: 10, y: 20 })).toEqual({
+      x: 10,
+      y: 20,
+      width: 20,
+      height: 30,
+    });
+  });
+
+  it("selects nodes whose bounds intersect the marquee", () => {
+    const nodes = [
+      { id: "a", position: { x: 0, y: 0 } },
+      { id: "b", position: { x: 200, y: 0 } },
+      { id: "c", position: { x: 40, y: 40 } },
+    ];
+    const rect = { x: 10, y: 10, width: 100, height: 100 };
+    expect(nodeIdsIntersectingRect(nodes, rect).sort()).toEqual(["a", "c"]);
+  });
+
+  it("moves all selected nodes by the same delta", () => {
+    const nodes = [
+      { id: "a", position: { x: 0, y: 0 } },
+      { id: "b", position: { x: 100, y: 0 } },
+      { id: "c", position: { x: 0, y: 50 } },
+    ];
+    const moved = applyPositionDeltaToNodes(nodes, new Set(["a", "c"]), { dx: 10, dy: -5 });
+    expect(moved.find((n) => n.id === "a")!.position).toEqual({ x: 10, y: -5 });
+    expect(moved.find((n) => n.id === "b")!.position).toEqual({ x: 100, y: 0 });
+    expect(moved.find((n) => n.id === "c")!.position).toEqual({ x: 10, y: 45 });
   });
 });

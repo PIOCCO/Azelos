@@ -1,0 +1,31 @@
+.relationship-map-flow .react-flow__pane {
+  transition: cursor 0.05s linear;
+}
+
+.relationship-map-flow.relationship-map-flow--pan .react-flow__pane {
+  cursor: grab;
+}
+
+.relationship-map-flow.relationship-map-flow--pan .react-flow__pane:active {
+  cursor: grabbing;
+}
+
+.relationship-map-flow.relationship-map-flow--select .react-flow__pane {
+  cursor: default;
+}
+
+.relationship-map-flow .react-flow__selection {
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.55);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.relationship-map-flow .react-flow__node.relationship-map-node--selected {
+  z-index: 2;
+}
+
+.relationship-map-flow .react-flow__node:hover {
+  filter: brightness(0.98);
+  z-index: 3;
+}

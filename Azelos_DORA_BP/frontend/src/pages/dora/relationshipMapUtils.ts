@@ -211,24 +211,111 @@ export function mergeFlowNodePositions(
   });
 }
 
+export const DEFAULT_NODE_WIDTH = 150;
+export const DEFAULT_NODE_HEIGHT = 52;
+
+export type AxisRect = { x: number; y: number; width: number; height: number };
+
+/** Normalize a drag rectangle (any corner start) to positive width/height. */
+export function normalizeSelectionRect(
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+): AxisRect {
+  const x = Math.min(start.x, end.x);
+  const y = Math.min(start.y, end.y);
+  const width = Math.abs(end.x - start.x);
+  const height = Math.abs(end.y - start.y);
+  return { x, y, width, height };
+}
+
+export function axisRectsIntersect(a: AxisRect, b: AxisRect): boolean {
+  return (
+    a.x < b.x + b.width &&
+    a.x + a.width > b.x &&
+    a.y < b.y + b.height &&
+    a.y + a.height > b.y
+  );
+}
+
+export function nodeAxisBounds(node: {
+  position: { x: number; y: number };
+  width?: number;
+  height?: number;
+}): AxisRect {
+  const width = node.width ?? DEFAULT_NODE_WIDTH;
+  const height = node.height ?? DEFAULT_NODE_HEIGHT;
+  return { x: node.position.x, y: node.position.y, width, height };
+}
+
+/** Select visible nodes whose bounding box intersects the marquee (flow coordinates). */
+export function nodeIdsIntersectingRect(
+  nodes: Array<{
+    id: string;
+    position: { x: number; y: number };
+    width?: number;
+    height?: number;
+  }>,
+  rect: AxisRect,
+): string[] {
+  if (rect.width < 1 && rect.height < 1) return [];
+  return nodes
+    .filter((n) => axisRectsIntersect(nodeAxisBounds(n), rect))
+    .map((n) => n.id);
+}
+
+/** Apply the same drag delta to every selected node (layout-only). */
+export function applyPositionDeltaToNodes(
+  nodes: Array<{ id: string; position: { x: number; y: number } }>,
+  selectedIds: ReadonlySet<string>,
+  delta: { dx: number; dy: number },
+): Array<{ id: string; position: { x: number; y: number } }> {
+  if (delta.dx === 0 && delta.dy === 0) return nodes;
+  return nodes.map((n) => {
+    if (!selectedIds.has(n.id)) return n;
+    return {
+      ...n,
+      position: { x: n.position.x + delta.dx, y: n.position.y + delta.dy },
+    };
+  });
+}
+
 export function toFlowNodes(
   flowLayout: Node[],
   opts: {
     highlightNodeIds: Set<string>;
     dimUnrelated: boolean;
-    selectedId: string | null;
+    selectedIds: ReadonlySet<string>;
+    focusedId: string | null;
   },
 ): Node[] {
   return flowLayout.map((n) => {
-    const highlighted = opts.highlightNodeIds.has(n.id) || n.id === opts.selectedId;
+    const isCanvasSelected = opts.selectedIds.has(n.id);
+    const isFocused = opts.focusedId === n.id;
+    const highlighted =
+      opts.highlightNodeIds.has(n.id) || isCanvasSelected || isFocused;
     const dimmed = opts.dimUnrelated && !highlighted;
+    const selectionRing = isCanvasSelected
+      ? "0 0 0 2px rgba(37,99,235,0.85), 0 0 0 4px rgba(37,99,235,0.25)"
+      : undefined;
+    const focusRing = isFocused
+      ? "0 0 0 2px rgba(15,23,42,0.9), 0 0 0 5px rgba(37,99,235,0.35)"
+      : undefined;
     return {
       ...n,
+      selected: isCanvasSelected,
       style: {
         ...n.style,
         opacity: dimmed ? 0.25 : 1,
-        boxShadow: n.id === opts.selectedId ? "0 0 0 3px rgba(37,99,235,0.45)" : undefined,
+        borderWidth: isCanvasSelected ? 3 : n.style?.borderWidth ?? 2,
+        boxShadow: focusRing ?? selectionRing,
       },
+      className: [
+        n.className,
+        isCanvasSelected ? "relationship-map-node--selected" : "",
+        isFocused ? "relationship-map-node--focused" : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
     };
   });
 }
