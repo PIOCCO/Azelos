@@ -8,6 +8,7 @@ import {
   normalizeSelectionRect,
   relationshipTypesInGraph,
   RELATIONSHIP_PRESETS,
+  toFlowNodes,
 } from "./relationshipMapUtils";
 import type { Node } from "@xyflow/react";
 import type { GraphEdge, GraphNode } from "../../api/graphql";
@@ -95,6 +96,18 @@ describe("relationshipMapUtils", () => {
     ];
     const rect = { x: 10, y: 10, width: 100, height: 100 };
     expect(nodeIdsIntersectingRect(nodes, rect).sort()).toEqual(["a", "c"]);
+  });
+
+  it("marks canvas-selected nodes with selected flag and stronger border", () => {
+    const layout: Node[] = [{ id: "a", position: { x: 0, y: 0 }, data: { label: "A" } }];
+    const styled = toFlowNodes(layout, {
+      highlightNodeIds: new Set(),
+      dimUnrelated: false,
+      selectedIds: new Set(["a"]),
+      focusedId: null,
+    });
+    expect(styled[0]!.selected).toBe(true);
+    expect(styled[0]!.style?.borderWidth).toBe(3);
   });
 
   it("moves all selected nodes by the same delta", () => {
